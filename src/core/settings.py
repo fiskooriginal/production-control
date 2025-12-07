@@ -10,6 +10,7 @@ from src.core.config import (
     REDIS_HOST,
     REDIS_PASSWORD,
     REDIS_PORT,
+    REDIS_PREFIX,
     REDIS_URL,
 )
 
@@ -32,6 +33,7 @@ class DatabaseSettings:
 class RedisSettings:
     host: str = REDIS_HOST
     port: int = REDIS_PORT
+    prefix: str = REDIS_PREFIX
     password: str | None = REDIS_PASSWORD
     url: str | None = REDIS_URL
 
@@ -40,5 +42,5 @@ class RedisSettings:
         if self.url:
             return self.url
         if self.password:
-            return f"redis://:{self.password}@{self.host}:{self.port}/{self.db}"
-        return f"redis://{self.host}:{self.port}/{self.db}"
+            return f"redis://:{self.password}@{self.host}:{self.port}/{self.prefix}"
+        return f"redis://{self.host}:{self.port}/{self.prefix}"
