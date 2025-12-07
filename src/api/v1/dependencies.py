@@ -24,5 +24,5 @@ async def get_db_session(
         yield session
 
 
-DBEngine: type[AsyncEngine] = Annotated[AsyncEngine, Depends(get_engine)]
-DBSession: type[AsyncSession] = Annotated[AsyncSession, Depends(get_db_session)]
+DBEngine = Annotated[AsyncEngine, Depends(get_engine)]
+DBSession = Annotated[AsyncSession, Depends(get_db_session)]
