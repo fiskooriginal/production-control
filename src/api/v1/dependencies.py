@@ -17,12 +17,13 @@ def get_session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
     return request.app.state.session_factory
 
 
-async def get_db_session(
-    session_factory: Annotated[async_sessionmaker[AsyncSession], Depends(get_session_factory)],
-) -> AsyncIterator[AsyncSession]:
+db_engine = Annotated[AsyncEngine, Depends(get_engine)]
+db_session_factory = Annotated[async_sessionmaker[AsyncSession], Depends(get_session_factory)]
+
+
+async def get_db_session(session_factory: db_session_factory) -> AsyncIterator[AsyncSession]:
     async with session_factory() as session:
         yield session
 
 
-DBEngine = Annotated[AsyncEngine, Depends(get_engine)]
-DBSession = Annotated[AsyncSession, Depends(get_db_session)]
+db_session = Annotated[AsyncSession, Depends(get_db_session)]
