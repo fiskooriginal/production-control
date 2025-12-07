@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from starlette import status
 
-from src.api.v1.dependencies import db_session
+from src.core.dependencies import db_session
 
 router = APIRouter(prefix="/healthcheck", tags=["healthcheck"])
 
