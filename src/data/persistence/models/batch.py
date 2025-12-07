@@ -5,11 +5,11 @@ from uuid import UUID
 from sqlalchemy import Index
 from sqlmodel import Field, Relationship
 
-from src.data.models.base import BaseModel
+from src.data.persistence.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from src.data.models.product import Product
-    from src.data.models.work_center import WorkCenter
+    from src.data.persistence.models.product import Product
+    from src.data.persistence.models.work_center import WorkCenter
 
 
 class Batch(BaseModel, table=True):
