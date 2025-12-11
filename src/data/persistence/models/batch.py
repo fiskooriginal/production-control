@@ -28,9 +28,7 @@ class Batch(BaseModel, table=True):
 
     # описание задачи
     task_description: str
-    work_center_id: UUID = Field(
-        foreign_key="work_centers.uuid", sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"}
-    )
+    work_center_id: UUID = Field(foreign_key="work_centers.uuid", sa_column_kwargs={"nullable": False})
     shift: str
     team: str
 

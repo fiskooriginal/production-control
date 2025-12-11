@@ -23,7 +23,7 @@ class Product(BaseModel, table=True):
     )
 
     unique_code: str
-    batch_id: UUID = Field(foreign_key="batches.uuid", sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"})
+    batch_id: UUID = Field(foreign_key="batches.uuid", sa_column_kwargs={"nullable": False})
 
     is_aggregated: bool = False
     aggregated_at: datetime | None = None

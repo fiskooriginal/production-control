@@ -43,7 +43,7 @@ class WebhookDelivery(BaseModel, table=True):
 
     subscription_id: UUID = Field(
         foreign_key="webhook_subscriptions.uuid",
-        sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"},
+        sa_column_kwargs={"nullable": False},
     )
 
     # связи

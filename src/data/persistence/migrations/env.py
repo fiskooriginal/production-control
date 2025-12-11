@@ -38,7 +38,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table_schema=db_settings.schema
+        version_table_schema=db_settings.schema,
     )
 
     with context.begin_transaction():
