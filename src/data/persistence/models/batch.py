@@ -28,7 +28,9 @@ class Batch(BaseModel, table=True):
 
     # описание задачи
     task_description: str
-    work_center_id: UUID = Field(foreign_key="work_centers.uuid")
+    work_center_id: UUID = Field(
+        foreign_key="work_centers.uuid", sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"}
+    )
     shift: str
     team: str
 
@@ -44,6 +46,11 @@ class Batch(BaseModel, table=True):
     shift_start_time: datetime
     shift_end_time: datetime
 
-    # связи
-    work_center: "WorkCenter" = Relationship(back_populates="batches")
-    products: list["Product"] = Relationship(back_populates="batch")
+    work_center: "WorkCenter" = Relationship(
+        back_populates="batches",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
+    products: list["Product"] = Relationship(
+        back_populates="batch",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
+    )

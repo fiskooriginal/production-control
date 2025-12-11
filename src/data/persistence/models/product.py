@@ -23,10 +23,12 @@ class Product(BaseModel, table=True):
     )
 
     unique_code: str
-    batch_id: UUID = Field(foreign_key="batches.uuid")
+    batch_id: UUID = Field(foreign_key="batches.uuid", sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"})
 
     is_aggregated: bool = False
     aggregated_at: datetime | None = None
 
-    # связи
-    batch: "Batch" = Relationship(back_populates="products")
+    batch: "Batch" = Relationship(
+        back_populates="products",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )

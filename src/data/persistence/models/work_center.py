@@ -23,5 +23,7 @@ class WorkCenter(BaseModel, table=True):
     name: str
     author: UUID
 
-    # связи
-    batches: list["Batch"] = Relationship(back_populates="work_center")
+    batches: list["Batch"] = Relationship(
+        back_populates="work_center",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
+    )

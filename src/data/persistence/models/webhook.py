@@ -21,7 +21,10 @@ class WebhookSubscription(BaseModel, table=True):
     timeout_seconds: int = 10
 
     # связи
-    deliveries: list["WebhookDelivery"] = Relationship(back_populates="subscription")
+    deliveries: list["WebhookDelivery"] = Relationship(
+        back_populates="subscription",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
+    )
 
 
 class WebhookDelivery(BaseModel, table=True):
@@ -38,7 +41,13 @@ class WebhookDelivery(BaseModel, table=True):
     response_body: str | None = None
     error_message: str | None = None
 
-    subscription_id: UUID = Field(foreign_key="webhook_subscriptions.uuid")
+    subscription_id: UUID = Field(
+        foreign_key="webhook_subscriptions.uuid",
+        sa_column_kwargs={"nullable": False, "ondelete": "CASCADE"},
+    )
 
     # связи
-    subscription: WebhookSubscription = Relationship(back_populates="deliveries")
+    subscription: WebhookSubscription = Relationship(
+        back_populates="deliveries",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
