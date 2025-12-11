@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from starlette import status
 
-from src.core.dependencies import db_session
+from src.core.dependencies import DBSessionDI
 
-router = APIRouter(prefix="/healthcheck", tags=["healthcheck"])
+router = APIRouter(prefix="/healthchecks", tags=["healthchecks"])
 
 
 @router.get("", status_code=status.HTTP_200_OK)
@@ -13,7 +13,7 @@ async def healthcheck():
 
 
 @router.get("/postgres", status_code=status.HTTP_200_OK)
-async def healthcheck_postgres(session: db_session):
+async def postgres(session: DBSessionDI):
     try:
         result = await session.execute(text("SELECT 1"))
         result.scalar_one()

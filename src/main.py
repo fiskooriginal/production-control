@@ -3,17 +3,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.api import v1
+from src.api import router
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.settings import DatabaseSettings
 
 
 def create_app(lifespan: Callable) -> FastAPI:
     return FastAPI(title="Production Control API", lifespan=lifespan)
-
-
-def include_routers(app: FastAPI):
-    app.include_router(v1.router)
 
 
 @asynccontextmanager
@@ -30,4 +26,4 @@ async def lifespan(app: FastAPI):
 
 
 app = create_app(lifespan)
-include_routers(app)
+app.include_router(router)
