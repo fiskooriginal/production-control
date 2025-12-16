@@ -13,8 +13,8 @@ router = APIRouter(prefix="/batches", tags=["batches"])
 
 
 @router.get("", response_model=list[BatchResponseSchema])
-async def list_batches(session: DBSessionDI, skip: int = 0, limit: int = 100):
-    stmt = select(Batch).offset(skip).limit(limit)
+async def list_batches(session: DBSessionDI, offset: int = 0, limit: int = 100):
+    stmt = select(Batch).offset(offset).limit(limit)
     result = await session.execute(stmt)
     return result.scalars().all()
 
