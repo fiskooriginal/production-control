@@ -1,18 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from src.domain.shared.entity import BaseEntity
+from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import EmptyFieldError, InvalidStateError, InvalidValueError
-from src.domain.webhook.enums import WebhookEventType, WebhookStatus
-
-if TYPE_CHECKING:
-    from src.domain.webhook.entities.subscription import WebhookSubscriptionEntity
+from src.domain.webhooks.entities.subscription import WebhookSubscriptionEntity
+from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WebhookDeliveryEntity(BaseEntity):
-    subscription: "WebhookSubscriptionEntity"
+    subscription: WebhookSubscriptionEntity
     event_type: WebhookEventType
     payload: dict[str, Any]
     status: WebhookStatus

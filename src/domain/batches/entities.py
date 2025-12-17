@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from src.domain.shared.entity import BaseEntity
+from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import (
     EmptyFieldError,
     InvalidDateRangeError,
@@ -11,8 +11,8 @@ from src.domain.shared.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from src.domain.product.entity import ProductEntity
-    from src.domain.work_center.entity import WorkCenterEntity
+    from src.domain.products.entities import ProductEntity
+    from src.domain.work_centers.entities import WorkCenterEntity
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

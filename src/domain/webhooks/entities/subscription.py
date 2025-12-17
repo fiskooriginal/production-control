@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
-from src.domain.shared.entity import BaseEntity
+from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import EmptyFieldError, InvalidValueError
-from src.domain.webhook.enums import WebhookEventType
-from src.domain.webhook.exceptions import (
+from src.domain.webhooks.enums import WebhookEventType
+from src.domain.webhooks.exceptions import (
     WebhookSubscriptionInvalidEventsError,
     WebhookSubscriptionInvalidUrlError,
 )

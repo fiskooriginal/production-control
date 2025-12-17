@@ -1,4 +1,10 @@
 from dataclasses import dataclass
+from enum import Enum
+
+
+class SortDirection(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -10,7 +16,7 @@ class PaginationSpec:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SortSpec:
     field: str
-    direction: str
+    direction: SortDirection = SortDirection.ASC
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

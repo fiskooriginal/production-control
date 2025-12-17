@@ -5,7 +5,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
 from src.data.persistence.models.base import BaseModel
-from src.domain.webhook.enums import WebhookEventType, WebhookStatus
+from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
 
 
 class WebhookSubscription(BaseModel, table=True):
