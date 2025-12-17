@@ -6,6 +6,7 @@ class DomainException(Exception):
         super().__init__(self.message)
 
 
+# Entity exceptions
 class EmptyFieldError(DomainException):
     """Исключение для пустых обязательных полей"""
 
@@ -26,5 +27,36 @@ class InvalidDateRangeError(DomainException):
 
 class InvalidStateError(DomainException):
     """Исключение для невалидных состояний сущности"""
+
+    ...
+
+
+# Repository exceptions
+class RepositoryException(DomainException):
+    """Базовое исключение для операций с репозиториями"""
+
+    ...
+
+
+class AlreadyExistsError(RepositoryException):
+    """Исключение для случаев, когда сущность уже существует"""
+
+    ...
+
+
+class DoesNotExistError(RepositoryException):
+    """Исключение для случаев, когда сущность не найдена"""
+
+    ...
+
+
+class MultipleFoundError(RepositoryException):
+    """Исключение для случаев, когда найдено несколько сущностей вместо одной"""
+
+    ...
+
+
+class RepositoryOperationError(RepositoryException):
+    """Исключение для ошибок операций с репозиторием"""
 
     ...
