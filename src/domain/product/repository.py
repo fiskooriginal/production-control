@@ -1,14 +1,8 @@
-from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-from src.domain.entities.product import ProductEntity
+from src.domain.product.entity import ProductEntity
 from src.domain.shared.query import PaginationSpec, QueryResult, SortSpec
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class ProductFilters:
-    pass
 
 
 class ProductRepositoryProtocol(Protocol):
@@ -24,7 +18,6 @@ class ProductRepositoryProtocol(Protocol):
 
     async def list(
         self,
-        filters: ProductFilters | None = None,
         pagination: PaginationSpec | None = None,
         sort: SortSpec | None = None,
     ) -> QueryResult[ProductEntity]: ...

@@ -11,8 +11,8 @@ from src.domain.shared.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from src.domain.entities.product import ProductEntity
-    from src.domain.entities.work_center import WorkCenterEntity
+    from src.domain.product.entity import ProductEntity
+    from src.domain.work_center.entity import WorkCenterEntity
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

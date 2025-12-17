@@ -1,19 +1,10 @@
-from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
 from uuid import UUID
 
-from src.domain.entities.batch import BatchEntity
+from src.domain.batch.entity import BatchEntity
+from src.domain.batch.filter import BatchFilters
 from src.domain.shared.query import PaginationSpec, QueryResult, SortSpec
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class BatchFilters:
-    is_closed: bool | None = None
-    batch_number: int | None = None
-    batch_date: date | None = None
-    work_center_id: str | None = None
-    shift: str | None = None
 
 
 class BatchRepositoryProtocol(Protocol):

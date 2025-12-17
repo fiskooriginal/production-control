@@ -1,14 +1,8 @@
-from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-from src.domain.entities.work_center import WorkCenterEntity
 from src.domain.shared.query import PaginationSpec, QueryResult, SortSpec
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class WorkCenterFilters:
-    pass
+from src.domain.work_center.entity import WorkCenterEntity
 
 
 class WorkCenterRepositoryProtocol(Protocol):
@@ -24,7 +18,6 @@ class WorkCenterRepositoryProtocol(Protocol):
 
     async def list(
         self,
-        filters: WorkCenterFilters | None = None,
         pagination: PaginationSpec | None = None,
         sort: SortSpec | None = None,
     ) -> QueryResult[WorkCenterEntity]: ...
