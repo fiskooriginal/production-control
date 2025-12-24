@@ -2,6 +2,9 @@ from abc import abstractmethod
 from types import TracebackType
 from typing import Protocol, Self
 
+from src.data.persistence.repositories.batches import BatchRepository
+from src.data.persistence.repositories.products import ProductRepository
+from src.data.persistence.repositories.work_centers import WorkCenterRepository
 from src.domain.repositories.protocol import BaseRepositoryProtocol
 
 
@@ -23,3 +26,15 @@ class UnitOfWorkProtocol(Protocol):
     @property
     @abstractmethod
     def repository(self) -> BaseRepositoryProtocol: ...
+
+    @property
+    @abstractmethod
+    def batches(self) -> BatchRepository: ...
+
+    @property
+    @abstractmethod
+    def products(self) -> ProductRepository: ...
+
+    @property
+    @abstractmethod
+    def work_centers(self) -> WorkCenterRepository: ...
