@@ -1,8 +1,8 @@
 from typing import Protocol
 from uuid import UUID
 
+from src.application.dtos.batches import BatchFilters
 from src.domain.batches.entities import BatchEntity
-from src.domain.batches.filters import BatchFilters
 from src.domain.repositories.protocol import BaseRepositoryProtocol
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 
