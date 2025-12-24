@@ -1,20 +1,37 @@
 from dataclasses import dataclass
 from datetime import datetime
+from uuid import UUID
 
+from src.domain.products.events import ProductAggregatedEvent
+from src.domain.products.value_objects import ProductCode
 from src.domain.shared.entities import BaseEntity
-from src.domain.shared.exceptions import EmptyFieldError, InvalidStateError
+from src.domain.shared.exceptions import InvalidStateError
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class ProductEntity(BaseEntity):
-    unique_code: str
+    unique_code: ProductCode
+    batch_id: UUID
     is_aggregated: bool = False
     aggregated_at: datetime | None = None
 
     def __post_init__(self) -> None:
-        if not self.unique_code or not self.unique_code.strip():
-            raise EmptyFieldError("Уникальный код не может быть пустым")
         if self.is_aggregated and self.aggregated_at is None:
             raise InvalidStateError("Время агрегации должно быть установлено для агрегированного продукта")
         if not self.is_aggregated and self.aggregated_at is not None:
             raise InvalidStateError("Время агрегации должно быть пустым для неагрегированного продукта")
+
+    def aggregate(self, aggregated_at: datetime | None = None) -> None:
+        """Агрегирует продукт"""
+        if self.is_aggregated:
+            raise InvalidStateError("Продукт уже агрегирован")
+        if aggregated_at is None:
+            aggregated_at = datetime.now()
+        self.is_aggregated = True
+        self.aggregated_at = aggregated_at
+        self.updated_at = datetime.now()
+        self.add_domain_event(
+            ProductAggregatedEvent(
+                aggregate_id=self.uuid, product_id=self.uuid, batch_id=self.batch_id, aggregated_at=aggregated_at
+            )
+        )
