@@ -2,9 +2,9 @@ from datetime import date, datetime
 from uuid import UUID
 
 from src.application.dtos.batches import BatchFilters
+from src.application.uow import UnitOfWorkProtocol
 from src.data.persistence.repositories.batches import BatchRepository
 from src.data.persistence.repositories.products import ProductRepository
-from src.data.persistence.repositories.work_centers import WorkCenterRepository
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent
 from src.domain.batches.services import can_close_batch, validate_batch_number_uniqueness, validate_shift_time_overlap
@@ -23,13 +23,13 @@ from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 
 
 class CreateBatchUseCase:
-    def __init__(
-        self,
-        batch_repository: BatchRepository,
-        work_center_repository: WorkCenterRepository,
-    ):
-        self._batch_repository = batch_repository
-        self._work_center_repository = work_center_repository
+    """
+    Use case для создания партии.
+    Использует UnitOfWork для атомарного сохранения партии и доменных событий.
+    """
+
+    def __init__(self, uow: UnitOfWorkProtocol):
+        self._uow = uow
 
     async def execute(
         self,
@@ -44,54 +44,65 @@ class CreateBatchUseCase:
         shift_end: datetime,
         work_center_id: UUID,
     ) -> BatchEntity:
-        """Создает новую партию"""
-        batch_number_vo = BatchNumber(batch_number)
-        is_unique = await validate_batch_number_uniqueness(batch_number_vo, self._batch_repository)
-        if not is_unique:
-            raise InvalidStateError(f"Партия с номером {batch_number} уже существует")
+        """Создает новую партию с автоматическим сохранением доменных событий в outbox"""
+        async with self._uow:
+            batch_number_vo = BatchNumber(batch_number)
+            is_unique = await validate_batch_number_uniqueness(batch_number_vo, self._uow.batches)
+            if not is_unique:
+                raise InvalidStateError(f"Партия с номером {batch_number} уже существует")
 
-        await self._work_center_repository.get_or_raise(work_center_id)
+            await self._uow.work_centers.get_or_raise(work_center_id)
 
-        batch_entity = BatchEntity(
-            task_description=TaskDescription(task_description),
-            shift=Shift(shift),
-            team=Team(team),
-            batch_number=batch_number_vo,
-            batch_date=batch_date,
-            nomenclature=Nomenclature(nomenclature),
-            ekn_code=EknCode(ekn_code),
-            shift_time_range=ShiftTimeRange(start=shift_start, end=shift_end),
-            products=[],
-            work_center_id=work_center_id,
-        )
-
-        is_valid = await validate_shift_time_overlap(batch_entity, self._batch_repository)
-        if not is_valid:
-            raise InvalidStateError("Время смены пересекается с другой партией")
-
-        batch_entity.add_domain_event(
-            BatchCreatedEvent(
-                aggregate_id=batch_entity.uuid,
+            batch_entity = BatchEntity(
+                task_description=TaskDescription(task_description),
+                shift=Shift(shift),
+                team=Team(team),
                 batch_number=batch_number_vo,
                 batch_date=batch_date,
+                nomenclature=Nomenclature(nomenclature),
+                ekn_code=EknCode(ekn_code),
+                shift_time_range=ShiftTimeRange(start=shift_start, end=shift_end),
+                products=[],
                 work_center_id=work_center_id,
             )
-        )
 
-        return await self._batch_repository.create(batch_entity)
+            is_valid = await validate_shift_time_overlap(batch_entity, self._uow.batches)
+            if not is_valid:
+                raise InvalidStateError("Время смены пересекается с другой партией")
+
+            batch_entity.add_domain_event(
+                BatchCreatedEvent(
+                    aggregate_id=batch_entity.uuid,
+                    batch_number=batch_number_vo,
+                    batch_date=batch_date,
+                    work_center_id=work_center_id,
+                )
+            )
+
+            result = await self._uow.batches.create(batch_entity)
+            await self._uow.commit()
+            return result
 
 
 class CloseBatchUseCase:
-    def __init__(self, batch_repository: BatchRepository):
-        self._batch_repository = batch_repository
+    """
+    Use case для закрытия партии.
+    Использует UnitOfWork для атомарного обновления партии и сохранения доменных событий.
+    """
+
+    def __init__(self, uow: UnitOfWorkProtocol):
+        self._uow = uow
 
     async def execute(self, batch_id: UUID, closed_at: datetime | None = None) -> BatchEntity:
-        """Закрывает партию"""
-        batch = await self._batch_repository.get_or_raise(batch_id)
-        if not can_close_batch(batch):
-            raise InvalidStateError("Не все продукты в партии агрегированы")
-        batch.close(closed_at)
-        return await self._batch_repository.update(batch)
+        """Закрывает партию с автоматическим сохранением доменных событий в outbox"""
+        async with self._uow:
+            batch = await self._uow.batches.get_or_raise(batch_id)
+            if not can_close_batch(batch):
+                raise InvalidStateError("Не все продукты в партии агрегированы")
+            batch.close(closed_at)
+            result = await self._uow.batches.update(batch)
+            await self._uow.commit()
+            return result
 
 
 class AddProductToBatchUseCase:

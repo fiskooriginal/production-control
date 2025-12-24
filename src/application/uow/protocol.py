@@ -2,13 +2,17 @@ from abc import abstractmethod
 from types import TracebackType
 from typing import Protocol, Self
 
-from src.data.persistence.repositories.batches import BatchRepository
-from src.data.persistence.repositories.products import ProductRepository
-from src.data.persistence.repositories.work_centers import WorkCenterRepository
-from src.domain.repositories.protocol import BaseRepositoryProtocol
+from src.domain.repositories.batches import BatchRepositoryProtocol
+from src.domain.repositories.products import ProductRepositoryProtocol
+from src.domain.repositories.work_centers import WorkCenterRepositoryProtocol
 
 
 class UnitOfWorkProtocol(Protocol):
+    """
+    Протокол UnitOfWork для управления транзакциями и доступа к репозиториям.
+    Зависит от domain repository protocols, а не от concrete data.persistence классов.
+    """
+
     @abstractmethod
     async def __aenter__(self) -> Self: ...
 
@@ -25,16 +29,12 @@ class UnitOfWorkProtocol(Protocol):
 
     @property
     @abstractmethod
-    def repository(self) -> BaseRepositoryProtocol: ...
+    def batches(self) -> BatchRepositoryProtocol: ...
 
     @property
     @abstractmethod
-    def batches(self) -> BatchRepository: ...
+    def products(self) -> ProductRepositoryProtocol: ...
 
     @property
     @abstractmethod
-    def products(self) -> ProductRepository: ...
-
-    @property
-    @abstractmethod
-    def work_centers(self) -> WorkCenterRepository: ...
+    def work_centers(self) -> WorkCenterRepositoryProtocol: ...
