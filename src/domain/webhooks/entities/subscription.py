@@ -1,15 +1,13 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import EmptyFieldError, InvalidValueError
 from src.domain.webhooks.enums import WebhookEventType
-from src.domain.webhooks.exceptions import (
-    WebhookSubscriptionInvalidEventsError,
-    WebhookSubscriptionInvalidUrlError,
-)
+from src.domain.webhooks.exceptions import WebhookSubscriptionInvalidEventsError, WebhookSubscriptionInvalidUrlError
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class WebhookSubscriptionEntity(BaseEntity):
     url: str
     events: list[WebhookEventType]
@@ -38,3 +36,22 @@ class WebhookSubscriptionEntity(BaseEntity):
 
         if self.timeout <= 0:
             raise InvalidValueError("Таймаут должен быть > 0")
+
+    def activate(self) -> None:
+        """Активирует подписку"""
+        self.is_active = True
+        self.updated_at = datetime.now()
+
+    def deactivate(self) -> None:
+        """Деактивирует подписку"""
+        self.is_active = False
+        self.updated_at = datetime.now()
+
+    def update_events(self, events: list[WebhookEventType]) -> None:
+        """Обновляет список событий"""
+        if not events:
+            raise WebhookSubscriptionInvalidEventsError("список событий не может быть пустым")
+        if not all(isinstance(event, WebhookEventType) for event in events):
+            raise WebhookSubscriptionInvalidEventsError("все события должны быть типа WebhookEventType")
+        self.events = events
+        self.updated_at = datetime.now()
