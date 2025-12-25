@@ -14,9 +14,9 @@ from src.data.persistence.repositories.batches import BatchRepository
 from src.data.persistence.repositories.outbox import OutboxRepository
 from src.data.persistence.repositories.products import ProductRepository
 from src.data.persistence.repositories.work_centers import WorkCenterRepository
-from src.domain.repositories.batches import BatchRepositoryProtocol
-from src.domain.repositories.products import ProductRepositoryProtocol
-from src.domain.repositories.work_centers import WorkCenterRepositoryProtocol
+from src.domain.batches.repositories import BatchRepositoryProtocol
+from src.domain.products.repositories import ProductRepositoryProtocol
+from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
 
 
 class UnitOfWork:

@@ -1,6 +1,6 @@
 from src.domain.batches.entities import BatchEntity
+from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.batches.value_objects import BatchNumber
-from src.domain.repositories.batches import BatchRepositoryProtocol
 
 
 async def validate_batch_number_uniqueness(batch_number: BatchNumber, repository: BatchRepositoryProtocol) -> bool:

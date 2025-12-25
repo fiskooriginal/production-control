@@ -7,12 +7,12 @@ from src.data.persistence.repositories.batches import BatchRepository
 from src.data.persistence.repositories.products import ProductRepository
 from src.data.persistence.repositories.work_centers import WorkCenterRepository
 from src.domain.batches.entities import BatchEntity
+from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.products.entities import ProductEntity
-from src.domain.repositories.batches import BatchRepositoryProtocol
-from src.domain.repositories.products import ProductRepositoryProtocol
-from src.domain.repositories.work_centers import WorkCenterRepositoryProtocol
+from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
 
 
 class BatchRepositoryProxy(BatchRepositoryProtocol):

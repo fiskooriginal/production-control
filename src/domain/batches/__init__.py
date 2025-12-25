@@ -5,6 +5,7 @@ from src.domain.batches.events import (
     ProductAddedToBatchEvent,
     ProductRemovedFromBatchEvent,
 )
+from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.batches.services import can_close_batch, validate_batch_number_uniqueness, validate_shift_time_overlap
 from src.domain.batches.value_objects import (
     BatchNumber,
@@ -15,7 +16,6 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
-from src.domain.repositories.batches import BatchRepositoryProtocol
 
 __all__ = [
     "BatchClosedEvent",

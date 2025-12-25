@@ -3,8 +3,8 @@ from uuid import UUID
 
 from src.application.dtos.batches import BatchFilters
 from src.domain.batches.entities import BatchEntity
-from src.domain.repositories.protocol import BaseRepositoryProtocol
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.domain.shared.repository_protocol import BaseRepositoryProtocol
 
 
 class BatchRepositoryProtocol(BaseRepositoryProtocol[BatchEntity], Protocol):

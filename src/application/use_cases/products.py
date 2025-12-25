@@ -23,5 +23,4 @@ class AggregateProductUseCase:
                 raise InvalidStateError("Продукт уже агрегирован")
             product.aggregate(aggregated_at)
             result = await self._uow.products.update(product)
-            await self._uow.commit()
             return result

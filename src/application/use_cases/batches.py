@@ -80,7 +80,6 @@ class CreateBatchUseCase:
             )
 
             result = await self._uow.batches.create(batch_entity)
-            await self._uow.commit()
             return result
 
 
@@ -101,7 +100,6 @@ class CloseBatchUseCase:
                 raise InvalidStateError("Не все продукты в партии агрегированы")
             batch.close(closed_at)
             result = await self._uow.batches.update(batch)
-            await self._uow.commit()
             return result
 
 

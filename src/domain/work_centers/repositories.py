@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from src.domain.repositories.protocol import BaseRepositoryProtocol
+from src.domain.shared.repository_protocol import BaseRepositoryProtocol
 from src.domain.work_centers.entities import WorkCenterEntity
 
 

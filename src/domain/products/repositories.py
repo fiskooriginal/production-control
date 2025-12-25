@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from src.domain.products.entities import ProductEntity
-from src.domain.repositories.protocol import BaseRepositoryProtocol
+from src.domain.shared.repository_protocol import BaseRepositoryProtocol
 
 
 class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol):

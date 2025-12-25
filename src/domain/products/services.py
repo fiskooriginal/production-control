@@ -1,7 +1,7 @@
 from uuid import UUID
 
+from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.products.value_objects import ProductCode
-from src.domain.repositories.products import ProductRepositoryProtocol
 
 
 async def validate_product_code_uniqueness(code: ProductCode, repository: ProductRepositoryProtocol) -> bool:
