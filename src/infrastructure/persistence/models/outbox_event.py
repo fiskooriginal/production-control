@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import JSON, Index
 from sqlmodel import Column, Field
 
-from src.data.persistence.models.base import BaseModel
+from src.infrastructure.persistence.models.base import BaseModel
 
 
 class OutboxEventStatus(str, Enum):

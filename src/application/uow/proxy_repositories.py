@@ -3,9 +3,6 @@ from uuid import UUID
 
 from src.application.dtos.batches import BatchFilters
 from src.application.uow.identity_map import IdentityMap
-from src.data.persistence.repositories.batches import BatchRepository
-from src.data.persistence.repositories.products import ProductRepository
-from src.data.persistence.repositories.work_centers import WorkCenterRepository
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.products.entities import ProductEntity
@@ -13,12 +10,15 @@ from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.infrastructure.persistence.repositories.batches import BatchRepository
+from src.infrastructure.persistence.repositories.products import ProductRepository
+from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
 
 
 class BatchRepositoryProxy(BatchRepositoryProtocol):
     """
     Proxy поверх BatchRepository который регистрирует агрегаты в IdentityMap.
-    Не изменяет оригинальный data.persistence репозиторий.
+    Не изменяет оригинальный infrastructure.persistence репозиторий.
     """
 
     def __init__(self, repository: BatchRepository, identity_map: IdentityMap) -> None:

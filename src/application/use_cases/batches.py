@@ -3,8 +3,6 @@ from uuid import UUID
 
 from src.application.dtos.batches import BatchFilters
 from src.application.uow import UnitOfWorkProtocol
-from src.data.persistence.repositories.batches import BatchRepository
-from src.data.persistence.repositories.products import ProductRepository
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent
 from src.domain.batches.services import can_close_batch, validate_batch_number_uniqueness, validate_shift_time_overlap
@@ -20,6 +18,8 @@ from src.domain.batches.value_objects import (
 from src.domain.products.entities import ProductEntity
 from src.domain.shared.exceptions import InvalidStateError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.infrastructure.persistence.repositories.batches import BatchRepository
+from src.infrastructure.persistence.repositories.products import ProductRepository
 
 
 class CreateBatchUseCase:

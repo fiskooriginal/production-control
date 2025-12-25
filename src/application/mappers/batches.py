@@ -2,7 +2,6 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from src.application.mappers.products import to_domain_entity as product_to_domain
-from src.data.persistence.models.batch import Batch
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.value_objects import (
     BatchNumber,
@@ -13,6 +12,7 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
+from src.infrastructure.persistence.models.batch import Batch
 
 if TYPE_CHECKING:
     from src.domain.products.entities import ProductEntity

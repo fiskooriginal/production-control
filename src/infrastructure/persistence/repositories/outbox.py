@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.data.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
+from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
 
 
 class OutboxRepository:

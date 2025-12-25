@@ -7,11 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.dtos.batches import BatchFilters
 from src.application.mappers.batches import to_domain_entity, to_persistence_model
 from src.application.mappers.products import to_domain_entity as product_to_domain
-from src.data.persistence.models.batch import Batch
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.infrastructure.persistence.models.batch import Batch
 
 
 class BatchRepository(BatchRepositoryProtocol):

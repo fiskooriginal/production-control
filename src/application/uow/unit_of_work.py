@@ -10,13 +10,13 @@ from src.application.uow.proxy_repositories import (
     ProductRepositoryProxy,
     WorkCenterRepositoryProxy,
 )
-from src.data.persistence.repositories.batches import BatchRepository
-from src.data.persistence.repositories.outbox import OutboxRepository
-from src.data.persistence.repositories.products import ProductRepository
-from src.data.persistence.repositories.work_centers import WorkCenterRepository
 from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.infrastructure.persistence.repositories.batches import BatchRepository
+from src.infrastructure.persistence.repositories.outbox import OutboxRepository
+from src.infrastructure.persistence.repositories.products import ProductRepository
+from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
 
 
 class UnitOfWork:

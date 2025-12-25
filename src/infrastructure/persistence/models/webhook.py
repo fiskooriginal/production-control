@@ -4,8 +4,8 @@ from sqlalchemy import JSON, Column
 from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
-from src.data.persistence.models.base import BaseModel
 from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.infrastructure.persistence.models.base import BaseModel
 
 
 class WebhookSubscription(BaseModel, table=True):

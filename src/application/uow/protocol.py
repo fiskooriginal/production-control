@@ -10,7 +10,7 @@ from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
 class UnitOfWorkProtocol(Protocol):
     """
     Протокол UnitOfWork для управления транзакциями и доступа к репозиториям.
-    Зависит от domain repository protocols, а не от concrete data.persistence классов.
+    Зависит от domain repository protocols, а не от concrete infrastructure.persistence классов.
     """
 
     @abstractmethod

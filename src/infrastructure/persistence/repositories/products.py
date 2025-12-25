@@ -5,11 +5,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.mappers.products import to_domain_entity, to_persistence_model
-from src.data.persistence.models.product import Product
 from src.domain.products.entities import ProductEntity
 from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.infrastructure.persistence.models.product import Product
 
 
 class ProductRepository(ProductRepositoryProtocol):

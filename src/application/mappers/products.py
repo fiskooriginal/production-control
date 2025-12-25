@@ -1,6 +1,6 @@
-from src.data.persistence.models.product import Product
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
+from src.infrastructure.persistence.models.product import Product
 
 
 def to_domain_entity(product_model: Product) -> ProductEntity:

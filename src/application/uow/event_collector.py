@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from src.application.events.serializer import EventSerializer
 from src.application.uow.identity_map import IdentityMap
-from src.data.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
 from src.domain.shared.events import DomainEvent
+from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
 
 
 class EventCollector:

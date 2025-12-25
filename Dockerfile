@@ -38,4 +38,4 @@ COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY ./src ./src
 COPY ./alembic.ini ./alembic.ini
 
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "src.presentation.main:app", "--host", "0.0.0.0", "--port", "8000"]

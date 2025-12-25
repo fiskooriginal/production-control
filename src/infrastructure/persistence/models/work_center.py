@@ -4,10 +4,10 @@ from uuid import UUID
 from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Relationship
 
-from src.data.persistence.models.base import BaseModel
+from src.infrastructure.persistence.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from src.data.persistence.models.batch import Batch
+    from src.infrastructure.persistence.models.batch import Batch
 
 
 class WorkCenter(BaseModel, table=True):

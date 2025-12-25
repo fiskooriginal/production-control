@@ -5,11 +5,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.mappers.work_centers import to_domain_entity, to_persistence_model
-from src.data.persistence.models.work_center import WorkCenter
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.infrastructure.persistence.models.work_center import WorkCenter
 
 
 class WorkCenterRepository(WorkCenterRepositoryProtocol):

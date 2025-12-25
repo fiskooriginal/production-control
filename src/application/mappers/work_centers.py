@@ -1,6 +1,6 @@
-from src.data.persistence.models.work_center import WorkCenter
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.value_objects import WorkCenterIdentifier, WorkCenterName
+from src.infrastructure.persistence.models.work_center import WorkCenter
 
 
 def to_domain_entity(work_center_model: WorkCenter) -> WorkCenterEntity:
