@@ -1,26 +1,25 @@
-from datetime import datetime
-from uuid import UUID
-
+from src.application.dtos.products import AggregateProductInputDTO
 from src.application.uow import UnitOfWorkProtocol
 from src.domain.products.entities import ProductEntity
 from src.domain.shared.exceptions import InvalidStateError
 
 
 class AggregateProductUseCase:
-    """
-    Use case для агрегации продукта.
-    Использует UnitOfWork для атомарного обновления продукта и сохранения доменных событий.
-    """
-
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 
-    async def execute(self, product_id: UUID, aggregated_at: datetime | None = None) -> ProductEntity:
+    async def execute(self, input_dto: AggregateProductInputDTO) -> ProductEntity:
         """Агрегирует продукт с автоматическим сохранением доменных событий в outbox"""
         async with self._uow:
-            product = await self._uow.products.get_or_raise(product_id)
+            # Загружаем доменную сущность из репозитория
+            product = await self._uow.products.get_or_raise(input_dto.product_id)
+
+            # Валидация на уровне use case
             if product.is_aggregated:
                 raise InvalidStateError("Продукт уже агрегирован")
-            product.aggregate(aggregated_at)
-            result = await self._uow.products.update(product)
-            return result
+
+            # Работаем с доменной сущностью
+            product.aggregate(input_dto.aggregated_at)
+
+            # Сохраняем и возвращаем доменную сущность
+            return await self._uow.products.update(product)

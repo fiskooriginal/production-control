@@ -1,7 +1,7 @@
+import builtins
 from typing import Any
 from uuid import UUID
 
-from src.application.dtos.batches import BatchFilters
 from src.application.uow.identity_map import IdentityMap
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.repositories import BatchRepositoryProtocol
@@ -25,8 +25,8 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
         self._repository = repository
         self._identity_map = identity_map
 
-    async def create(self, entity: BatchEntity) -> BatchEntity:
-        result = await self._repository.create(entity)
+    async def create(self, domain_entity: BatchEntity) -> BatchEntity:
+        result = await self._repository.create(domain_entity)
         self._identity_map.add(result)
         return result
 
@@ -41,8 +41,8 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def update(self, entity: BatchEntity) -> BatchEntity:
-        result = await self._repository.update(entity)
+    async def update(self, domain_entity: BatchEntity) -> BatchEntity:
+        result = await self._repository.update(domain_entity)
         self._identity_map.add(result)
         return result
 
@@ -54,7 +54,7 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
 
     async def list(
         self,
-        filters: BatchFilters | None = None,
+        filters: dict[str, Any] | None = None,
         pagination: PaginationSpec | None = None,
         sort: SortSpec | None = None,
     ) -> QueryResult[BatchEntity]:
@@ -69,7 +69,7 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
             self._identity_map.add(result)
         return result
 
-    async def get_by_work_center(self, work_center_uuid: UUID) -> list[BatchEntity]:
+    async def get_by_work_center(self, work_center_uuid: UUID) -> builtins.list[BatchEntity]:
         results = await self._repository.get_by_work_center(work_center_uuid)
         for entity in results:
             self._identity_map.add(entity)
@@ -85,8 +85,8 @@ class ProductRepositoryProxy(ProductRepositoryProtocol):
         self._repository = repository
         self._identity_map = identity_map
 
-    async def create(self, entity: ProductEntity) -> ProductEntity:
-        result = await self._repository.create(entity)
+    async def create(self, domain_entity: ProductEntity) -> ProductEntity:
+        result = await self._repository.create(domain_entity)
         self._identity_map.add(result)
         return result
 
@@ -101,8 +101,8 @@ class ProductRepositoryProxy(ProductRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def update(self, entity: ProductEntity) -> ProductEntity:
-        result = await self._repository.update(entity)
+    async def update(self, domain_entity: ProductEntity) -> ProductEntity:
+        result = await self._repository.update(domain_entity)
         self._identity_map.add(result)
         return result
 
@@ -129,8 +129,14 @@ class ProductRepositoryProxy(ProductRepositoryProtocol):
             self._identity_map.add(result)
         return result
 
-    async def get_aggregated(self) -> list[ProductEntity]:
+    async def get_aggregated(self) -> builtins.list[ProductEntity]:
         results = await self._repository.get_aggregated()
+        for entity in results:
+            self._identity_map.add(entity)
+        return results
+
+    async def get_by_ids(self, product_ids: builtins.list[UUID]) -> builtins.list[ProductEntity]:
+        results = await self._repository.get_by_ids(product_ids)
         for entity in results:
             self._identity_map.add(entity)
         return results
@@ -145,8 +151,8 @@ class WorkCenterRepositoryProxy(WorkCenterRepositoryProtocol):
         self._repository = repository
         self._identity_map = identity_map
 
-    async def create(self, entity: WorkCenterEntity, author: UUID | None = None) -> WorkCenterEntity:
-        result = await self._repository.create(entity, author=author)
+    async def create(self, domain_entity: WorkCenterEntity, author: UUID | None = None) -> WorkCenterEntity:
+        result = await self._repository.create(domain_entity, author=author)
         self._identity_map.add(result)
         return result
 
@@ -161,8 +167,8 @@ class WorkCenterRepositoryProxy(WorkCenterRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def update(self, entity: WorkCenterEntity) -> WorkCenterEntity:
-        result = await self._repository.update(entity)
+    async def update(self, domain_entity: WorkCenterEntity) -> WorkCenterEntity:
+        result = await self._repository.update(domain_entity)
         self._identity_map.add(result)
         return result
 

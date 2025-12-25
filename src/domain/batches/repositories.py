@@ -1,7 +1,6 @@
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
-from src.application.dtos.batches import BatchFilters
 from src.domain.batches.entities import BatchEntity
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.shared.repository_protocol import BaseRepositoryProtocol
@@ -18,7 +17,7 @@ class BatchRepositoryProtocol(BaseRepositoryProtocol[BatchEntity], Protocol):
 
     async def list(
         self,
-        filters: BatchFilters | None = None,
+        filters: dict[str, Any] | None = None,
         pagination: PaginationSpec | None = None,
         sort: SortSpec | None = None,
     ) -> QueryResult[BatchEntity]:

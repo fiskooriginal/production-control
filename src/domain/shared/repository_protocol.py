@@ -7,8 +7,8 @@ T = TypeVar("T")
 
 
 class BaseRepositoryProtocol(Protocol[T]):
-    async def create(self, entity: T) -> T:
-        """Создает новую сущность в репозитории. Выбрасывает AlreadyExistsError, если сущность уже существует."""
+    async def create(self, domain_entity: T) -> T:
+        """Создает новую доменную сущность в репозитории. Выбрасывает AlreadyExistsError, если сущность уже существует."""
         ...
 
     async def get(self, uuid: UUID) -> T | None:
@@ -19,8 +19,8 @@ class BaseRepositoryProtocol(Protocol[T]):
         """Получает сущность по UUID. Выбрасывает DoesNotExistError, если сущность не найдена."""
         ...
 
-    async def update(self, entity: T) -> T:
-        """Обновляет существующую сущность. Выбрасывает DoesNotExistError, если сущность не найдена."""
+    async def update(self, domain_entity: T) -> T:
+        """Обновляет существующую доменную сущность. Выбрасывает DoesNotExistError, если сущность не найдена."""
         ...
 
     async def delete(self, uuid: UUID) -> None:

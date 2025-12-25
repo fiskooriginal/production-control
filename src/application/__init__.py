@@ -4,6 +4,7 @@ from src.application.use_cases.batches import (
     CloseBatchUseCase,
     CreateBatchUseCase,
     ListBatchesUseCase,
+    RemoveProductFromBatchUseCase,
 )
 from src.application.use_cases.products import AggregateProductUseCase
 
@@ -14,4 +15,5 @@ __all__ = [
     "CloseBatchUseCase",
     "CreateBatchUseCase",
     "ListBatchesUseCase",
+    "RemoveProductFromBatchUseCase",
 ]

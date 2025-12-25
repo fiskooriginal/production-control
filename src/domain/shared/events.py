@@ -5,7 +5,7 @@ from uuid import UUID
 from src.domain.shared.time import utc_now
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DomainEvent:
-    occurred_at: datetime = field(default_factory=utc_now)
     aggregate_id: UUID
+    occurred_at: datetime = field(default_factory=utc_now)

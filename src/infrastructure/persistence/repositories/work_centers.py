@@ -4,11 +4,11 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.mappers.work_centers import to_domain_entity, to_persistence_model
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.infrastructure.persistence.mappers.work_centers import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.work_center import WorkCenter
 
 
@@ -16,12 +16,12 @@ class WorkCenterRepository(WorkCenterRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def create(self, entity: WorkCenterEntity, author: UUID | None = None) -> WorkCenterEntity:
+    async def create(self, domain_entity: WorkCenterEntity, author: UUID | None = None) -> WorkCenterEntity:
         """Создает новый рабочий центр в репозитории"""
-        existing = await self.get(entity.uuid)
+        existing = await self.get(domain_entity.uuid)
         if existing is not None:
-            raise AlreadyExistsError(f"Рабочий центр с UUID {entity.uuid} уже существует")
-        work_center_model = to_persistence_model(entity, existing_model=None)
+            raise AlreadyExistsError(f"Рабочий центр с UUID {domain_entity.uuid} уже существует")
+        work_center_model = to_persistence_model(domain_entity, existing_model=None)
         if author is not None:
             work_center_model.author = author
         self._session.add(work_center_model)
@@ -42,12 +42,12 @@ class WorkCenterRepository(WorkCenterRepositoryProtocol):
             raise DoesNotExistError(f"Рабочий центр с UUID {uuid} не найден")
         return work_center
 
-    async def update(self, entity: WorkCenterEntity) -> WorkCenterEntity:
+    async def update(self, domain_entity: WorkCenterEntity) -> WorkCenterEntity:
         """Обновляет существующий рабочий центр"""
-        work_center_model = await self._session.get(WorkCenter, entity.uuid)
+        work_center_model = await self._session.get(WorkCenter, domain_entity.uuid)
         if work_center_model is None:
-            raise DoesNotExistError(f"Рабочий центр с UUID {entity.uuid} не найден")
-        updated_model = to_persistence_model(entity, existing_model=work_center_model)
+            raise DoesNotExistError(f"Рабочий центр с UUID {domain_entity.uuid} не найден")
+        updated_model = to_persistence_model(domain_entity, existing_model=work_center_model)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(work_center_model, key, value)
         await self._session.flush()

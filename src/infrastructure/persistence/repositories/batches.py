@@ -4,13 +4,12 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.dtos.batches import BatchFilters
-from src.application.mappers.batches import to_domain_entity, to_persistence_model
-from src.application.mappers.products import to_domain_entity as product_to_domain
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.infrastructure.persistence.mappers.batches import to_domain_entity, to_persistence_model
+from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
 from src.infrastructure.persistence.models.batch import Batch
 
 
@@ -18,12 +17,12 @@ class BatchRepository(BatchRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def create(self, entity: BatchEntity) -> BatchEntity:
+    async def create(self, domain_entity: BatchEntity) -> BatchEntity:
         """Создает новую партию в репозитории"""
-        existing = await self.get(entity.uuid)
+        existing = await self.get(domain_entity.uuid)
         if existing is not None:
-            raise AlreadyExistsError(f"Партия с UUID {entity.uuid} уже существует")
-        batch_model = to_persistence_model(entity)
+            raise AlreadyExistsError(f"Партия с UUID {domain_entity.uuid} уже существует")
+        batch_model = to_persistence_model(domain_entity)
         self._session.add(batch_model)
         await self._session.flush()
         return to_domain_entity(batch_model, product_mapper=product_to_domain)
@@ -44,12 +43,12 @@ class BatchRepository(BatchRepositoryProtocol):
             raise DoesNotExistError(f"Партия с UUID {uuid} не найдена")
         return batch
 
-    async def update(self, entity: BatchEntity) -> BatchEntity:
+    async def update(self, domain_entity: BatchEntity) -> BatchEntity:
         """Обновляет существующую партию"""
-        batch_model = await self._session.get(Batch, entity.uuid)
+        batch_model = await self._session.get(Batch, domain_entity.uuid)
         if batch_model is None:
-            raise DoesNotExistError(f"Партия с UUID {entity.uuid} не найдена")
-        updated_model = to_persistence_model(entity)
+            raise DoesNotExistError(f"Партия с UUID {domain_entity.uuid} не найдена")
+        updated_model = to_persistence_model(domain_entity)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(batch_model, key, value)
         await self._session.flush()
@@ -136,21 +135,9 @@ class BatchRepository(BatchRepositoryProtocol):
 
     async def list(
         self,
-        filters: BatchFilters | None = None,
+        filters: dict[str, Any] | None = None,
         pagination: PaginationSpec | None = None,
         sort: SortSpec | None = None,
     ) -> QueryResult[BatchEntity]:
         """Получает список партий с фильтрацией, пагинацией и сортировкой"""
-        filter_dict: dict[str, Any] = {}
-        if filters:
-            if filters.is_closed is not None:
-                filter_dict["is_closed"] = filters.is_closed
-            if filters.batch_number is not None:
-                filter_dict["batch_number"] = filters.batch_number
-            if filters.batch_date is not None:
-                filter_dict["batch_date"] = filters.batch_date
-            if filters.work_center_id is not None:
-                filter_dict["work_center_id"] = filters.work_center_id
-            if filters.shift is not None:
-                filter_dict["shift"] = filters.shift
-        return await self._list_base(pagination=pagination, sort=sort, filters=filter_dict)
+        return await self._list_base(pagination=pagination, sort=sort, filters=filters)

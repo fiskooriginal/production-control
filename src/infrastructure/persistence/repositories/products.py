@@ -1,14 +1,15 @@
+import builtins
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.mappers.products import to_domain_entity, to_persistence_model
 from src.domain.products.entities import ProductEntity
 from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.infrastructure.persistence.mappers.products import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.product import Product
 
 
@@ -16,12 +17,12 @@ class ProductRepository(ProductRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def create(self, entity: ProductEntity) -> ProductEntity:
+    async def create(self, domain_entity: ProductEntity) -> ProductEntity:
         """Создает новый продукт в репозитории"""
-        existing = await self.get(entity.uuid)
+        existing = await self.get(domain_entity.uuid)
         if existing is not None:
-            raise AlreadyExistsError(f"Продукт с UUID {entity.uuid} уже существует")
-        product_model = to_persistence_model(entity)
+            raise AlreadyExistsError(f"Продукт с UUID {domain_entity.uuid} уже существует")
+        product_model = to_persistence_model(domain_entity)
         self._session.add(product_model)
         await self._session.flush()
         return to_domain_entity(product_model)
@@ -40,12 +41,12 @@ class ProductRepository(ProductRepositoryProtocol):
             raise DoesNotExistError(f"Продукт с UUID {uuid} не найден")
         return product
 
-    async def update(self, entity: ProductEntity) -> ProductEntity:
+    async def update(self, domain_entity: ProductEntity) -> ProductEntity:
         """Обновляет существующий продукт"""
-        product_model = await self._session.get(Product, entity.uuid)
+        product_model = await self._session.get(Product, domain_entity.uuid)
         if product_model is None:
-            raise DoesNotExistError(f"Продукт с UUID {entity.uuid} не найден")
-        updated_model = to_persistence_model(entity)
+            raise DoesNotExistError(f"Продукт с UUID {domain_entity.uuid} не найден")
+        updated_model = to_persistence_model(domain_entity)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(product_model, key, value)
         await self._session.flush()
@@ -111,9 +112,18 @@ class ProductRepository(ProductRepositoryProtocol):
             return None
         return to_domain_entity(product_model)
 
-    async def get_aggregated(self) -> list[ProductEntity]:
+    async def get_aggregated(self) -> builtins.list[ProductEntity]:
         """Находит все агрегированные продукты"""
         stmt = select(Product).where(Product.is_aggregated.is_(True))
+        result = await self._session.execute(stmt)
+        products = result.scalars().all()
+        return [to_domain_entity(p) for p in products]
+
+    async def get_by_ids(self, ids: builtins.list[UUID]) -> builtins.list[ProductEntity]:
+        """Возвращает все продукты из переданного списка ID"""
+        if not ids:
+            return []
+        stmt = select(Product).where(Product.uuid.in_(ids))
         result = await self._session.execute(stmt)
         products = result.scalars().all()
         return [to_domain_entity(p) for p in products]

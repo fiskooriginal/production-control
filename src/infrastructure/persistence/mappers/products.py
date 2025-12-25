@@ -4,7 +4,7 @@ from src.infrastructure.persistence.models.product import Product
 
 
 def to_domain_entity(product_model: Product) -> ProductEntity:
-    """Конвертирует persistence модель Product в domain entity ProductEntity"""
+    """Конвертирует persistence модель Product в domain domain_entity ProductEntity"""
     return ProductEntity(
         uuid=product_model.uuid,
         created_at=product_model.created_at,
@@ -17,7 +17,7 @@ def to_domain_entity(product_model: Product) -> ProductEntity:
 
 
 def to_persistence_model(product_entity: ProductEntity) -> Product:
-    """Конвертирует domain entity ProductEntity в persistence модель Product"""
+    """Конвертирует domain domain_entity ProductEntity в persistence модель Product"""
     return Product(
         uuid=product_entity.uuid,
         created_at=product_entity.created_at,

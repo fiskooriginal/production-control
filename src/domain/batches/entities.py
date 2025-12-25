@@ -15,10 +15,10 @@ from src.domain.batches.value_objects import (
 )
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import InvalidStateError
+from src.domain.shared.time import utc_now
 
 if TYPE_CHECKING:
     from src.domain.products.entities import ProductEntity
-from src.domain.shared.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)
@@ -80,10 +80,9 @@ class BatchEntity(BaseEntity):
         """Удаляет продукт из партии"""
         if self.is_closed:
             raise InvalidStateError("Нельзя удалять продукты из закрытой партии")
-        product_index = next((i for i, p in enumerate(self.products) if p.uuid == product_id), None)
-        if product_index is None:
+        if product_id not in self.product_ids:
             raise InvalidStateError("Продукт не найден в партии")
-        self.products.pop(product_index)
+        self.product_ids.remove(product_id)
         self.updated_at = utc_now()
         self.add_domain_event(
             ProductRemovedFromBatchEvent(aggregate_id=self.uuid, product_id=product_id, batch_id=self.uuid)
