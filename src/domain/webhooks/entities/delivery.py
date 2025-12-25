@@ -5,6 +5,7 @@ from uuid import UUID
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import EmptyFieldError, InvalidStateError, InvalidValueError
+from src.domain.shared.time import utc_now
 from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
 
 
@@ -39,7 +40,7 @@ class WebhookDeliveryEntity(BaseEntity):
     def mark_success(self, response_status: int, response_body: str, delivered_at: datetime | None = None) -> None:
         """Отмечает доставку как успешную"""
         if delivered_at is None:
-            delivered_at = datetime.now()
+            delivered_at = utc_now()
         if not (100 <= response_status <= 599):
             raise InvalidValueError("HTTP статус должен быть в диапазоне 100-599")
         self.status = WebhookStatus.SUCCESS
@@ -47,15 +48,15 @@ class WebhookDeliveryEntity(BaseEntity):
         self.response_body = response_body
         self.delivered_at = delivered_at
         self.error_message = None
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
 
     def mark_failed(self, error_message: str) -> None:
         """Отмечает доставку как неудачную"""
         self.status = WebhookStatus.FAILED
         self.error_message = error_message
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
 
     def increment_attempts(self) -> None:
         """Увеличивает количество попыток"""
         self.attempts += 1
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()

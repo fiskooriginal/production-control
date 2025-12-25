@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import EmptyFieldError, InvalidValueError
+from src.domain.shared.time import utc_now
 from src.domain.webhooks.enums import WebhookEventType
 from src.domain.webhooks.exceptions import WebhookSubscriptionInvalidEventsError, WebhookSubscriptionInvalidUrlError
 
@@ -40,12 +40,12 @@ class WebhookSubscriptionEntity(BaseEntity):
     def activate(self) -> None:
         """Активирует подписку"""
         self.is_active = True
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
 
     def deactivate(self) -> None:
         """Деактивирует подписку"""
         self.is_active = False
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
 
     def update_events(self, events: list[WebhookEventType]) -> None:
         """Обновляет список событий"""
@@ -54,4 +54,4 @@ class WebhookSubscriptionEntity(BaseEntity):
         if not all(isinstance(event, WebhookEventType) for event in events):
             raise WebhookSubscriptionInvalidEventsError("все события должны быть типа WebhookEventType")
         self.events = events
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()

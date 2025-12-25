@@ -3,13 +3,14 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from src.domain.shared.events import DomainEvent
+from src.domain.shared.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)
 class BaseEntity:
     uuid: UUID = field(default_factory=uuid4)
 
-    created_at: datetime = field(default_factory=lambda: datetime.now())
+    created_at: datetime = field(default_factory=utc_now)
     updated_at: datetime | None = None
     _domain_events: list[DomainEvent] = field(default_factory=list, init=False, repr=False)
 

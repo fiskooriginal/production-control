@@ -18,6 +18,7 @@ from src.domain.shared.exceptions import InvalidStateError
 
 if TYPE_CHECKING:
     from src.domain.products.entities import ProductEntity
+from src.domain.shared.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)
@@ -53,10 +54,10 @@ class BatchEntity(BaseEntity):
         if self.is_closed:
             raise InvalidStateError("Партия уже закрыта")
         if closed_at is None:
-            closed_at = datetime.now()
+            closed_at = utc_now()
         self.is_closed = True
         self.closed_at = closed_at
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
         self.add_domain_event(
             BatchClosedEvent(aggregate_id=self.uuid, batch_number=self.batch_number, closed_at=closed_at)
         )
@@ -70,7 +71,7 @@ class BatchEntity(BaseEntity):
         if any(p.uuid == product.uuid for p in self.products):
             raise InvalidStateError("Продукт уже добавлен в партию")
         self.products.append(product)
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
         self.add_domain_event(
             ProductAddedToBatchEvent(aggregate_id=self.uuid, product_id=product.uuid, batch_id=self.uuid)
         )
@@ -83,7 +84,7 @@ class BatchEntity(BaseEntity):
         if product_index is None:
             raise InvalidStateError("Продукт не найден в партии")
         self.products.pop(product_index)
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
         self.add_domain_event(
             ProductRemovedFromBatchEvent(aggregate_id=self.uuid, product_id=product_id, batch_id=self.uuid)
         )
@@ -94,4 +95,4 @@ class BatchEntity(BaseEntity):
             raise InvalidStateError("Нельзя изменять время смены для закрытой партии")
         new_range = ShiftTimeRange(start=start, end=end)
         self.shift_time_range = new_range
-        self.updated_at = datetime.now()
+        self.updated_at = utc_now()
