@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column('last_error', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('correlation_id', sa.Uuid(), nullable=True),
         sa.Column('causation_id', sa.Uuid(), nullable=True),
-        sa.Column('metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column('event_metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column('dedup_key', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.PrimaryKeyConstraint('uuid'),
         sa.UniqueConstraint('uuid'),
