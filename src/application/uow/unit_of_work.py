@@ -107,7 +107,7 @@ class UnitOfWork:
             await self._outbox_repository.insert_events(outbox_events)
 
         await self._session.commit()
-        logger.info("Transaction committed successfully")
+        logger.info("Transaction committed successfully (commit)")
 
         self._event_collector.clear_events()
         self._identity_map.clear()
@@ -117,6 +117,6 @@ class UnitOfWork:
         Откатывает транзакцию.
         События НЕ очищаются - это позволяет им остаться для retry логики.
         """
-        logger.warning("Rolling back transaction")
+        logger.warning("Transtaction rolled back (rollback)")
         await self._session.rollback()
         self._identity_map.clear()
