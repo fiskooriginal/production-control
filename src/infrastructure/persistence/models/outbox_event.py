@@ -8,7 +8,7 @@ from sqlmodel import Column, Field
 from src.infrastructure.persistence.models.base import BaseModel
 
 
-class OutboxEventStatus(str, Enum):
+class OutboxEventStatusEnum(str, Enum):
     """Статус события в outbox"""
 
     PENDING = "pending"
@@ -34,12 +34,12 @@ class OutboxEvent(BaseModel, table=True):
     aggregate_id: UUID = Field(nullable=False, index=True)
     payload: dict = Field(sa_column=Column(JSON, nullable=False))
     occurred_at: datetime = Field(nullable=False)
-    status: OutboxEventStatus = Field(default=OutboxEventStatus.PENDING, nullable=False)
+    status: OutboxEventStatusEnum = Field(default=OutboxEventStatusEnum.PENDING, nullable=False)
     attempts: int = Field(default=0, nullable=False)
     locked_until: datetime | None = Field(default=None, nullable=True)
     processed_at: datetime | None = Field(default=None, nullable=True)
     last_error: str | None = Field(default=None, nullable=True)
     correlation_id: UUID | None = Field(default=None, nullable=True)
     causation_id: UUID | None = Field(default=None, nullable=True)
-    event_metadata: dict | None = Field(sa_column=Column(JSON, nullable=True), default=None)
+    event_metadata: dict | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     dedup_key: str | None = Field(default=None, nullable=True, unique=True)
