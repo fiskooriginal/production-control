@@ -29,6 +29,7 @@ from src.infrastructure.exceptions import (
     DatabaseException,
     InfrastructureException,
     MappingException,
+    OutboxRepositoryException,
 )
 from src.presentation.exceptions import (
     PresentationException,
@@ -176,6 +177,14 @@ async def mapping_exception_handler(request: Request, exc: MappingException) -> 
     )
 
 
+async def outbox_repository_exception_handler(request: Request, exc: OutboxRepositoryException) -> JSONResponse:
+    logger.exception(f"Outbox repository error: {exc.message} path={request.url.path}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Ошибка при работе с outbox репозиторием"},
+    )
+
+
 async def infrastructure_exception_handler(request: Request, exc: InfrastructureException) -> JSONResponse:
     logger.exception(f"Infrastructure error: {exc.message} path={request.url.path}")
     return JSONResponse(
@@ -248,6 +257,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(DatabaseException, database_exception_handler)
     app.add_exception_handler(ConnectionException, connection_exception_handler)
     app.add_exception_handler(MappingException, mapping_exception_handler)
+    app.add_exception_handler(OutboxRepositoryException, outbox_repository_exception_handler)
     app.add_exception_handler(InfrastructureException, infrastructure_exception_handler)
 
     # Presentation exceptions

@@ -17,3 +17,9 @@ class MappingException(InfrastructureException):
     """Исключение для ошибок маппинга между доменными и persistence моделями"""
 
     ...
+
+
+class OutboxRepositoryException(InfrastructureException):
+    """Исключение для ошибок работы с outbox репозиторием"""
+
+    ...

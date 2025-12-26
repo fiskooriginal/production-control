@@ -3,6 +3,7 @@ from src.infrastructure.exceptions.database import (
     ConnectionException,
     DatabaseException,
     MappingException,
+    OutboxRepositoryException,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "DatabaseException",
     "InfrastructureException",
     "MappingException",
+    "OutboxRepositoryException",
 ]
