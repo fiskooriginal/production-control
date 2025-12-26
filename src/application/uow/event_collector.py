@@ -1,9 +1,9 @@
-from datetime import UTC, datetime
 from uuid import uuid4
 
 from src.application.events.serializer import EventSerializer
 from src.application.uow.identity_map import IdentityMap
 from src.domain.shared.events import DomainEvent
+from src.domain.shared.time import utc_now
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
 
 
@@ -42,7 +42,7 @@ class EventCollector:
     def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
         serialized = EventSerializer.serialize(event)
-        now = datetime.now(UTC)
+        now = utc_now()
 
         dedup_key = self._generate_dedup_key(event)
 
