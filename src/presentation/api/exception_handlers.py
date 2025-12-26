@@ -8,6 +8,7 @@ from src.application.exceptions import (
     BusinessRuleViolationException,
     ValidationException,
 )
+from src.core.logging import get_logger
 from src.domain.shared.exceptions import (
     AlreadyExistsError,
     DoesNotExistError,
@@ -34,8 +35,11 @@ from src.presentation.exceptions import (
     SerializationException,
 )
 
+logger = get_logger("exception_handler")
+
 
 async def does_not_exist_error_handler(request: Request, exc: DoesNotExistError) -> JSONResponse:
+    logger.info(f"Resource not found: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={"detail": exc.message},
@@ -43,6 +47,7 @@ async def does_not_exist_error_handler(request: Request, exc: DoesNotExistError)
 
 
 async def already_exists_error_handler(request: Request, exc: AlreadyExistsError) -> JSONResponse:
+    logger.warning(f"Resource already exists: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
         content={"detail": exc.message},
@@ -50,6 +55,7 @@ async def already_exists_error_handler(request: Request, exc: AlreadyExistsError
 
 
 async def invalid_value_error_handler(request: Request, exc: InvalidValueError) -> JSONResponse:
+    logger.warning(f"Invalid value: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -57,6 +63,7 @@ async def invalid_value_error_handler(request: Request, exc: InvalidValueError) 
 
 
 async def invalid_state_error_handler(request: Request, exc: InvalidStateError) -> JSONResponse:
+    logger.warning(f"Invalid state: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
         content={"detail": exc.message},
@@ -64,6 +71,7 @@ async def invalid_state_error_handler(request: Request, exc: InvalidStateError) 
 
 
 async def empty_field_error_handler(request: Request, exc: EmptyFieldError) -> JSONResponse:
+    logger.warning(f"Empty field: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -71,6 +79,7 @@ async def empty_field_error_handler(request: Request, exc: EmptyFieldError) -> J
 
 
 async def invalid_date_range_error_handler(request: Request, exc: InvalidDateRangeError) -> JSONResponse:
+    logger.warning(f"Invalid date range: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -78,6 +87,7 @@ async def invalid_date_range_error_handler(request: Request, exc: InvalidDateRan
 
 
 async def webhook_invalid_url_error_handler(request: Request, exc: WebhookSubscriptionInvalidUrlError) -> JSONResponse:
+    logger.warning(f"Invalid webhook URL: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -87,6 +97,7 @@ async def webhook_invalid_url_error_handler(request: Request, exc: WebhookSubscr
 async def webhook_invalid_events_error_handler(
     request: Request, exc: WebhookSubscriptionInvalidEventsError
 ) -> JSONResponse:
+    logger.warning(f"Invalid webhook events: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -94,6 +105,7 @@ async def webhook_invalid_events_error_handler(
 
 
 async def multiple_found_error_handler(request: Request, exc: MultipleFoundError) -> JSONResponse:
+    logger.exception(f"Multiple records found: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Внутренняя ошибка: найдено несколько записей вместо одной"},
@@ -101,6 +113,7 @@ async def multiple_found_error_handler(request: Request, exc: MultipleFoundError
 
 
 async def repository_operation_error_handler(request: Request, exc: RepositoryOperationError) -> JSONResponse:
+    logger.exception(f"Repository operation error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Ошибка операции с хранилищем данных"},
@@ -108,6 +121,7 @@ async def repository_operation_error_handler(request: Request, exc: RepositoryOp
 
 
 async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
+    logger.info(f"Domain exception: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": exc.message},
@@ -115,6 +129,7 @@ async def domain_exception_handler(request: Request, exc: DomainException) -> JS
 
 
 async def validation_exception_handler(request: Request, exc: ValidationException) -> JSONResponse:
+    logger.warning(f"Validation error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -122,6 +137,7 @@ async def validation_exception_handler(request: Request, exc: ValidationExceptio
 
 
 async def business_rule_violation_handler(request: Request, exc: BusinessRuleViolationException) -> JSONResponse:
+    logger.warning(f"Business rule violation: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
         content={"detail": exc.message},
@@ -129,6 +145,7 @@ async def business_rule_violation_handler(request: Request, exc: BusinessRuleVio
 
 
 async def application_exception_handler(request: Request, exc: ApplicationException) -> JSONResponse:
+    logger.warning(f"Application exception: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": exc.message},
@@ -136,6 +153,7 @@ async def application_exception_handler(request: Request, exc: ApplicationExcept
 
 
 async def database_exception_handler(request: Request, exc: DatabaseException) -> JSONResponse:
+    logger.exception(f"Database error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Ошибка при работе с базой данных"},
@@ -143,6 +161,7 @@ async def database_exception_handler(request: Request, exc: DatabaseException) -
 
 
 async def connection_exception_handler(request: Request, exc: ConnectionException) -> JSONResponse:
+    logger.exception(f"Connection error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         content={"detail": "Ошибка подключения к внешнему сервису"},
@@ -150,6 +169,7 @@ async def connection_exception_handler(request: Request, exc: ConnectionExceptio
 
 
 async def mapping_exception_handler(request: Request, exc: MappingException) -> JSONResponse:
+    logger.exception(f"Mapping error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Ошибка преобразования данных"},
@@ -157,6 +177,7 @@ async def mapping_exception_handler(request: Request, exc: MappingException) -> 
 
 
 async def infrastructure_exception_handler(request: Request, exc: InfrastructureException) -> JSONResponse:
+    logger.exception(f"Infrastructure error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Внутренняя ошибка инфраструктуры"},
@@ -164,6 +185,7 @@ async def infrastructure_exception_handler(request: Request, exc: Infrastructure
 
 
 async def serialization_exception_handler(request: Request, exc: SerializationException) -> JSONResponse:
+    logger.warning(f"Serialization error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": exc.message},
@@ -171,6 +193,7 @@ async def serialization_exception_handler(request: Request, exc: SerializationEx
 
 
 async def presentation_exception_handler(request: Request, exc: PresentationException) -> JSONResponse:
+    logger.warning(f"Presentation error: {exc.message} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": exc.message},
@@ -178,6 +201,7 @@ async def presentation_exception_handler(request: Request, exc: PresentationExce
 
 
 async def pydantic_validation_error_handler(request: Request, exc: ValidationError) -> JSONResponse:
+    logger.warning(f"Pydantic validation error path={request.url.path} errors={exc.errors()!r}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Ошибка валидации данных", "errors": exc.errors()},
@@ -185,6 +209,7 @@ async def pydantic_validation_error_handler(request: Request, exc: ValidationErr
 
 
 async def request_validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    logger.warning(f"Request validation error path={request.url.path} errors={exc.errors()!r}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Ошибка валидации запроса", "errors": exc.errors()},
@@ -192,6 +217,7 @@ async def request_validation_error_handler(request: Request, exc: RequestValidat
 
 
 async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception(f"Unexpected error: {type(exc).__name__} {exc!s} path={request.url.path}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Внутренняя ошибка сервера"},

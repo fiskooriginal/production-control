@@ -23,3 +23,6 @@ REDIS_URL: str | None = getenv("REDIS_URL")
 
 # Validation
 TEXT_MAX_LENGTH: int | None = int(getenv("TEXT_MAX_LENGTH", 255))
+
+# Logging settings
+LOG_LEVEL: str = getenv("LOG_LEVEL", "INFO")

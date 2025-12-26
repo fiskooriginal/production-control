@@ -10,6 +10,7 @@ from src.application.uow.proxy_repositories import (
     ProductRepositoryProxy,
     WorkCenterRepositoryProxy,
 )
+from src.core.logging import get_logger
 from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.products.repositories import ProductRepositoryProtocol
 from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
@@ -17,6 +18,8 @@ from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
 from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
+
+logger = get_logger("uow")
 
 
 class UnitOfWork:
@@ -77,6 +80,7 @@ class UnitOfWork:
         При исключении выполняет rollback, события НЕ очищаются.
         """
         if exc_type is not None:
+            logger.error(f"Transaction failed with {exc_type.__name__}: {exc_value}")
             await self.rollback()
         else:
             await self.commit()
@@ -97,9 +101,13 @@ class UnitOfWork:
         outbox_events = self._event_collector.collect_events()
 
         if outbox_events:
+            logger.info(f"Collected {len(outbox_events)} domain event(s)")
+            for event in outbox_events:
+                logger.debug(f"Event: {event.event_name} v{event.event_version} aggregate_id={event.aggregate_id}")
             await self._outbox_repository.insert_events(outbox_events)
 
         await self._session.commit()
+        logger.info("Transaction committed successfully")
 
         self._event_collector.clear_events()
         self._identity_map.clear()
@@ -109,5 +117,6 @@ class UnitOfWork:
         Откатывает транзакцию.
         События НЕ очищаются - это позволяет им остаться для retry логики.
         """
+        logger.warning("Rolling back transaction")
         await self._session.rollback()
         self._identity_map.clear()
