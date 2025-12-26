@@ -71,15 +71,15 @@ class AddProductToBatchUseCase:
         async with self._uow:
             batch = await self._uow.batches.get_or_raise(batch_id)
 
-            product = ProductEntity(
-                unique_code=ProductCode(unique_code),
-                batch_id=batch_id,
-            )
+            if batch.is_closed:
+                raise InvalidStateError("Нельзя добавлять продукты в закрытую партию")
 
-            saved_product = await self._uow.products.create(product)
-            batch.add_product(saved_product)
+            product = ProductEntity(unique_code=ProductCode(unique_code), batch_id=batch_id)
 
-            return await self._uow.batches.update(batch)
+            await self._uow.products.create(product)
+            batch.add_product(product)
+            await self._uow.batches.update(batch)
+            return batch
 
 
 class RemoveProductFromBatchUseCase:
@@ -103,15 +103,9 @@ class RemoveProductFromBatchUseCase:
             if product.batch_id != batch_id:
                 raise InvalidStateError("Продукт не принадлежит этой партии")
 
-            # Удаляем ID продукта из партии (генерирует domain event)
-            batch.remove_product_id(product_id)
-
-            # Удаляем продукт из БД (так как batch_id не может быть NULL)
             await self._uow.products.delete(product_id)
-
-            # Обновляем партию
+            batch.remove_product(product)
             await self._uow.batches.update(batch)
-
             return batch
 
 

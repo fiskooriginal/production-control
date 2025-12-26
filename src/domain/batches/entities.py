@@ -66,26 +66,31 @@ class BatchEntity(BaseEntity):
         """Добавляет продукт в партию"""
         if self.is_closed:
             raise InvalidStateError("Нельзя добавлять продукты в закрытую партию")
+
         if product.batch_id != self.uuid:
             raise InvalidStateError("Продукт должен принадлежать этой партии")
-        if any(p.uuid == product.uuid for p in self.products):
+
+        if product in self.products:
             raise InvalidStateError("Продукт уже добавлен в партию")
+
         self.products.append(product)
         self.updated_at = utc_now()
         self.add_domain_event(
             ProductAddedToBatchEvent(aggregate_id=self.uuid, product_id=product.uuid, batch_id=self.uuid)
         )
 
-    def remove_product(self, product_id: UUID) -> None:
+    def remove_product(self, product: "ProductEntity") -> None:
         """Удаляет продукт из партии"""
         if self.is_closed:
             raise InvalidStateError("Нельзя удалять продукты из закрытой партии")
-        if product_id not in self.product_ids:
+
+        if product not in self.products:
             raise InvalidStateError("Продукт не найден в партии")
-        self.product_ids.remove(product_id)
+
+        self.products.remove(product)
         self.updated_at = utc_now()
         self.add_domain_event(
-            ProductRemovedFromBatchEvent(aggregate_id=self.uuid, product_id=product_id, batch_id=self.uuid)
+            ProductRemovedFromBatchEvent(aggregate_id=self.uuid, product_id=product.uuid, batch_id=self.uuid)
         )
 
     def update_shift_time_range(self, start: datetime, end: datetime) -> None:
