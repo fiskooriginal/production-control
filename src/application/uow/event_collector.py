@@ -4,7 +4,8 @@ from src.application.events.serializer import EventSerializer
 from src.application.uow.identity_map import IdentityMap
 from src.domain.shared.events import DomainEvent
 from src.domain.shared.time import utc_now
-from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatus
+from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive
+from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 
 
 class EventCollector:
@@ -42,7 +43,6 @@ class EventCollector:
     def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
         serialized = EventSerializer.serialize(event)
-        now = utc_now()
 
         dedup_key = self._generate_dedup_key(event)
 
@@ -50,11 +50,11 @@ class EventCollector:
             uuid=uuid4(),
             event_name=serialized["event_name"],
             event_version=serialized["event_version"],
-            aggregate_id=event.aggregate_id,
+            aggregate_id=serialized["aggregate_id"],
             payload=serialized["payload"],
-            occurred_at=event.occurred_at,
-            created_at=now,
-            status=OutboxEventStatus.PENDING,
+            occurred_at=datetime_aware_to_naive(event.occurred_at),
+            created_at=datetime_aware_to_naive(utc_now()),
+            status=OutboxEventStatusEnum.PENDING,
             attempts=0,
             dedup_key=dedup_key,
         )
