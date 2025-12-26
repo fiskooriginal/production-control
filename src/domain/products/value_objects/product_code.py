@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from src.domain.shared.exceptions import EmptyFieldError
-from src.domain.shared.value_objects import ValueObject
+from src.domain.common.exceptions import EmptyFieldError
+from src.domain.common.value_objects import ValueObject
 
 
 @dataclass(frozen=True, slots=True)

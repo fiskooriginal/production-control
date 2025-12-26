@@ -1,8 +1,8 @@
 from typing import Protocol
 from uuid import UUID
 
+from src.domain.common.repository_protocol import BaseRepositoryProtocol
 from src.domain.products.entities import ProductEntity
-from src.domain.shared.repository_protocol import BaseRepositoryProtocol
 
 
 class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol):
@@ -14,6 +14,6 @@ class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol)
         """Возвращает все агрегированные продукты."""
         ...
 
-    async def get_by_ids(self, ids: list[UUID]) -> ProductEntity | None:
-        """Возвращает все продукты из переданного списка ID"""
+    async def get_by_ids(self, ids: list[UUID]) -> list[ProductEntity]:
+        """Возвращает все продукты из переданного списка ID."""
         ...

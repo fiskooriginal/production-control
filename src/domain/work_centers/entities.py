@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.domain.shared.entities import BaseEntity
+from src.domain.common.entities import BaseEntity
 from src.domain.work_centers.value_objects import WorkCenterIdentifier, WorkCenterName
 
 

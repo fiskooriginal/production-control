@@ -13,9 +13,9 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
-from src.domain.shared.entities import BaseEntity
-from src.domain.shared.exceptions import InvalidStateError
-from src.domain.shared.time import utc_now
+from src.domain.common.entities import BaseEntity
+from src.domain.common.exceptions import InvalidStateError
+from src.domain.common.time import utc_now
 
 if TYPE_CHECKING:
     from src.domain.products.entities import ProductEntity
@@ -48,6 +48,14 @@ class BatchEntity(BaseEntity):
             raise InvalidStateError("Время закрытия должно быть пустым для открытой партии")
         if self.products is None:
             self.products = []
+
+    def can_close(self) -> bool:
+        """Проверяет, можно ли закрыть партию"""
+        if self.is_closed:
+            return False
+        if not self.products:
+            return False
+        return all(product.is_aggregated for product in self.products)
 
     def close(self, closed_at: datetime | None = None) -> None:
         """Закрывает партию с валидацией"""

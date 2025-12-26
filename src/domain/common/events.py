@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
-from src.domain.shared.time import utc_now
+from src.domain.common.time import utc_now
 
 
 @dataclass(frozen=True, kw_only=True)

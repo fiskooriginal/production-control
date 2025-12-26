@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
-from src.domain.shared.queries import PaginationSpec, SortDirection
+from src.domain.common.queries import PaginationSpec, SortDirection
 
 
 class ProductSortField(str, Enum):

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from src.application.events.registry import EventRegistry
 from src.domain.batches.value_objects import BatchNumber
-from src.domain.shared.events import DomainEvent
+from src.domain.common.events import DomainEvent
 
 
 class EventSerializer:

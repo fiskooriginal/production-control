@@ -4,7 +4,7 @@ from uuid import UUID
 from src.application.queries.batches import BatchReadDTO, ListBatchesQuery
 from src.application.queries.products import ListProductsQuery, ProductReadDTO
 from src.application.queries.work_centers import ListWorkCentersQuery, WorkCenterReadDTO
-from src.domain.shared.queries import QueryResult
+from src.domain.common.queries import QueryResult
 
 
 class BatchQueryServiceProtocol(Protocol):

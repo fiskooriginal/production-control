@@ -11,9 +11,9 @@ from src.application.uow.proxy_repositories import (
     WorkCenterRepositoryProxy,
 )
 from src.core.logging import get_logger
-from src.domain.batches.repositories import BatchRepositoryProtocol
-from src.domain.products.repositories import ProductRepositoryProtocol
-from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.products.interfaces.repository import ProductRepositoryProtocol
+from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository

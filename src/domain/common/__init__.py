@@ -1,6 +1,6 @@
-from src.domain.shared.entities import BaseEntity
-from src.domain.shared.events import DomainEvent
-from src.domain.shared.exceptions import (
+from src.domain.common.entities import BaseEntity
+from src.domain.common.events import DomainEvent
+from src.domain.common.exceptions import (
     AlreadyExistsError,
     DoesNotExistError,
     DomainException,
@@ -12,8 +12,8 @@ from src.domain.shared.exceptions import (
     RepositoryException,
     RepositoryOperationError,
 )
-from src.domain.shared.queries import PaginationSpec, QueryResult, SortDirection, SortSpec
-from src.domain.shared.value_objects import ValueObject
+from src.domain.common.queries import PaginationSpec, QueryResult, SortDirection, SortSpec
+from src.domain.common.value_objects import ValueObject
 
 __all__ = [
     "AlreadyExistsError",

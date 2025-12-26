@@ -9,7 +9,7 @@ from src.application.exceptions import (
     ValidationException,
 )
 from src.core.logging import get_logger
-from src.domain.shared.exceptions import (
+from src.domain.common.exceptions import (
     AlreadyExistsError,
     DoesNotExistError,
     DomainException,

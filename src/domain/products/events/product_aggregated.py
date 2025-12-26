@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from src.domain.shared.events import DomainEvent
+from src.domain.common.events import DomainEvent
 
 
 @dataclass(frozen=True)

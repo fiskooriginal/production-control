@@ -4,7 +4,7 @@ from src.application.dtos.work_centers import CreateWorkCenterInputDTO, UpdateWo
 from src.application.mappers.work_centers import input_dto_to_entity, update_dto_to_entity
 from src.application.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
-from src.domain.shared.exceptions import InvalidStateError
+from src.domain.common.exceptions import InvalidStateError
 from src.domain.work_centers.entities import WorkCenterEntity
 
 logger = get_logger("use_case.work_centers")

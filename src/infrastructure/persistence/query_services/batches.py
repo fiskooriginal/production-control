@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.queries.batches import BatchReadDTO, BatchSortField, ListBatchesQuery
 from src.application.queries.ports import BatchQueryServiceProtocol
-from src.domain.shared.queries import QueryResult
+from src.domain.common.queries import QueryResult
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.query import batch_model_to_read_dto
 from src.infrastructure.persistence.models.batch import Batch

@@ -1,4 +1,4 @@
-from src.domain.shared.exceptions import DomainException
+from src.domain.common.exceptions import DomainException
 
 
 class WebhookSubscriptionInvalidUrlError(DomainException):

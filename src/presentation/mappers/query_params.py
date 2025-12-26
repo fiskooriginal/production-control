@@ -14,7 +14,7 @@ from src.application.queries import (
     WorkCenterSortField,
     WorkCenterSortSpec,
 )
-from src.domain.shared.queries import PaginationSpec
+from src.domain.common.queries import PaginationSpec
 from src.presentation.api.schemas.batches import BatchFiltersParams
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
 from src.presentation.api.schemas.work_centers import WorkCenterFiltersParams

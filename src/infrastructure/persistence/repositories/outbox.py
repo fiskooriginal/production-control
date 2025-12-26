@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.shared.time import utc_now
+from src.domain.common.time import utc_now
 from src.infrastructure.exceptions import OutboxRepositoryException
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 

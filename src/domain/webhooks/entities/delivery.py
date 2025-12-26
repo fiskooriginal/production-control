@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from src.domain.shared.entities import BaseEntity
-from src.domain.shared.exceptions import EmptyFieldError, InvalidStateError, InvalidValueError
-from src.domain.shared.time import utc_now
+from src.domain.common.entities import BaseEntity
+from src.domain.common.exceptions import EmptyFieldError, InvalidStateError, InvalidValueError
+from src.domain.common.time import utc_now
 from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
 
 

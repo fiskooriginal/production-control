@@ -3,9 +3,9 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
+from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.work_centers.entities import WorkCenterEntity
-from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.domain.work_centers.interfaces import WorkCenterRepositoryProtocol
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.work_centers import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.work_center import WorkCenter

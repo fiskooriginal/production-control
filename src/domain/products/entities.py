@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from src.domain.common.entities import BaseEntity
+from src.domain.common.exceptions import InvalidStateError
+from src.domain.common.time import utc_now
 from src.domain.products.events import ProductAggregatedEvent
 from src.domain.products.value_objects import ProductCode
-from src.domain.shared.entities import BaseEntity
-from src.domain.shared.exceptions import InvalidStateError
-from src.domain.shared.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)

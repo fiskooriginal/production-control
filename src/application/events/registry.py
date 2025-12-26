@@ -6,8 +6,8 @@ from src.domain.batches.events import (
     ProductAddedToBatchEvent,
     ProductRemovedFromBatchEvent,
 )
+from src.domain.common.events import DomainEvent
 from src.domain.products.events import ProductAggregatedEvent
-from src.domain.shared.events import DomainEvent
 
 T = TypeVar("T", bound=DomainEvent)
 

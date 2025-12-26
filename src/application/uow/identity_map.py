@@ -1,7 +1,7 @@
 from typing import TypeVar
 from uuid import UUID
 
-from src.domain.shared.entities import BaseEntity
+from src.domain.common.entities import BaseEntity
 
 T = TypeVar("T", bound=BaseEntity)
 

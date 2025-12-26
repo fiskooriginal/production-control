@@ -6,10 +6,10 @@ from src.application.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent
-from src.domain.batches.services import can_close_batch, validate_batch_number_uniqueness, validate_shift_time_overlap
+from src.domain.batches.services import validate_batch_number_uniqueness, validate_shift_time_overlap
+from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
-from src.domain.shared.exceptions import InvalidStateError
 
 logger = get_logger("use_case.batches")
 
@@ -67,7 +67,7 @@ class CloseBatchUseCase:
         try:
             async with self._uow:
                 batch = await self._uow.batches.get_or_raise(input_dto.batch_id)
-                if not can_close_batch(batch):
+                if not batch.can_close():
                     raise InvalidStateError("Не все продукты в партии агрегированы")
                 batch.close(input_dto.closed_at)
                 result = await self._uow.batches.update(batch)

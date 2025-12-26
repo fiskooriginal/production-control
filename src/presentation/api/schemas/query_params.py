@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Query
 from pydantic import BaseModel
 
-from src.domain.shared.queries import SortDirection
+from src.domain.common.queries import SortDirection
 
 
 class PaginationParams(BaseModel):

@@ -4,9 +4,9 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.products.entities import ProductEntity
-from src.domain.products.repositories import ProductRepositoryProtocol
-from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
+from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.products import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.product import Product

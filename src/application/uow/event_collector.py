@@ -2,8 +2,8 @@ from uuid import uuid4
 
 from src.application.events.serializer import EventSerializer
 from src.application.uow.identity_map import IdentityMap
-from src.domain.shared.events import DomainEvent
-from src.domain.shared.time import utc_now
+from src.domain.common.events import DomainEvent
+from src.domain.common.time import utc_now
 from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 

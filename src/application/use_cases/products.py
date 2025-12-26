@@ -1,8 +1,8 @@
 from src.application.dtos.products import AggregateProductInputDTO
 from src.application.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
+from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity
-from src.domain.shared.exceptions import InvalidStateError
 
 logger = get_logger("use_case.products")
 

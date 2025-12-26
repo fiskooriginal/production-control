@@ -2,9 +2,9 @@ from abc import abstractmethod
 from types import TracebackType
 from typing import Protocol, Self
 
-from src.domain.batches.repositories import BatchRepositoryProtocol
-from src.domain.products.repositories import ProductRepositoryProtocol
-from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.products.interfaces.repository import ProductRepositoryProtocol
+from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 
 
 class UnitOfWorkProtocol(Protocol):

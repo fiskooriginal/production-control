@@ -3,8 +3,8 @@ from uuid import UUID
 from src.application.queries.ports import WorkCenterQueryServiceProtocol
 from src.application.queries.work_centers import ListWorkCentersQuery, WorkCenterReadDTO
 from src.core.logging import get_logger
-from src.domain.shared.exceptions import DoesNotExistError
-from src.domain.shared.queries import QueryResult
+from src.domain.common.exceptions import DoesNotExistError
+from src.domain.common.queries import QueryResult
 
 logger = get_logger("use_case.queries.work_centers")
 

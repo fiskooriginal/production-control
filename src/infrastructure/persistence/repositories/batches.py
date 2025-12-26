@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.batches.entities import BatchEntity
-from src.domain.batches.repositories import BatchRepositoryProtocol
-from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
+from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.batches import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.batch import Batch

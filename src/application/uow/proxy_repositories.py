@@ -4,12 +4,12 @@ from uuid import UUID
 
 from src.application.uow.identity_map import IdentityMap
 from src.domain.batches.entities import BatchEntity
-from src.domain.batches.repositories import BatchRepositoryProtocol
+from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.common.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.products.entities import ProductEntity
-from src.domain.products.repositories import ProductRepositoryProtocol
-from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
+from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.domain.work_centers.entities import WorkCenterEntity
-from src.domain.work_centers.repositories import WorkCenterRepositoryProtocol
+from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
 from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository

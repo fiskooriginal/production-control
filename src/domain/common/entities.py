@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from src.domain.shared.events import DomainEvent
-from src.domain.shared.time import utc_now
+from src.domain.common.events import DomainEvent
+from src.domain.common.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)
