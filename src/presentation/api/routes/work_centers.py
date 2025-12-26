@@ -2,19 +2,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
+from src.application.use_cases.queries import GetWorkCenterQueryUseCase, ListWorkCentersQueryUseCase
 from src.application.use_cases.work_centers import (
     CreateWorkCenterUseCase,
     DeleteWorkCenterUseCase,
-    GetWorkCenterUseCase,
-    ListWorkCentersUseCase,
     UpdateWorkCenterUseCase,
 )
 from src.presentation.api.dependencies import (
     get_create_work_center_use_case,
     get_delete_work_center_use_case,
-    get_get_work_center_use_case,
-    get_list_work_centers_use_case,
+    get_list_work_centers_query_use_case,
     get_update_work_center_use_case,
+    get_work_center_query_use_case,
 )
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
 from src.presentation.api.schemas.work_centers import (
@@ -24,11 +23,8 @@ from src.presentation.api.schemas.work_centers import (
     WorkCenterFiltersParams,
     WorkCenterResponse,
 )
-from src.presentation.mappers.query_params import (
-    pagination_params_to_spec,
-    sort_params_to_spec,
-    work_center_filters_params_to_dto,
-)
+from src.presentation.mappers.query_params import build_list_work_centers_query
+from src.presentation.mappers.query_responses import work_center_read_dto_to_response
 from src.presentation.mappers.work_centers import (
     create_request_to_input_dto,
     entity_to_response,
@@ -56,16 +52,15 @@ async def create_work_center(
 @router.get("/{work_center_id}", response_model=WorkCenterResponse)
 async def get_work_center(
     work_center_id: UUID,
-    use_case: GetWorkCenterUseCase = Depends(get_get_work_center_use_case),
+    use_case: GetWorkCenterQueryUseCase = Depends(get_work_center_query_use_case),
 ) -> WorkCenterResponse:
     """
     Получает рабочий центр по ID.
 
     RESTful endpoint: GET /work-centers/{work_center_id}
     """
-
-    work_center_entity = await use_case.execute(work_center_id)
-    return entity_to_response(work_center_entity)
+    work_center_dto = await use_case.execute(work_center_id)
+    return work_center_read_dto_to_response(work_center_dto)
 
 
 @router.patch("/{work_center_id}", response_model=WorkCenterResponse)
@@ -103,21 +98,18 @@ async def list_work_centers(
     filter_params: WorkCenterFiltersParams = Depends(),
     pagination_params: PaginationParams = Depends(),
     sort_params: SortParams = Depends(),
-    use_case: ListWorkCentersUseCase = Depends(get_list_work_centers_use_case),
+    use_case: ListWorkCentersQueryUseCase = Depends(get_list_work_centers_query_use_case),
 ) -> ListWorkCentersResponse:
     """
     Получает список рабочих центров с фильтрацией, пагинацией и сортировкой.
 
     RESTful endpoint: GET /work-centers
     """
-    filters = work_center_filters_params_to_dto(filter_params)
-    pagination = pagination_params_to_spec(pagination_params)
-    sort = sort_params_to_spec(sort_params)
-
-    result = await use_case.execute(filters=filters, pagination=pagination, sort=sort)
+    query = build_list_work_centers_query(filter_params, pagination_params, sort_params)
+    result = await use_case.execute(query)
 
     return ListWorkCentersResponse(
-        items=[entity_to_response(entity) for entity in result.items],
+        items=[work_center_read_dto_to_response(dto) for dto in result.items],
         total=result.total,
         limit=result.limit,
         offset=result.offset,

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.dtos.batches import BatchFilters, CloseBatchInputDTO, CreateBatchInputDTO
+from src.application.dtos.batches import CloseBatchInputDTO, CreateBatchInputDTO
 from src.application.mappers.batches import input_dto_to_entity
 from src.application.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
@@ -10,7 +10,6 @@ from src.domain.batches.services import can_close_batch, validate_batch_number_u
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
 from src.domain.shared.exceptions import InvalidStateError
-from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 
 logger = get_logger("use_case.batches")
 
@@ -135,57 +134,4 @@ class RemoveProductFromBatchUseCase:
                 return batch
         except Exception as e:
             logger.exception(f"Failed to remove product from batch: {e}")
-            raise
-
-
-class ListBatchesUseCase:
-    def __init__(self, uow: UnitOfWorkProtocol):
-        self._uow = uow
-
-    async def execute(
-        self,
-        filters: BatchFilters | None = None,
-        pagination: PaginationSpec | None = None,
-        sort: SortSpec | None = None,
-    ) -> QueryResult[BatchEntity]:
-        """Получает список партий с фильтрацией, пагинацией и сортировкой"""
-        logger.debug(f"Listing batches: filters={filters}")
-        try:
-            async with self._uow:
-                # Конвертируем BatchFilters в dict для передачи в репозиторий
-                filter_dict = None
-                if filters:
-                    filter_dict = {}
-                    if filters.is_closed is not None:
-                        filter_dict["is_closed"] = filters.is_closed
-                    if filters.batch_number is not None:
-                        filter_dict["batch_number"] = filters.batch_number
-                    if filters.batch_date is not None:
-                        filter_dict["batch_date"] = filters.batch_date
-                    if filters.work_center_id is not None:
-                        filter_dict["work_center_id"] = filters.work_center_id
-                    if filters.shift is not None:
-                        filter_dict["shift"] = filters.shift
-                result = await self._uow.batches.list(filters=filter_dict, pagination=pagination, sort=sort)
-                logger.debug(f"Listed {result.total} batches")
-                return result
-        except Exception as e:
-            logger.exception(f"Failed to list batches: {e}")
-            raise
-
-
-class GetBatchUseCase:
-    def __init__(self, uow: UnitOfWorkProtocol):
-        self._uow = uow
-
-    async def execute(self, batch_id: UUID) -> BatchEntity:
-        """Получает партию по UUID"""
-        logger.debug(f"Getting batch: batch_id={batch_id}")
-        try:
-            async with self._uow:
-                result = await self._uow.batches.get_or_raise(batch_id)
-                logger.debug(f"Batch retrieved: batch_id={batch_id}")
-                return result
-        except Exception as e:
-            logger.exception(f"Failed to get batch: {e}")
             raise

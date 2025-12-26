@@ -8,17 +8,26 @@ from src.application.use_cases.batches import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
-    GetBatchUseCase,
-    ListBatchesUseCase,
     RemoveProductFromBatchUseCase,
 )
-from src.application.use_cases.products import AggregateProductUseCase, GetProductUseCase, ListProductsUseCase
+from src.application.use_cases.products import AggregateProductUseCase
+from src.application.use_cases.queries import (
+    GetBatchQueryUseCase,
+    GetProductQueryUseCase,
+    GetWorkCenterQueryUseCase,
+    ListBatchesQueryUseCase,
+    ListProductsQueryUseCase,
+    ListWorkCentersQueryUseCase,
+)
 from src.application.use_cases.work_centers import (
     CreateWorkCenterUseCase,
     DeleteWorkCenterUseCase,
-    GetWorkCenterUseCase,
-    ListWorkCentersUseCase,
     UpdateWorkCenterUseCase,
+)
+from src.infrastructure.persistence.query_services import (
+    BatchQueryService,
+    ProductQueryService,
+    WorkCenterQueryService,
 )
 
 
@@ -49,16 +58,6 @@ async def get_aggregate_product_use_case(uow: UnitOfWork = Depends(get_uow)) -> 
     return AggregateProductUseCase(uow)
 
 
-async def get_list_products_use_case(uow: UnitOfWork = Depends(get_uow)) -> ListProductsUseCase:
-    """Dependency для ListProductsUseCase"""
-    return ListProductsUseCase(uow)
-
-
-async def get_product_use_case(uow: UnitOfWork = Depends(get_uow)) -> GetProductUseCase:
-    """Dependency для ProductUseCase"""
-    return GetProductUseCase(uow)
-
-
 async def get_add_product_to_batch_use_case(uow: UnitOfWork = Depends(get_uow)) -> AddProductToBatchUseCase:
     """Dependency для AddProductToBatchUseCase"""
     return AddProductToBatchUseCase(uow)
@@ -69,24 +68,9 @@ async def get_remove_product_from_batch_use_case(uow: UnitOfWork = Depends(get_u
     return RemoveProductFromBatchUseCase(uow)
 
 
-async def get_list_batches_use_case(uow: UnitOfWork = Depends(get_uow)) -> ListBatchesUseCase:
-    """Dependency для ListBatchesUseCase"""
-    return ListBatchesUseCase(uow)
-
-
-async def get_batch_use_case(uow: UnitOfWork = Depends(get_uow)) -> GetBatchUseCase:
-    """Dependency для GetBatchUseCase"""
-    return GetBatchUseCase(uow)
-
-
 async def get_create_work_center_use_case(uow: UnitOfWork = Depends(get_uow)) -> CreateWorkCenterUseCase:
     """Dependency для CreateWorkCenterUseCase"""
     return CreateWorkCenterUseCase(uow)
-
-
-async def get_get_work_center_use_case(uow: UnitOfWork = Depends(get_uow)) -> GetWorkCenterUseCase:
-    """Dependency для GetWorkCenterUseCase"""
-    return GetWorkCenterUseCase(uow)
 
 
 async def get_update_work_center_use_case(uow: UnitOfWork = Depends(get_uow)) -> UpdateWorkCenterUseCase:
@@ -99,6 +83,58 @@ async def get_delete_work_center_use_case(uow: UnitOfWork = Depends(get_uow)) ->
     return DeleteWorkCenterUseCase(uow)
 
 
-async def get_list_work_centers_use_case(uow: UnitOfWork = Depends(get_uow)) -> ListWorkCentersUseCase:
-    """Dependency для ListWorkCentersUseCase"""
-    return ListWorkCentersUseCase(uow)
+async def get_work_center_query_service(session: AsyncSession = Depends(get_session)) -> WorkCenterQueryService:
+    """Dependency для WorkCenterQueryService"""
+    return WorkCenterQueryService(session)
+
+
+async def get_batch_query_service(session: AsyncSession = Depends(get_session)) -> BatchQueryService:
+    """Dependency для BatchQueryService"""
+    return BatchQueryService(session)
+
+
+async def get_product_query_service(session: AsyncSession = Depends(get_session)) -> ProductQueryService:
+    """Dependency для ProductQueryService"""
+    return ProductQueryService(session)
+
+
+async def get_list_work_centers_query_use_case(
+    query_service: WorkCenterQueryService = Depends(get_work_center_query_service),
+) -> ListWorkCentersQueryUseCase:
+    """Dependency для ListWorkCentersQueryUseCase"""
+    return ListWorkCentersQueryUseCase(query_service)
+
+
+async def get_list_batches_query_use_case(
+    query_service: BatchQueryService = Depends(get_batch_query_service),
+) -> ListBatchesQueryUseCase:
+    """Dependency для ListBatchesQueryUseCase"""
+    return ListBatchesQueryUseCase(query_service)
+
+
+async def get_list_products_query_use_case(
+    query_service: ProductQueryService = Depends(get_product_query_service),
+) -> ListProductsQueryUseCase:
+    """Dependency для ListProductsQueryUseCase"""
+    return ListProductsQueryUseCase(query_service)
+
+
+async def get_work_center_query_use_case(
+    query_service: WorkCenterQueryService = Depends(get_work_center_query_service),
+) -> GetWorkCenterQueryUseCase:
+    """Dependency для GetWorkCenterQueryUseCase"""
+    return GetWorkCenterQueryUseCase(query_service)
+
+
+async def get_batch_query_use_case(
+    query_service: BatchQueryService = Depends(get_batch_query_service),
+) -> GetBatchQueryUseCase:
+    """Dependency для GetBatchQueryUseCase"""
+    return GetBatchQueryUseCase(query_service)
+
+
+async def get_product_query_use_case(
+    query_service: ProductQueryService = Depends(get_product_query_service),
+) -> GetProductQueryUseCase:
+    """Dependency для GetProductQueryUseCase"""
+    return GetProductQueryUseCase(query_service)

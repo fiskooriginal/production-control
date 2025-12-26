@@ -21,12 +21,3 @@ class CreateBatchInputDTO:
 class CloseBatchInputDTO:
     batch_id: UUID
     closed_at: datetime | None = None
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class BatchFilters:
-    is_closed: bool | None = None
-    batch_number: int | None = None
-    batch_date: date | None = None
-    work_center_id: UUID | None = None
-    shift: str | None = None

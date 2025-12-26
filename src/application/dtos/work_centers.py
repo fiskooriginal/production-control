@@ -13,8 +13,3 @@ class UpdateWorkCenterInputDTO:
     work_center_id: UUID
     identifier: str | None = None
     name: str | None = None
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class WorkCenterFilters:
-    identifier: str | None = None
