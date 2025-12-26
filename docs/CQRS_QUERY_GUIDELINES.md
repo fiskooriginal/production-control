@@ -4,12 +4,14 @@
 
 В проекте реализован CQRS-подход для разделения операций чтения и записи:
 
-### Write-side (Command):
+### Write-side (Command)
+
 - **Repositories** (domain protocols + infrastructure) - только `get_or_raise`, `create`, `update`, `delete`
 - **Command Use Cases** - работают с репозиториями через UoW для транзакций
 - **Доменные сущности** - полные агрегаты с бизнес-логикой и событиями
 
-### Read-side (Query):
+### Read-side (Query)
+
 - **Query Objects** (application layer) - типизированные модели запросов
 - **Query Use Cases** (application layer) - бизнес-логика для чтения
 - **Query Service Protocols** (application layer) - порты/интерфейсы
@@ -18,7 +20,8 @@
 
 ## Поток данных
 
-### Read-side (GET /list, GET /id):
+### Read-side (GET /list, GET /id)
+
 ```
 API Route → Query Params → Query Object → Query Use Case → Query Service Protocol → SQLAlchemy Query Service → Database
                 ↓                                                                              ↓
@@ -27,7 +30,8 @@ API Route → Query Params → Query Object → Query Use Case → Query Service
                                                                                            Read DTO
 ```
 
-### Write-side (POST, PATCH, DELETE):
+### Write-side (POST, PATCH, DELETE)
+
 ```
 API Route → Request → Input DTO → Command Use Case → Repository (через UoW) → Database
                 ↓                        ↓                    ↓
@@ -36,14 +40,16 @@ API Route → Request → Input DTO → Command Use Case → Repository (чер�
 
 ## Ключевое разделение
 
-### Repositories (write-only):
+### Repositories (write-only)
+
 - `get_or_raise(uuid)` - **только для загрузки агрегата перед изменением** (update/delete/бизнес-операции)
 - `create(entity)` - создание нового агрегата
 - `update(entity)` - сохранение изменённого агрегата
 - `delete(uuid)` - удаление агрегата
 - Специфичные методы для бизнес-логики (например `get_by_batch_number`, `get_by_identifier`)
 
-### Query Services (read-only):
+### Query Services (read-only)
+
 - `get(uuid)` - получение проекции для отображения (возвращает ReadDTO)
 - `list(query)` - получение списка проекций с фильтрацией/сортировкой/пагинацией
 
