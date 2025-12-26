@@ -9,7 +9,6 @@ from src.domain.batches.repositories import BatchRepositoryProtocol
 from src.domain.shared.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.shared.queries import PaginationSpec, QueryResult, SortSpec
 from src.infrastructure.persistence.mappers.batches import to_domain_entity, to_persistence_model
-from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
 from src.infrastructure.persistence.models.batch import Batch
 
 
@@ -25,7 +24,7 @@ class BatchRepository(BatchRepositoryProtocol):
         batch_model = to_persistence_model(domain_entity)
         self._session.add(batch_model)
         await self._session.flush()
-        return to_domain_entity(batch_model, product_mapper=product_to_domain)
+        return to_domain_entity(batch_model)
 
     async def get(self, uuid: UUID) -> BatchEntity | None:
         """Получает партию по UUID"""
@@ -34,7 +33,7 @@ class BatchRepository(BatchRepositoryProtocol):
         batch_model = result.scalar_one_or_none()
         if batch_model is None:
             return None
-        return to_domain_entity(batch_model, product_mapper=product_to_domain)
+        return to_domain_entity(batch_model)
 
     async def get_or_raise(self, uuid: UUID) -> BatchEntity:
         """Получает партию по UUID или выбрасывает исключение"""
@@ -52,7 +51,7 @@ class BatchRepository(BatchRepositoryProtocol):
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(batch_model, key, value)
         await self._session.flush()
-        return to_domain_entity(batch_model, product_mapper=product_to_domain)
+        return to_domain_entity(batch_model)
 
     async def delete(self, uuid: UUID) -> None:
         """Удаляет партию по UUID"""
@@ -109,7 +108,7 @@ class BatchRepository(BatchRepositoryProtocol):
             stmt = stmt.offset(pagination.offset).limit(pagination.limit)
         result = await self._session.execute(stmt)
         batches = result.scalars().all()
-        entities = [to_domain_entity(b, product_mapper=product_to_domain) for b in batches]
+        entities = [to_domain_entity(b) for b in batches]
         return QueryResult(
             items=entities,
             total=total,
@@ -124,14 +123,14 @@ class BatchRepository(BatchRepositoryProtocol):
         batch_model = result.scalar_one_or_none()
         if batch_model is None:
             return None
-        return to_domain_entity(batch_model, product_mapper=product_to_domain)
+        return to_domain_entity(batch_model)
 
     async def get_by_work_center(self, work_center_uuid: UUID) -> list[BatchEntity]:
         """Находит все партии для указанного рабочего центра"""
         stmt = select(Batch).where(Batch.work_center_id == work_center_uuid)
         result = await self._session.execute(stmt)
         batches = result.scalars().all()
-        return [to_domain_entity(b, product_mapper=product_to_domain) for b in batches]
+        return [to_domain_entity(b) for b in batches]
 
     async def list(
         self,

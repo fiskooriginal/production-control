@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from src.domain.batches.entities import BatchEntity
@@ -11,20 +10,20 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
+from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
 from src.infrastructure.persistence.models.batch import Batch
 
 if TYPE_CHECKING:
     from src.domain.products.entities import ProductEntity
 
 
-def to_domain_entity(batch_model: Batch, product_mapper: Callable | None = None) -> BatchEntity:
+def to_domain_entity(batch_model: Batch) -> BatchEntity:
     """Конвертирует persistence модель Batch в domain domain_entity BatchEntity"""
-    from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
 
-    mapper = product_mapper or product_to_domain
     products: list[ProductEntity] = []
     if batch_model.products:
-        products = [mapper(p) for p in batch_model.products]
+        products = [product_to_domain(p) for p in batch_model.products]
+
     return BatchEntity(
         uuid=batch_model.uuid,
         created_at=batch_model.created_at,
