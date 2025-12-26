@@ -5,12 +5,9 @@ from src.domain.products.entities import ProductEntity
 from src.presentation.api.schemas.products import AggregateProductRequest, ProductResponse
 
 
-def aggregate_request_to_input_dto(product_id: str, request: AggregateProductRequest) -> AggregateProductInputDTO:
+def aggregate_request_to_input_dto(product_id: UUID, request: AggregateProductRequest) -> AggregateProductInputDTO:
     """Конвертирует Pydantic AggregateProductRequest в Application InputDTO"""
-    return AggregateProductInputDTO(
-        product_id=UUID(product_id),
-        aggregated_at=request.aggregated_at,
-    )
+    return AggregateProductInputDTO(product_id=product_id, aggregated_at=request.aggregated_at)
 
 
 def entity_to_response(entity: ProductEntity) -> ProductResponse:

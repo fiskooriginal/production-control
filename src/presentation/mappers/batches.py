@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from src.application.dtos.batches import CloseBatchInputDTO, CreateBatchInputDTO
 from src.domain.batches.entities import BatchEntity
 from src.presentation.api.schemas.batches import (
@@ -25,14 +27,9 @@ def create_batch_request_to_input_dto(request: CreateBatchRequest) -> CreateBatc
     )
 
 
-def close_batch_request_to_input_dto(batch_id: str, request: CloseBatchRequest) -> CloseBatchInputDTO:
+def close_batch_request_to_input_dto(batch_id: UUID, request: CloseBatchRequest) -> CloseBatchInputDTO:
     """Конвертирует Pydantic CloseBatchRequest в Application InputDTO"""
-    from uuid import UUID
-
-    return CloseBatchInputDTO(
-        batch_id=UUID(batch_id),
-        closed_at=request.closed_at,
-    )
+    return CloseBatchInputDTO(batch_id=batch_id, closed_at=request.closed_at)
 
 
 def domain_to_response(entity: BatchEntity) -> BatchResponse:

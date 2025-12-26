@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 
 from src.application.use_cases.products import AggregateProductUseCase
@@ -10,7 +12,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 @router.patch("/{product_id}/aggregate", response_model=ProductResponse)
 async def aggregate_product(
-    product_id: str,
+    product_id: UUID,
     request: AggregateProductRequest,
     use_case: AggregateProductUseCase = Depends(get_aggregate_product_use_case),
 ) -> ProductResponse:

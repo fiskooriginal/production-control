@@ -55,7 +55,7 @@ async def create_work_center(
 
 @router.get("/{work_center_id}", response_model=WorkCenterResponse)
 async def get_work_center(
-    work_center_id: str,
+    work_center_id: UUID,
     use_case: GetWorkCenterUseCase = Depends(get_get_work_center_use_case),
 ) -> WorkCenterResponse:
     """
@@ -64,13 +64,13 @@ async def get_work_center(
     RESTful endpoint: GET /work-centers/{work_center_id}
     """
 
-    work_center_entity = await use_case.execute(UUID(work_center_id))
+    work_center_entity = await use_case.execute(work_center_id)
     return entity_to_response(work_center_entity)
 
 
 @router.patch("/{work_center_id}", response_model=WorkCenterResponse)
 async def update_work_center(
-    work_center_id: str,
+    work_center_id: UUID,
     request: UpdateWorkCenterRequest,
     use_case: UpdateWorkCenterUseCase = Depends(get_update_work_center_use_case),
 ) -> WorkCenterResponse:
@@ -86,7 +86,7 @@ async def update_work_center(
 
 @router.delete("/{work_center_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_work_center(
-    work_center_id: str,
+    work_center_id: UUID,
     use_case: DeleteWorkCenterUseCase = Depends(get_delete_work_center_use_case),
 ) -> None:
     """
@@ -95,7 +95,7 @@ async def delete_work_center(
     RESTful endpoint: DELETE /work-centers/{work_center_id}
     """
 
-    await use_case.execute(UUID(work_center_id))
+    await use_case.execute(work_center_id)
 
 
 @router.get("", response_model=ListWorkCentersResponse)

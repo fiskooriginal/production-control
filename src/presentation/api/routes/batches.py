@@ -56,7 +56,7 @@ async def create_batch(
 
 @router.patch("/{batch_id}/close", response_model=BatchResponse)
 async def close_batch(
-    batch_id: str,
+    batch_id: UUID,
     request: CloseBatchRequest,
     use_case: CloseBatchUseCase = Depends(get_close_batch_use_case),
 ) -> BatchResponse:
@@ -72,7 +72,7 @@ async def close_batch(
 
 @router.post("/{batch_id}/products", response_model=BatchResponse)
 async def add_product_to_batch(
-    batch_id: str,
+    batch_id: UUID,
     request: AddProductToBatchRequest,
     use_case: AddProductToBatchUseCase = Depends(get_add_product_to_batch_use_case),
 ) -> BatchResponse:
@@ -81,14 +81,14 @@ async def add_product_to_batch(
 
     RESTful endpoint: POST /batches/{batch_id}/products
     """
-    batch_entity = await use_case.execute(UUID(batch_id), request.unique_code)
+    batch_entity = await use_case.execute(batch_id, request.unique_code)
     return domain_to_response(batch_entity)
 
 
 @router.delete("/{batch_id}/products/{product_id}", response_model=BatchResponse)
 async def remove_product_from_batch(
-    batch_id: str,
-    product_id: str,
+    batch_id: UUID,
+    product_id: UUID,
     use_case: RemoveProductFromBatchUseCase = Depends(get_remove_product_from_batch_use_case),
 ) -> BatchResponse:
     """
@@ -98,7 +98,7 @@ async def remove_product_from_batch(
 
     ВАЖНО: Продукт будет полностью удален из БД, так как batch_id NOT NULL.
     """
-    batch_entity = await use_case.execute(UUID(batch_id), UUID(product_id))
+    batch_entity = await use_case.execute(batch_id, product_id)
     return domain_to_response(batch_entity)
 
 

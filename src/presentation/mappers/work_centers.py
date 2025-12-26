@@ -17,13 +17,9 @@ def create_request_to_input_dto(request: CreateWorkCenterRequest) -> CreateWorkC
     )
 
 
-def update_request_to_input_dto(work_center_id: str, request: UpdateWorkCenterRequest) -> UpdateWorkCenterInputDTO:
+def update_request_to_input_dto(work_center_id: UUID, request: UpdateWorkCenterRequest) -> UpdateWorkCenterInputDTO:
     """Конвертирует Pydantic UpdateWorkCenterRequest в Application InputDTO"""
-    return UpdateWorkCenterInputDTO(
-        work_center_id=UUID(work_center_id),
-        identifier=request.identifier,
-        name=request.name,
-    )
+    return UpdateWorkCenterInputDTO(work_center_id=work_center_id, identifier=request.identifier, name=request.name)
 
 
 def entity_to_response(entity: WorkCenterEntity) -> WorkCenterResponse:
