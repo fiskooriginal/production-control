@@ -5,10 +5,15 @@ from fastapi import FastAPI
 
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.settings import DatabaseSettings
+from src.presentation.api.routes import batches, products, work_centers
 
 
 def create_app(lifespan: Callable) -> FastAPI:
-    return FastAPI(title="Production Control API", lifespan=lifespan)
+    app = FastAPI(title="Production Control API", lifespan=lifespan)
+    app.include_router(batches.router)
+    app.include_router(products.router)
+    app.include_router(work_centers.router)
+    return app
 
 
 @asynccontextmanager
