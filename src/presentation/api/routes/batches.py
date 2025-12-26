@@ -6,11 +6,13 @@ from src.application.use_cases.batches import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
+    GetBatchUseCase,
     ListBatchesUseCase,
     RemoveProductFromBatchUseCase,
 )
 from src.presentation.api.dependencies import (
     get_add_product_to_batch_use_case,
+    get_batch_use_case,
     get_close_batch_use_case,
     get_create_batch_use_case,
     get_list_batches_use_case,
@@ -126,3 +128,17 @@ async def list_batches(
         limit=result.limit,
         offset=result.offset,
     )
+
+
+@router.get("/{batch_id}", response_model=BatchResponse)
+async def get_batch(
+    batch_id: UUID,
+    use_case: GetBatchUseCase = Depends(get_batch_use_case),
+) -> BatchResponse:
+    """
+    Получает партию по UUID.
+
+    RESTful endpoint: GET /batches/{batch_id}
+    """
+    batch_entity = await use_case.execute(batch_id)
+    return domain_to_response(batch_entity)

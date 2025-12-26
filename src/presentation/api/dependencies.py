@@ -8,10 +8,11 @@ from src.application.use_cases.batches import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
+    GetBatchUseCase,
     ListBatchesUseCase,
     RemoveProductFromBatchUseCase,
 )
-from src.application.use_cases.products import AggregateProductUseCase
+from src.application.use_cases.products import AggregateProductUseCase, GetProductUseCase, ListProductsUseCase
 from src.application.use_cases.work_centers import (
     CreateWorkCenterUseCase,
     DeleteWorkCenterUseCase,
@@ -48,6 +49,16 @@ async def get_aggregate_product_use_case(uow: UnitOfWork = Depends(get_uow)) -> 
     return AggregateProductUseCase(uow)
 
 
+async def get_list_products_use_case(uow: UnitOfWork = Depends(get_uow)) -> ListProductsUseCase:
+    """Dependency для ListProductsUseCase"""
+    return ListProductsUseCase(uow)
+
+
+async def get_product_use_case(uow: UnitOfWork = Depends(get_uow)) -> GetProductUseCase:
+    """Dependency для ProductUseCase"""
+    return GetProductUseCase(uow)
+
+
 async def get_add_product_to_batch_use_case(uow: UnitOfWork = Depends(get_uow)) -> AddProductToBatchUseCase:
     """Dependency для AddProductToBatchUseCase"""
     return AddProductToBatchUseCase(uow)
@@ -61,6 +72,11 @@ async def get_remove_product_from_batch_use_case(uow: UnitOfWork = Depends(get_u
 async def get_list_batches_use_case(uow: UnitOfWork = Depends(get_uow)) -> ListBatchesUseCase:
     """Dependency для ListBatchesUseCase"""
     return ListBatchesUseCase(uow)
+
+
+async def get_batch_use_case(uow: UnitOfWork = Depends(get_uow)) -> GetBatchUseCase:
+    """Dependency для GetBatchUseCase"""
+    return GetBatchUseCase(uow)
 
 
 async def get_create_work_center_use_case(uow: UnitOfWork = Depends(get_uow)) -> CreateWorkCenterUseCase:

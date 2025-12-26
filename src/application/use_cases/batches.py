@@ -172,3 +172,20 @@ class ListBatchesUseCase:
         except Exception as e:
             logger.exception(f"Failed to list batches: {e}")
             raise
+
+
+class GetBatchUseCase:
+    def __init__(self, uow: UnitOfWorkProtocol):
+        self._uow = uow
+
+    async def execute(self, batch_id: UUID) -> BatchEntity:
+        """Получает партию по UUID"""
+        logger.debug(f"Getting batch: batch_id={batch_id}")
+        try:
+            async with self._uow:
+                result = await self._uow.batches.get_or_raise(batch_id)
+                logger.debug(f"Batch retrieved: batch_id={batch_id}")
+                return result
+        except Exception as e:
+            logger.exception(f"Failed to get batch: {e}")
+            raise

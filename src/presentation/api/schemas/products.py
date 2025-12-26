@@ -22,3 +22,15 @@ class ProductResponse(UUIDSchema, TimestampSchema, BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ListProductsResponse(BaseModel):
+    """Response schema для списка продуктов"""
+
+    items: list[ProductResponse] = Field(..., description="Список продуктов")
+    total: int = Field(..., description="Общее количество продуктов")
+    limit: int | None = Field(None, description="Лимит элементов на странице")
+    offset: int | None = Field(None, description="Смещение от начала")
+
+    class Config:
+        from_attributes = True
