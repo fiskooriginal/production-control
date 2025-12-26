@@ -15,7 +15,7 @@ def init_engine(db_url: str, *, echo: bool = False, pool_pre_ping: bool = True) 
     )
 
     _setup_engine_logging(engine)
-    logger.info("Database engine initialized.")
+    logger.info("Database engine initialized")
 
     return engine
 
