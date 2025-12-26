@@ -90,3 +90,13 @@ class BatchRepository(BatchRepositoryProtocol):
             return to_domain_entity(batch_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске партии по номеру: {e}") from e
+
+    async def get_by_work_center(self, work_center_id: UUID) -> list[BatchEntity]:
+        """Находит все партии рабочего центра"""
+        try:
+            stmt = select(Batch).where(Batch.work_center_id == work_center_id)
+            result = await self._session.execute(stmt)
+            batch_models = result.scalars().all()
+            return [to_domain_entity(batch) for batch in batch_models]
+        except Exception as e:
+            raise DatabaseException(f"Ошибка базы данных при поиске партий по рабочему центру: {e}") from e

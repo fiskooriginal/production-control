@@ -1,11 +1,9 @@
 import builtins
-from typing import Any
 from uuid import UUID
 
 from src.application.uow.identity_map import IdentityMap
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
-from src.domain.common.queries import PaginationSpec, QueryResult, SortSpec
 from src.domain.products.entities import ProductEntity
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.domain.work_centers.entities import WorkCenterEntity
@@ -30,12 +28,6 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def get(self, uuid: UUID) -> BatchEntity | None:
-        result = await self._repository.get(uuid)
-        if result:
-            self._identity_map.add(result)
-        return result
-
     async def get_or_raise(self, uuid: UUID) -> BatchEntity:
         result = await self._repository.get_or_raise(uuid)
         self._identity_map.add(result)
@@ -48,20 +40,6 @@ class BatchRepositoryProxy(BatchRepositoryProtocol):
 
     async def delete(self, uuid: UUID) -> None:
         await self._repository.delete(uuid)
-
-    async def exists(self, uuid: UUID) -> bool:
-        return await self._repository.exists(uuid)
-
-    async def list(
-        self,
-        filters: dict[str, Any] | None = None,
-        pagination: PaginationSpec | None = None,
-        sort: SortSpec | None = None,
-    ) -> QueryResult[BatchEntity]:
-        result = await self._repository.list(filters=filters, pagination=pagination, sort=sort)
-        for entity in result.items:
-            self._identity_map.add(entity)
-        return result
 
     async def get_by_batch_number(self, batch_number: int) -> BatchEntity | None:
         result = await self._repository.get_by_batch_number(batch_number)
@@ -90,12 +68,6 @@ class ProductRepositoryProxy(ProductRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def get(self, uuid: UUID) -> ProductEntity | None:
-        result = await self._repository.get(uuid)
-        if result:
-            self._identity_map.add(result)
-        return result
-
     async def get_or_raise(self, uuid: UUID) -> ProductEntity:
         result = await self._repository.get_or_raise(uuid)
         self._identity_map.add(result)
@@ -108,20 +80,6 @@ class ProductRepositoryProxy(ProductRepositoryProtocol):
 
     async def delete(self, uuid: UUID) -> None:
         await self._repository.delete(uuid)
-
-    async def exists(self, uuid: UUID) -> bool:
-        return await self._repository.exists(uuid)
-
-    async def list(
-        self,
-        pagination: PaginationSpec | None = None,
-        sort: SortSpec | None = None,
-        filters: dict[str, Any] | None = None,
-    ) -> QueryResult[ProductEntity]:
-        result = await self._repository.list(pagination=pagination, sort=sort, filters=filters)
-        for entity in result.items:
-            self._identity_map.add(entity)
-        return result
 
     async def get_by_unique_code(self, unique_code: str) -> ProductEntity | None:
         result = await self._repository.get_by_unique_code(unique_code)
@@ -156,12 +114,6 @@ class WorkCenterRepositoryProxy(WorkCenterRepositoryProtocol):
         self._identity_map.add(result)
         return result
 
-    async def get(self, uuid: UUID) -> WorkCenterEntity | None:
-        result = await self._repository.get(uuid)
-        if result:
-            self._identity_map.add(result)
-        return result
-
     async def get_or_raise(self, uuid: UUID) -> WorkCenterEntity:
         result = await self._repository.get_or_raise(uuid)
         self._identity_map.add(result)
@@ -174,20 +126,6 @@ class WorkCenterRepositoryProxy(WorkCenterRepositoryProtocol):
 
     async def delete(self, uuid: UUID) -> None:
         await self._repository.delete(uuid)
-
-    async def exists(self, uuid: UUID) -> bool:
-        return await self._repository.exists(uuid)
-
-    async def list(
-        self,
-        pagination: PaginationSpec | None = None,
-        sort: SortSpec | None = None,
-        filters: dict[str, Any] | None = None,
-    ) -> QueryResult[WorkCenterEntity]:
-        result = await self._repository.list(pagination=pagination, sort=sort, filters=filters)
-        for entity in result.items:
-            self._identity_map.add(entity)
-        return result
 
     async def get_by_identifier(self, identifier: str) -> WorkCenterEntity | None:
         result = await self._repository.get_by_identifier(identifier)
