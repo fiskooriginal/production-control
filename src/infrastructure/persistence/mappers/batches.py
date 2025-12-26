@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.value_objects import (
     BatchNumber,
@@ -12,20 +10,14 @@ from src.domain.batches.value_objects import (
 )
 from src.infrastructure.exceptions import MappingException
 from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
+from src.infrastructure.persistence.mappers.products import to_persistence_model as product_to_persistence_model
 from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive, datetime_naive_to_aware
 from src.infrastructure.persistence.models.batch import Batch
-
-if TYPE_CHECKING:
-    from src.domain.products.entities import ProductEntity
 
 
 def to_domain_entity(batch_model: Batch) -> BatchEntity:
     """Конвертирует persistence модель Batch в domain domain_entity BatchEntity"""
     try:
-        products: list[ProductEntity] = []
-        if batch_model.products:
-            products = [product_to_domain(p) for p in batch_model.products]
-
         return BatchEntity(
             uuid=batch_model.uuid,
             created_at=datetime_naive_to_aware(batch_model.created_at),
@@ -43,7 +35,7 @@ def to_domain_entity(batch_model: Batch) -> BatchEntity:
                 start=datetime_naive_to_aware(batch_model.shift_start_time),
                 end=datetime_naive_to_aware(batch_model.shift_end_time),
             ),
-            products=products,
+            products=[product_to_domain(p) for p in batch_model.products],
             work_center_id=batch_model.work_center_id,
         )
     except Exception as e:
@@ -69,6 +61,7 @@ def to_persistence_model(batch_entity: BatchEntity) -> Batch:
             shift_start_time=datetime_aware_to_naive(batch_entity.shift_time_range.start),
             shift_end_time=datetime_aware_to_naive(batch_entity.shift_time_range.end),
             work_center_id=batch_entity.work_center_id,
+            products=[product_to_persistence_model(p) for p in batch_entity.products],
         )
     except Exception as e:
         raise MappingException(f"Ошибка маппинга domain -> persistence для Batch: {e}") from e
