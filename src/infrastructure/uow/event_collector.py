@@ -1,8 +1,7 @@
 from uuid import uuid4
 
-from src.core.time import datetime_now
+from src.core.time import datetime_aware_to_naive, datetime_now
 from src.domain.common.events import DomainEvent
-from src.infrastructure.common.mappers import datetime_aware_to_naive
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 from src.infrastructure.uow.identity_map import IdentityMap
 

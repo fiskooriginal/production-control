@@ -1,3 +1,4 @@
+from src.core.time import datetime_aware_to_naive, datetime_naive_to_aware
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.value_objects import (
     BatchNumber,
@@ -9,7 +10,6 @@ from src.domain.batches.value_objects import (
     Team,
 )
 from src.infrastructure.common.exceptions import MappingException
-from src.infrastructure.common.mappers import datetime_aware_to_naive, datetime_naive_to_aware
 from src.infrastructure.persistence.models.batch import Batch
 from src.infrastructure.persistence.repositories.mappers.products import to_domain_entity as product_to_domain
 from src.infrastructure.persistence.repositories.mappers.products import (

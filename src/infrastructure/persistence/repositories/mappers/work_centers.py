@@ -1,7 +1,7 @@
+from src.core.time import datetime_aware_to_naive, datetime_naive_to_aware
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.value_objects import WorkCenterIdentifier, WorkCenterName
 from src.infrastructure.common.exceptions import MappingException
-from src.infrastructure.common.mappers import datetime_aware_to_naive, datetime_naive_to_aware
 from src.infrastructure.persistence.models.work_center import WorkCenter
 
 
