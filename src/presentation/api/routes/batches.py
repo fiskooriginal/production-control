@@ -7,6 +7,7 @@ from src.application.batches.use_cases import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
+    DeleteBatchUseCase,
     RemoveProductFromBatchUseCase,
     UpdateBatchUseCase,
 )
@@ -17,6 +18,7 @@ from src.presentation.api.dependencies import (
     get_batch_query_use_case,
     get_close_batch_use_case,
     get_create_batch_use_case,
+    get_delete_batch_use_case,
     get_list_batches_query_use_case,
     get_remove_product_from_batch_use_case,
     get_update_batch_use_case,
@@ -173,3 +175,18 @@ async def update_batch(
     input_dto = update_batch_request_to_input_dto(batch_id, request)
     batch_entity = await use_case.execute(input_dto)
     return domain_to_response(batch_entity)
+
+
+@router.delete("/{batch_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_batch(
+    batch_id: UUID,
+    use_case: DeleteBatchUseCase = Depends(get_delete_batch_use_case),
+) -> None:
+    """
+    Удаляет закрытую партию и все связанные продукты.
+
+    RESTful endpoint: DELETE /batches/{batch_id}
+
+    ВАЖНО: Можно удалить только закрытую партию. Все продукты будут автоматически удалены.
+    """
+    await use_case.execute(batch_id)
