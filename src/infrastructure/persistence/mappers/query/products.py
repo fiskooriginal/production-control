@@ -1,4 +1,4 @@
-from src.application.queries.products import ProductReadDTO
+from src.application.products.queries import ProductReadDTO
 from src.infrastructure.persistence.models.product import Product
 
 

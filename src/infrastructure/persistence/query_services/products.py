@@ -4,8 +4,12 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.queries.ports import ProductQueryServiceProtocol
-from src.application.queries.products import ListProductsQuery, ProductReadDTO, ProductSortField
+from src.application.products.queries import (
+    ListProductsQuery,
+    ProductQueryServiceProtocol,
+    ProductReadDTO,
+    ProductSortField,
+)
 from src.domain.common.queries import QueryResult
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.query import product_model_to_read_dto
@@ -65,7 +69,7 @@ class ProductQueryService(ProductQueryServiceProtocol):
 
     def _apply_sort(self, stmt, sort):
         """Применяет сортировку к запросу"""
-        from src.application.queries.products import ProductSortSpec
+        from src.application.products.queries import ProductSortSpec
 
         if not isinstance(sort, ProductSortSpec):
             raise ValueError("sort должен быть типа ProductSortSpec")

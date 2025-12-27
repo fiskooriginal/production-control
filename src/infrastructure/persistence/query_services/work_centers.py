@@ -4,9 +4,9 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.queries.ports import WorkCenterQueryServiceProtocol
-from src.application.queries.work_centers import (
+from src.application.work_centers.queries import (
     ListWorkCentersQuery,
+    WorkCenterQueryServiceProtocol,
     WorkCenterReadDTO,
     WorkCenterSortField,
 )
@@ -71,7 +71,7 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
 
     def _apply_filters(self, stmt, count_stmt, filters):
         """Применяет фильтры к запросу"""
-        from src.application.queries.work_centers import WorkCenterReadFilters
+        from src.application.work_centers.queries import WorkCenterReadFilters
 
         if not isinstance(filters, WorkCenterReadFilters):
             raise ValueError("filters должен быть типа WorkCenterReadFilters")
@@ -84,7 +84,7 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
 
     def _apply_sort(self, stmt, sort):
         """Применяет сортировку к запросу"""
-        from src.application.queries.work_centers import WorkCenterSortSpec
+        from src.application.work_centers.queries import WorkCenterSortSpec
 
         if not isinstance(sort, WorkCenterSortSpec):
             raise ValueError("sort должен быть типа WorkCenterSortSpec")

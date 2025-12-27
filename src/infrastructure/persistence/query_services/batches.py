@@ -4,8 +4,12 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.queries.batches import BatchReadDTO, BatchSortField, ListBatchesQuery
-from src.application.queries.ports import BatchQueryServiceProtocol
+from src.application.batches.queries import (
+    BatchQueryServiceProtocol,
+    BatchReadDTO,
+    BatchSortField,
+    ListBatchesQuery,
+)
 from src.domain.common.queries import QueryResult
 from src.infrastructure.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.query import batch_model_to_read_dto
@@ -72,7 +76,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
 
     def _apply_filters(self, stmt, count_stmt, filters):
         """Применяет фильтры к запросу"""
-        from src.application.queries.batches import BatchReadFilters
+        from src.application.batches.queries import BatchReadFilters
 
         if not isinstance(filters, BatchReadFilters):
             raise ValueError("filters должен быть типа BatchReadFilters")
@@ -101,7 +105,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
 
     def _apply_sort(self, stmt, sort):
         """Применяет сортировку к запросу"""
-        from src.application.queries.batches import BatchSortSpec
+        from src.application.batches.queries import BatchSortSpec
 
         if not isinstance(sort, BatchSortSpec):
             raise ValueError("sort должен быть типа BatchSortSpec")

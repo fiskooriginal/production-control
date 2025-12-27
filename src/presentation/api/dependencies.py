@@ -3,23 +3,18 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.uow import UnitOfWork
-from src.application.use_cases.batches import (
+from src.application.batches.queries.use_cases import GetBatchQueryUseCase, ListBatchesQueryUseCase
+from src.application.batches.use_cases import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
 )
-from src.application.use_cases.products import AggregateProductUseCase
-from src.application.use_cases.queries import (
-    GetBatchQueryUseCase,
-    GetProductQueryUseCase,
-    GetWorkCenterQueryUseCase,
-    ListBatchesQueryUseCase,
-    ListProductsQueryUseCase,
-    ListWorkCentersQueryUseCase,
-)
-from src.application.use_cases.work_centers import (
+from src.application.products.queries.use_cases import GetProductQueryUseCase, ListProductsQueryUseCase
+from src.application.products.use_cases import AggregateProductUseCase
+from src.application.uow import UnitOfWork
+from src.application.work_centers.queries.use_cases import GetWorkCenterQueryUseCase, ListWorkCentersQueryUseCase
+from src.application.work_centers.use_cases import (
     CreateWorkCenterUseCase,
     DeleteWorkCenterUseCase,
     UpdateWorkCenterUseCase,

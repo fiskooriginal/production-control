@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.dtos.products import AggregateProductInputDTO
+from src.application.products.dtos import AggregateProductInputDTO
 from src.domain.products.entities import ProductEntity
 from src.presentation.api.schemas.products import AggregateProductRequest, ProductResponse
 from src.presentation.exceptions import SerializationException

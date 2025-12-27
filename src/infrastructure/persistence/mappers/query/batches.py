@@ -1,4 +1,4 @@
-from src.application.queries.batches import BatchReadDTO, ProductReadDTONested
+from src.application.batches.queries import BatchReadDTO, ProductReadDTONested
 from src.infrastructure.persistence.models.batch import Batch
 
 

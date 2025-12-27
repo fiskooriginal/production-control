@@ -1,4 +1,6 @@
-from src.application.queries import BatchReadDTO, ProductReadDTO, WorkCenterReadDTO
+from src.application.batches.queries.dtos import BatchReadDTO
+from src.application.products.queries.dtos import ProductReadDTO
+from src.application.work_centers.queries.dtos import WorkCenterReadDTO
 from src.presentation.api.schemas.batches import BatchResponse, ShiftTimeRangeSchema
 from src.presentation.api.schemas.products import ProductResponse
 from src.presentation.api.schemas.work_centers import WorkCenterResponse

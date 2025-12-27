@@ -2,13 +2,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from src.application.use_cases.batches import (
+from src.application.batches.queries.use_cases import GetBatchQueryUseCase, ListBatchesQueryUseCase
+from src.application.batches.use_cases import (
     AddProductToBatchUseCase,
     CloseBatchUseCase,
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
 )
-from src.application.use_cases.queries import GetBatchQueryUseCase, ListBatchesQueryUseCase
 from src.presentation.api.dependencies import (
     get_add_product_to_batch_use_case,
     get_batch_query_use_case,

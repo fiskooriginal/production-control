@@ -1,19 +1,14 @@
 from datetime import date
 from uuid import UUID
 
-from src.application.queries import (
-    BatchReadFilters,
-    BatchSortField,
-    BatchSortSpec,
-    ListBatchesQuery,
-    ListProductsQuery,
-    ListWorkCentersQuery,
-    ProductSortField,
-    ProductSortSpec,
-    WorkCenterReadFilters,
-    WorkCenterSortField,
-    WorkCenterSortSpec,
-)
+from src.application.batches.queries.filters import BatchReadFilters
+from src.application.batches.queries.queries import ListBatchesQuery
+from src.application.batches.queries.sort import BatchSortField, BatchSortSpec
+from src.application.products.queries.queries import ListProductsQuery
+from src.application.products.queries.sort import ProductSortField, ProductSortSpec
+from src.application.work_centers.queries.filters import WorkCenterReadFilters
+from src.application.work_centers.queries.queries import ListWorkCentersQuery
+from src.application.work_centers.queries.sort import WorkCenterSortField, WorkCenterSortSpec
 from src.domain.common.queries import PaginationSpec
 from src.presentation.api.schemas.batches import BatchFiltersParams
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams

@@ -3,11 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from src.application.exceptions import (
-    ApplicationException,
-    BusinessRuleViolationException,
-    ValidationException,
-)
+from src.application.common.exceptions import ApplicationException, BusinessRuleViolationException, ValidationException
 from src.core.logging import get_logger
 from src.domain.common.exceptions import (
     AlreadyExistsError,
@@ -20,10 +16,7 @@ from src.domain.common.exceptions import (
     MultipleFoundError,
     RepositoryOperationError,
 )
-from src.domain.webhooks.exceptions import (
-    WebhookSubscriptionInvalidEventsError,
-    WebhookSubscriptionInvalidUrlError,
-)
+from src.domain.webhooks.exceptions import WebhookSubscriptionInvalidEventsError, WebhookSubscriptionInvalidUrlError
 from src.infrastructure.exceptions import (
     ConnectionException,
     DatabaseException,
@@ -31,10 +24,7 @@ from src.infrastructure.exceptions import (
     MappingException,
     OutboxRepositoryException,
 )
-from src.presentation.exceptions import (
-    PresentationException,
-    SerializationException,
-)
+from src.presentation.exceptions import PresentationException, SerializationException
 
 logger = get_logger("exception_handler")
 

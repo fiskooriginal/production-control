@@ -1,4 +1,4 @@
-from src.application.queries.work_centers import WorkCenterReadDTO
+from src.application.work_centers.queries import WorkCenterReadDTO
 from src.infrastructure.persistence.models.work_center import WorkCenter
 
 

@@ -2,8 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from src.application.use_cases.products import AggregateProductUseCase
-from src.application.use_cases.queries import GetProductQueryUseCase, ListProductsQueryUseCase
+from src.application.products.queries.use_cases import GetProductQueryUseCase, ListProductsQueryUseCase
+from src.application.products.use_cases import AggregateProductUseCase
 from src.presentation.api.dependencies import (
     get_aggregate_product_use_case,
     get_list_products_query_use_case,

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.dtos.batches import CloseBatchInputDTO, CreateBatchInputDTO
+from src.application.batches.dtos import CloseBatchInputDTO, CreateBatchInputDTO
 from src.domain.batches.entities import BatchEntity
 from src.presentation.api.schemas.batches import (
     BatchResponse,

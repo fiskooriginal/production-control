@@ -2,8 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from src.application.use_cases.queries import GetWorkCenterQueryUseCase, ListWorkCentersQueryUseCase
-from src.application.use_cases.work_centers import (
+from src.application.work_centers.queries.use_cases import GetWorkCenterQueryUseCase, ListWorkCentersQueryUseCase
+from src.application.work_centers.use_cases import (
     CreateWorkCenterUseCase,
     DeleteWorkCenterUseCase,
     UpdateWorkCenterUseCase,
