@@ -9,7 +9,7 @@ from src.core.logging import get_logger, setup_logging
 from src.core.settings import DatabaseSettings
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
-from src.presentation.api.routes import batches, products, work_centers
+from src.presentation.api.routes import batches, healthcheck, products, work_centers
 
 setup_logging(LOG_LEVEL)
 logger = get_logger("app")
@@ -19,6 +19,7 @@ def add_routes(app: FastAPI) -> None:
     app.include_router(batches.router)
     app.include_router(products.router)
     app.include_router(work_centers.router)
+    app.include_router(healthcheck.router)
 
 
 def create_app(lifespan: Callable) -> FastAPI:

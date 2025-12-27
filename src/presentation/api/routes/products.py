@@ -15,7 +15,7 @@ from src.presentation.mappers.products import aggregate_request_to_input_dto, en
 from src.presentation.mappers.query_params import build_list_products_query
 from src.presentation.mappers.query_responses import product_read_dto_to_response
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/api/products", tags=["products"])
 
 
 @router.patch("/{product_id}/aggregate", response_model=ProductResponse)

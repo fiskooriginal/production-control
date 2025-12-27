@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.presentation.api.dependencies import get_session
 
-router = APIRouter(prefix="/healthcheck", tags=["healthcheck"])
+router = APIRouter(prefix="/api/healthcheck", tags=["healthcheck"])
 
 
-@router.get("", status_code=status.HTTP_200_OK)
+@router.get("/service", status_code=status.HTTP_200_OK)
 async def healthcheck() -> dict[str, str]:
     """
     Проверяет статус приложения.

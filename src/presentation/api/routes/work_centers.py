@@ -31,7 +31,7 @@ from src.presentation.mappers.work_centers import (
     update_request_to_input_dto,
 )
 
-router = APIRouter(prefix="/work-centers", tags=["work-centers"])
+router = APIRouter(prefix="/api/work_centers", tags=["work-centers"])
 
 
 @router.post("", response_model=WorkCenterResponse, status_code=status.HTTP_201_CREATED)

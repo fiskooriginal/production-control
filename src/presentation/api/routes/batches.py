@@ -38,7 +38,7 @@ from src.presentation.mappers.batches import (
 from src.presentation.mappers.query_params import build_list_batches_query
 from src.presentation.mappers.query_responses import batch_read_dto_to_response
 
-router = APIRouter(prefix="/batches", tags=["batches"])
+router = APIRouter(prefix="/api/batches", tags=["batches"])
 
 
 @router.post("", response_model=BatchResponse, status_code=status.HTTP_201_CREATED)
