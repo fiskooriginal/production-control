@@ -17,3 +17,7 @@ class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol)
     async def get_by_ids(self, ids: list[UUID]) -> list[ProductEntity]:
         """Возвращает все продукты из переданного списка ID."""
         ...
+
+    async def get_by_unique_codes(self, unique_codes: list[str]) -> list[ProductEntity]:
+        """Возвращает все продукты из переданного списка уникальных кодов."""
+        ...

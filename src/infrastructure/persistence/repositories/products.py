@@ -116,3 +116,16 @@ class ProductRepository(ProductRepositoryProtocol):
             raise DatabaseException(f"Ошибка базы данных при получении продуктов по ID: {e}") from e
 
         return [to_domain_entity(p) for p in products]
+
+    async def get_by_unique_codes(self, unique_codes: builtins.list[str]) -> builtins.list[ProductEntity]:
+        """Возвращает все продукты из переданного списка уникальных кодов"""
+        try:
+            if not unique_codes:
+                return []
+            stmt = select(Product).where(Product.unique_code.in_(unique_codes))
+            result = await self._session.execute(stmt)
+            products = result.scalars().all()
+        except Exception as e:
+            raise DatabaseException(f"Ошибка базы данных при получении продуктов по уникальным кодам: {e}") from e
+
+        return [to_domain_entity(p) for p in products]
