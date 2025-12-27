@@ -1,5 +1,5 @@
+from src.application.common.uow import UnitOfWorkProtocol
 from src.application.products.dtos import AggregateProductInputDTO
-from src.application.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity

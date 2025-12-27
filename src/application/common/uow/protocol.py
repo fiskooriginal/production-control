@@ -8,11 +8,6 @@ from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryPr
 
 
 class UnitOfWorkProtocol(Protocol):
-    """
-    Протокол UnitOfWork для управления транзакциями и доступа к репозиториям.
-    Зависит от domain repository protocols, а не от concrete infrastructure.persistence классов.
-    """
-
     @abstractmethod
     async def __aenter__(self) -> Self: ...
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.uow import UnitOfWorkProtocol
+from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 
 logger = get_logger("use_case.work_centers")

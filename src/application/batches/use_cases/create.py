@@ -1,6 +1,6 @@
 from src.application.batches.dtos import CreateBatchInputDTO
 from src.application.batches.mappers import input_dto_to_entity
-from src.application.uow import UnitOfWorkProtocol
+from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent

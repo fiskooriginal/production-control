@@ -1,4 +1,4 @@
-from src.application.uow import UnitOfWorkProtocol
+from src.application.common.uow import UnitOfWorkProtocol
 from src.application.work_centers.dtos import CreateWorkCenterInputDTO
 from src.application.work_centers.mappers import input_dto_to_entity
 from src.core.logging import get_logger

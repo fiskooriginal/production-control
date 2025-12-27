@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.uow import UnitOfWorkProtocol
+from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.common.exceptions import InvalidStateError

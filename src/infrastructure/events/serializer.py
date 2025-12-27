@@ -2,9 +2,9 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from src.application.events.registry import EventRegistry
 from src.domain.batches.value_objects import BatchNumber
 from src.domain.common.events import DomainEvent
+from src.infrastructure.events.registry import EventRegistry
 
 
 class EventSerializer:
