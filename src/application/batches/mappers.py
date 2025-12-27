@@ -11,7 +11,7 @@ from src.domain.batches.value_objects import (
 )
 
 
-def input_dto_to_entity(dto: CreateBatchInputDTO) -> BatchEntity:
+def create_input_dto_to_entity(dto: CreateBatchInputDTO) -> BatchEntity:
     """Маппер из CreateBatchInputDTO в BatchEntity"""
     return BatchEntity(
         task_description=TaskDescription(dto.task_description),

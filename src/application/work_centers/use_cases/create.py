@@ -1,6 +1,6 @@
 from src.application.common.uow import UnitOfWorkProtocol
 from src.application.work_centers.dtos import CreateWorkCenterInputDTO
-from src.application.work_centers.mappers import input_dto_to_entity
+from src.application.work_centers.mappers import create_input_dto_to_entity
 from src.core.logging import get_logger
 from src.domain.common.exceptions import InvalidStateError
 from src.domain.work_centers.entities import WorkCenterEntity
@@ -21,7 +21,7 @@ class CreateWorkCenterUseCase:
                 if existing is not None:
                     raise InvalidStateError(f"Рабочий центр с идентификатором {input_dto.identifier} уже существует")
 
-                work_center_entity = input_dto_to_entity(input_dto)
+                work_center_entity = create_input_dto_to_entity(input_dto)
 
                 result = await self._uow.work_centers.create(work_center_entity)
                 logger.info(f"Work center created successfully: work_center_id={result.uuid}")

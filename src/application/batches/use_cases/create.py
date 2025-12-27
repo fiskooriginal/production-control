@@ -1,5 +1,5 @@
 from src.application.batches.dtos import CreateBatchInputDTO
-from src.application.batches.mappers import input_dto_to_entity
+from src.application.batches.mappers import create_input_dto_to_entity
 from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
@@ -19,7 +19,7 @@ class CreateBatchUseCase:
         logger.info(f"Creating batch: batch_number={input_dto.batch_number}")
         try:
             async with self._uow:
-                batch_entity = input_dto_to_entity(input_dto)
+                batch_entity = create_input_dto_to_entity(input_dto)
 
                 is_unique = await validate_batch_number_uniqueness(batch_entity.batch_number, self._uow.batches)
                 if not is_unique:

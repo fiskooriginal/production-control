@@ -4,8 +4,13 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from src.core.time import datetime_now
-from src.domain.batches.events import BatchClosedEvent, ProductAddedToBatchEvent, ProductRemovedFromBatchEvent
-from src.domain.batches.events.batch_aggregated import BatchAggregatedEvent
+from src.domain.batches.events import (
+    BatchAggregatedEvent,
+    BatchClosedEvent,
+    BatchOpenedEvent,
+    ProductAddedToBatchEvent,
+    ProductRemovedFromBatchEvent,
+)
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -66,15 +71,26 @@ class BatchEntity(BaseEntity):
 
     def close(self, closed_at: datetime | None = None) -> None:
         """Закрывает партию с валидацией"""
-        if self.is_closed:
-            raise InvalidStateError("Партия уже закрыта")
-        if closed_at is None:
-            closed_at = datetime_now()
+        if not self.can_close():
+            raise InvalidStateError("Невозможно закрыть партию")
+        closed_at = closed_at or datetime_now()
         self.is_closed = True
         self.closed_at = closed_at
         self.updated_at = datetime_now()
         self.add_domain_event(
             BatchClosedEvent(aggregate_id=self.uuid, batch_number=self.batch_number, closed_at=closed_at)
+        )
+
+    def open(self, opened_at: datetime | None = None) -> None:
+        """Открывает партию с валидацией"""
+        if not self.is_closed:
+            raise InvalidStateError("Партия не закрыта")
+        opened_at = opened_at or datetime_now()
+        self.is_closed = False
+        self.closed_at = None
+        self.updated_at = datetime_now()
+        self.add_domain_event(
+            BatchOpenedEvent(aggregate_id=self.uuid, batch_number=self.batch_number, opened_at=opened_at)
         )
 
     def add_product(self, product: "ProductEntity") -> None:
@@ -112,8 +128,7 @@ class BatchEntity(BaseEntity):
         """Обновляет временной диапазон смены"""
         if self.is_closed:
             raise InvalidStateError("Нельзя изменять время смены для закрытой партии")
-        new_range = ShiftTimeRange(start=start, end=end)
-        self.shift_time_range = new_range
+        self.shift_time_range = ShiftTimeRange(start=start, end=end)
         self.updated_at = datetime_now()
 
     def aggregate(self, aggregated_at: datetime | None = None) -> None:

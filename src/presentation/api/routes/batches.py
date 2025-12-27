@@ -8,6 +8,7 @@ from src.application.batches.use_cases import (
     CloseBatchUseCase,
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
+    UpdateBatchUseCase,
 )
 from src.application.batches.use_cases.aggregate import AggregateBatchUseCase
 from src.presentation.api.dependencies import (
@@ -18,6 +19,7 @@ from src.presentation.api.dependencies import (
     get_create_batch_use_case,
     get_list_batches_query_use_case,
     get_remove_product_from_batch_use_case,
+    get_update_batch_use_case,
 )
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
@@ -27,6 +29,7 @@ from src.presentation.api.schemas.batches import (
     CloseBatchRequest,
     CreateBatchRequest,
     ListBatchesResponse,
+    UpdateBatchRequest,
 )
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
 from src.presentation.mappers.batches import (
@@ -34,6 +37,7 @@ from src.presentation.mappers.batches import (
     close_batch_request_to_input_dto,
     create_batch_request_to_input_dto,
     domain_to_response,
+    update_batch_request_to_input_dto,
 )
 from src.presentation.mappers.query_params import build_list_batches_query
 from src.presentation.mappers.query_responses import batch_read_dto_to_response
@@ -153,5 +157,19 @@ async def aggregate_batch(
     RESTful endpoint: PATCH /batches/{batch_id}/aggregate
     """
     input_dto = aggregate_batch_request_to_input_dto(batch_id, request)
+    batch_entity = await use_case.execute(input_dto)
+    return domain_to_response(batch_entity)
+
+
+@router.patch("/{batch_id}", response_model=BatchResponse)
+async def update_batch(
+    batch_id: UUID,
+    request: UpdateBatchRequest,
+    use_case: UpdateBatchUseCase = Depends(get_update_batch_use_case),
+) -> BatchResponse:
+    """
+    Обновляет партию частично: только указанные поля.
+    """
+    input_dto = update_batch_request_to_input_dto(batch_id, request)
     batch_entity = await use_case.execute(input_dto)
     return domain_to_response(batch_entity)

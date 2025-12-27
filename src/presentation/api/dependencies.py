@@ -9,6 +9,7 @@ from src.application.batches.use_cases import (
     CloseBatchUseCase,
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
+    UpdateBatchUseCase,
 )
 from src.application.batches.use_cases.aggregate import AggregateBatchUseCase
 from src.application.common.uow import UnitOfWorkProtocol
@@ -70,6 +71,11 @@ async def get_remove_product_from_batch_use_case(
 async def get_aggregate_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AggregateBatchUseCase:
     """Dependency для AggregateBatchUseCase"""
     return AggregateBatchUseCase(uow)
+
+
+async def get_update_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> UpdateBatchUseCase:
+    """Dependency для UpdateBatchUseCase"""
+    return UpdateBatchUseCase(uow)
 
 
 # Products

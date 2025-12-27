@@ -1,12 +1,13 @@
 from typing import ClassVar, TypeVar
 
 from src.domain.batches.events import (
+    BatchAggregatedEvent,
     BatchClosedEvent,
     BatchCreatedEvent,
+    BatchOpenedEvent,
     ProductAddedToBatchEvent,
     ProductRemovedFromBatchEvent,
 )
-from src.domain.batches.events.batch_aggregated import BatchAggregatedEvent
 from src.domain.common.events import DomainEvent
 from src.domain.products.events import ProductAggregatedEvent
 
@@ -56,6 +57,7 @@ def _initialize_registry() -> None:
     """Инициализирует реестр всех доменных событий системы"""
     EventRegistry.register("batch.created", 1, BatchCreatedEvent)
     EventRegistry.register("batch.closed", 1, BatchClosedEvent)
+    EventRegistry.register("batch.opened", 1, BatchOpenedEvent)
     EventRegistry.register("batch.product_added", 1, ProductAddedToBatchEvent)
     EventRegistry.register("batch.product_removed", 1, ProductRemovedFromBatchEvent)
     EventRegistry.register("batch.aggregated", 1, BatchAggregatedEvent)

@@ -1,4 +1,4 @@
-from src.application.batches.dtos.aggregate import AggregateBatchInputDTO
+from src.application.batches.dtos import AggregateBatchInputDTO
 from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity

@@ -5,7 +5,7 @@ from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.value_objects import WorkCenterIdentifier, WorkCenterName
 
 
-def input_dto_to_entity(dto: CreateWorkCenterInputDTO) -> WorkCenterEntity:
+def create_input_dto_to_entity(dto: CreateWorkCenterInputDTO) -> WorkCenterEntity:
     """Маппер из CreateWorkCenterInputDTO в WorkCenterEntity"""
     return WorkCenterEntity(
         identifier=WorkCenterIdentifier(dto.identifier),

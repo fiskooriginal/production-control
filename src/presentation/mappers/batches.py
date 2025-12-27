@@ -1,7 +1,11 @@
 from uuid import UUID
 
-from src.application.batches.dtos import CloseBatchInputDTO, CreateBatchInputDTO
-from src.application.batches.dtos.aggregate import AggregateBatchInputDTO
+from src.application.batches.dtos import (
+    AggregateBatchInputDTO,
+    CloseBatchInputDTO,
+    CreateBatchInputDTO,
+    UpdateBatchInputDTO,
+)
 from src.domain.batches.entities import BatchEntity
 from src.presentation.api.schemas.batches import (
     AggregateBatchRequest,
@@ -9,6 +13,7 @@ from src.presentation.api.schemas.batches import (
     CloseBatchRequest,
     CreateBatchRequest,
     ShiftTimeRangeSchema,
+    UpdateBatchRequest,
 )
 from src.presentation.exceptions import SerializationException
 from src.presentation.mappers.products import entity_to_response as product_to_response
@@ -74,3 +79,24 @@ def aggregate_batch_request_to_input_dto(batch_id: UUID, request: AggregateBatch
         return AggregateBatchInputDTO(batch_id=batch_id, aggregated_at=request.aggregated_at)
     except Exception as e:
         raise SerializationException(f"Ошибка сериализации AggregateProductRequest: {e}") from e
+
+
+def update_batch_request_to_input_dto(batch_id: UUID, request: UpdateBatchRequest) -> UpdateBatchInputDTO:
+    """Конвертирует Pydantic UpdateBatchRequest в Application InputDTO"""
+    try:
+        return UpdateBatchInputDTO(
+            batch_id=batch_id,
+            task_description=request.task_description,
+            shift=request.shift,
+            team=request.team,
+            batch_number=request.batch_number,
+            batch_date=request.batch_date,
+            nomenclature=request.nomenclature,
+            ekn_code=request.ekn_code,
+            shift_start=request.shift_start,
+            shift_end=request.shift_end,
+            work_center_id=request.work_center_id,
+            is_closed=request.is_closed,
+        )
+    except Exception as e:
+        raise SerializationException(f"Ошибка сериализации UpdateBatchRequest: {e}") from e
