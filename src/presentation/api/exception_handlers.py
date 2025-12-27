@@ -17,7 +17,7 @@ from src.domain.common.exceptions import (
     RepositoryOperationError,
 )
 from src.domain.webhooks.exceptions import WebhookSubscriptionInvalidEventsError, WebhookSubscriptionInvalidUrlError
-from src.infrastructure.exceptions import (
+from src.infrastructure.common.exceptions import (
     ConnectionException,
     DatabaseException,
     InfrastructureException,

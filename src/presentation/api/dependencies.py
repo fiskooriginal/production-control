@@ -19,11 +19,7 @@ from src.application.work_centers.use_cases import (
     DeleteWorkCenterUseCase,
     UpdateWorkCenterUseCase,
 )
-from src.infrastructure.persistence.queries.services import (
-    BatchQueryService,
-    ProductQueryService,
-    WorkCenterQueryService,
-)
+from src.infrastructure.persistence.queries import BatchQueryService, ProductQueryService, WorkCenterQueryService
 from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
 
 

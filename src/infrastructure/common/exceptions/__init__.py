@@ -1,5 +1,5 @@
-from src.infrastructure.exceptions.base import InfrastructureException
-from src.infrastructure.exceptions.database import (
+from src.infrastructure.common.exceptions.base import InfrastructureException
+from src.infrastructure.common.exceptions.database import (
     ConnectionException,
     DatabaseException,
     MappingException,

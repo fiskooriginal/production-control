@@ -11,9 +11,9 @@ from src.application.products.queries import (
     ProductSortField,
 )
 from src.domain.common.queries import QueryResult
-from src.infrastructure.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.query import product_model_to_read_dto
+from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.product import Product
+from src.infrastructure.persistence.queries.mappers import product_model_to_read_dto
 
 
 class ProductQueryService(ProductQueryServiceProtocol):

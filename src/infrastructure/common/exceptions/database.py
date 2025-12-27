@@ -1,4 +1,4 @@
-from src.infrastructure.exceptions.base import InfrastructureException
+from src.infrastructure.common.exceptions.base import InfrastructureException
 
 
 class DatabaseException(InfrastructureException):

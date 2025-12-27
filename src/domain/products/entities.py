@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from src.core.time import datetime_now
 from src.domain.common.entities import BaseEntity
 from src.domain.common.exceptions import InvalidStateError
-from src.domain.common.time import utc_now
 from src.domain.products.events import ProductAggregatedEvent
 from src.domain.products.value_objects import ProductCode
 
@@ -27,10 +27,10 @@ class ProductEntity(BaseEntity):
         if self.is_aggregated:
             raise InvalidStateError("Продукт уже агрегирован")
         if aggregated_at is None:
-            aggregated_at = utc_now()
+            aggregated_at = datetime_now()
         self.is_aggregated = True
         self.aggregated_at = aggregated_at
-        self.updated_at = utc_now()
+        self.updated_at = datetime_now()
         self.add_domain_event(
             ProductAggregatedEvent(
                 aggregate_id=self.uuid, product_id=self.uuid, batch_id=self.batch_id, aggregated_at=aggregated_at

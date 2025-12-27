@@ -2,15 +2,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from src.core.time import datetime_now
 from src.domain.common.events import DomainEvent
-from src.domain.common.time import utc_now
 
 
 @dataclass(slots=True, kw_only=True)
 class BaseEntity:
     uuid: UUID = field(default_factory=uuid4)
 
-    created_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = field(default_factory=datetime_now)
     updated_at: datetime | None = None
     _domain_events: list[DomainEvent] = field(default_factory=list, init=False, repr=False)
 

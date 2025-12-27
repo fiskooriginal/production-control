@@ -8,11 +8,13 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
-from src.infrastructure.exceptions import MappingException
-from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
-from src.infrastructure.persistence.mappers.products import to_persistence_model as product_to_persistence_model
-from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive, datetime_naive_to_aware
+from src.infrastructure.common.exceptions import MappingException
+from src.infrastructure.common.mappers import datetime_aware_to_naive, datetime_naive_to_aware
 from src.infrastructure.persistence.models.batch import Batch
+from src.infrastructure.persistence.repositories.mappers.products import to_domain_entity as product_to_domain
+from src.infrastructure.persistence.repositories.mappers.products import (
+    to_persistence_model as product_to_persistence_model,
+)
 
 
 def to_domain_entity(batch_model: Batch) -> BatchEntity:

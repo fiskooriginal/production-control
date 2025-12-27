@@ -1,8 +1,8 @@
 from uuid import uuid4
 
+from src.core.time import datetime_now
 from src.domain.common.events import DomainEvent
-from src.domain.common.time import utc_now
-from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive
+from src.infrastructure.common.mappers import datetime_aware_to_naive
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 from src.infrastructure.uow.identity_map import IdentityMap
 
@@ -54,7 +54,7 @@ class EventCollector:
             aggregate_id=event.aggregate_id,
             payload=serialized["payload"],
             occurred_at=datetime_aware_to_naive(event.occurred_at),
-            created_at=datetime_aware_to_naive(utc_now()),
+            created_at=datetime_aware_to_naive(datetime_now()),
             status=OutboxEventStatusEnum.PENDING,
             attempts=0,
             dedup_key=dedup_key,

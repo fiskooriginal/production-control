@@ -5,7 +5,7 @@ from sqlalchemy import MetaData
 from sqlmodel import Field, SQLModel
 
 from src.core.config import DB_SCHEMA
-from src.domain.common.time import utc_now
+from src.core.time import datetime_now
 
 meta = MetaData(schema=DB_SCHEMA)
 
@@ -16,5 +16,5 @@ class BaseModel(SQLModel):
     metadata = meta
 
     uuid: UUID = Field(primary_key=True, default_factory=uuid4, unique=True)
-    created_at: datetime = Field(default_factory=utc_now)
+    created_at: datetime = Field(default_factory=datetime_now)
     updated_at: datetime | None = None

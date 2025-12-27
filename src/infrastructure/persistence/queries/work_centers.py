@@ -11,9 +11,9 @@ from src.application.work_centers.queries import (
     WorkCenterSortField,
 )
 from src.domain.common.queries import QueryResult
-from src.infrastructure.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.query import work_center_model_to_read_dto
+from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.work_center import WorkCenter
+from src.infrastructure.persistence.queries.mappers import work_center_model_to_read_dto
 
 
 class WorkCenterQueryService(WorkCenterQueryServiceProtocol):

@@ -11,9 +11,9 @@ from src.application.batches.queries import (
     ListBatchesQuery,
 )
 from src.domain.common.queries import QueryResult
-from src.infrastructure.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.query import batch_model_to_read_dto
+from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.batch import Batch
+from src.infrastructure.persistence.queries.mappers import batch_model_to_read_dto
 
 
 class BatchQueryService(BatchQueryServiceProtocol):
