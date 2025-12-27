@@ -1,0 +1,115 @@
+version: "3.8"
+
+services:
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/app:cached
+      - devcontainer-venv:/app/.venv
+    command: sleep infinity
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-production_control}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SCHEMA=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_URL=${REDIS_URL:-}
+      - REDIS_PREFIX=${REDIS_PREFIX:-0}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=/
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    networks:
+      - devcontainer-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-production_control}
+    volumes:
+      - devcontainer-postgres-data:/var/lib/postgresql/data
+    networks:
+      - devcontainer-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --appendfsync everysec
+        else
+          redis-server --appendonly yes --appendfsync everysec
+        fi
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    volumes:
+      - devcontainer-redis-data:/data
+    networks:
+      - devcontainer-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          if [ -n "$$REDIS_PASSWORD" ]; then
+            redis-cli -a $$REDIS_PASSWORD ping | grep PONG
+          else
+            redis-cli ping | grep PONG
+          fi
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - devcontainer-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - devcontainer-network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  devcontainer-postgres-data:
+  devcontainer-redis-data:
+  devcontainer-rabbitmq-data:
+  devcontainer-venv:
+
+networks:
+  devcontainer-network:
+    name: production-control-devcontainer-network
