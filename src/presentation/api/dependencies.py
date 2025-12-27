@@ -10,6 +10,7 @@ from src.application.batches.use_cases import (
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
 )
+from src.application.batches.use_cases.aggregate import AggregateBatchUseCase
 from src.application.common.uow import UnitOfWorkProtocol
 from src.application.products.queries.use_cases import GetProductQueryUseCase, ListProductsQueryUseCase
 from src.application.products.use_cases import AggregateProductUseCase
@@ -22,6 +23,8 @@ from src.application.work_centers.use_cases import (
 from src.infrastructure.persistence.queries import BatchQueryService, ProductQueryService, WorkCenterQueryService
 from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
 
+# Session
+
 
 async def get_session(request: Request) -> AsyncGenerator[AsyncSession]:
     """Dependency для получения сессии БД"""
@@ -30,11 +33,18 @@ async def get_session(request: Request) -> AsyncGenerator[AsyncSession]:
         yield session
 
 
+# Unit of Work
+
+
 async def get_uow(session: AsyncSession = Depends(get_session)) -> UnitOfWorkProtocol:
     """Dependency для получения Unit of Work"""
     return SqlAlchemyUnitOfWork(session)
 
 
+# Use Cases
+
+
+# Batches
 async def get_create_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> CreateBatchUseCase:
     """Dependency для CreateBatchUseCase"""
     return CreateBatchUseCase(uow)
@@ -43,11 +53,6 @@ async def get_create_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) 
 async def get_close_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> CloseBatchUseCase:
     """Dependency для CloseBatchUseCase"""
     return CloseBatchUseCase(uow)
-
-
-async def get_aggregate_product_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AggregateProductUseCase:
-    """Dependency для AggregateProductUseCase"""
-    return AggregateProductUseCase(uow)
 
 
 async def get_add_product_to_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AddProductToBatchUseCase:
@@ -62,6 +67,18 @@ async def get_remove_product_from_batch_use_case(
     return RemoveProductFromBatchUseCase(uow)
 
 
+async def get_aggregate_batch_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AggregateBatchUseCase:
+    """Dependency для AggregateBatchUseCase"""
+    return AggregateBatchUseCase(uow)
+
+
+# Products
+async def get_aggregate_product_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AggregateProductUseCase:
+    """Dependency для AggregateProductUseCase"""
+    return AggregateProductUseCase(uow)
+
+
+# Work Centers
 async def get_create_work_center_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> CreateWorkCenterUseCase:
     """Dependency для CreateWorkCenterUseCase"""
     return CreateWorkCenterUseCase(uow)
@@ -75,6 +92,9 @@ async def get_update_work_center_use_case(uow: UnitOfWorkProtocol = Depends(get_
 async def get_delete_work_center_use_case(uow: UnitOfWorkProtocol = Depends(get_uow)) -> DeleteWorkCenterUseCase:
     """Dependency для DeleteWorkCenterUseCase"""
     return DeleteWorkCenterUseCase(uow)
+
+
+# Query Services
 
 
 async def get_work_center_query_service(session: AsyncSession = Depends(get_session)) -> WorkCenterQueryService:

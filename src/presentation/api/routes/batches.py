@@ -9,8 +9,10 @@ from src.application.batches.use_cases import (
     CreateBatchUseCase,
     RemoveProductFromBatchUseCase,
 )
+from src.application.batches.use_cases.aggregate import AggregateBatchUseCase
 from src.presentation.api.dependencies import (
     get_add_product_to_batch_use_case,
+    get_aggregate_batch_use_case,
     get_batch_query_use_case,
     get_close_batch_use_case,
     get_create_batch_use_case,
@@ -19,6 +21,7 @@ from src.presentation.api.dependencies import (
 )
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
+    AggregateBatchRequest,
     BatchFiltersParams,
     BatchResponse,
     CloseBatchRequest,
@@ -27,6 +30,7 @@ from src.presentation.api.schemas.batches import (
 )
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
 from src.presentation.mappers.batches import (
+    aggregate_batch_request_to_input_dto,
     close_batch_request_to_input_dto,
     create_batch_request_to_input_dto,
     domain_to_response,
@@ -135,3 +139,19 @@ async def get_batch(
     """
     batch_dto = await use_case.execute(batch_id)
     return batch_read_dto_to_response(batch_dto)
+
+
+@router.patch("/{batch_id}/aggregate", response_model=BatchResponse)
+async def aggregate_batch(
+    batch_id: UUID,
+    request: AggregateBatchRequest,
+    use_case: AggregateBatchUseCase = Depends(get_aggregate_batch_use_case),
+) -> BatchResponse:
+    """
+    Агрегирует партию и все продукты в ней.
+
+    RESTful endpoint: PATCH /batches/{batch_id}/aggregate
+    """
+    input_dto = aggregate_batch_request_to_input_dto(batch_id, request)
+    batch_entity = await use_case.execute(input_dto)
+    return domain_to_response(batch_entity)

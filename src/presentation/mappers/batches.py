@@ -1,8 +1,10 @@
 from uuid import UUID
 
 from src.application.batches.dtos import CloseBatchInputDTO, CreateBatchInputDTO
+from src.application.batches.dtos.aggregate import AggregateBatchInputDTO
 from src.domain.batches.entities import BatchEntity
 from src.presentation.api.schemas.batches import (
+    AggregateBatchRequest,
     BatchResponse,
     CloseBatchRequest,
     CreateBatchRequest,
@@ -64,3 +66,11 @@ def domain_to_response(entity: BatchEntity) -> BatchResponse:
         )
     except Exception as e:
         raise SerializationException(f"Ошибка сериализации BatchEntity в response: {e}") from e
+
+
+def aggregate_batch_request_to_input_dto(batch_id: UUID, request: AggregateBatchRequest) -> AggregateBatchInputDTO:
+    """Конвертирует Pydantic AggregateProductRequest в Application InputDTO"""
+    try:
+        return AggregateBatchInputDTO(batch_id=batch_id, aggregated_at=request.aggregated_at)
+    except Exception as e:
+        raise SerializationException(f"Ошибка сериализации AggregateProductRequest: {e}") from e

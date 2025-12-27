@@ -16,6 +16,12 @@ class ShiftTimeRangeSchema(BaseModel):
     end: datetime = Field(..., description="Конец смены")
 
 
+class AggregateBatchRequest(BaseModel):
+    """Request schema для агрегации партии"""
+
+    aggregated_at: datetime | None = Field(None, description="Время агрегации (если не указано, используется текущее)")
+
+
 class CreateBatchRequest(BaseModel):
     """Request schema для создания партии"""
 

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from src.core.time import datetime_now
 from src.domain.batches.events import BatchClosedEvent, ProductAddedToBatchEvent, ProductRemovedFromBatchEvent
+from src.domain.batches.events.batch_aggregated import BatchAggregatedEvent
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -49,13 +50,19 @@ class BatchEntity(BaseEntity):
         if self.products is None:
             self.products = []
 
+    def all_products_aggregated(self) -> bool:
+        """Проверяет, все ли продукты в партии агрегированы"""
+        if not self.products:
+            return False
+        return all(product.is_aggregated for product in self.products)
+
     def can_close(self) -> bool:
         """Проверяет, можно ли закрыть партию"""
         if self.is_closed:
             return False
         if not self.products:
             return False
-        return all(product.is_aggregated for product in self.products)
+        return self.all_products_aggregated()
 
     def close(self, closed_at: datetime | None = None) -> None:
         """Закрывает партию с валидацией"""
@@ -108,3 +115,23 @@ class BatchEntity(BaseEntity):
         new_range = ShiftTimeRange(start=start, end=end)
         self.shift_time_range = new_range
         self.updated_at = datetime_now()
+
+    def aggregate(self, aggregated_at: datetime | None = None) -> None:
+        """Агрегирует партию и все продукты в ней"""
+        aggregated_at = aggregated_at or datetime_now()
+
+        if self.is_closed:
+            raise InvalidStateError("Нельзя агрегировать закрытую партию")
+        if not self.products:
+            raise InvalidStateError("Нельзя агрегировать партию без продуктов")
+
+        for product in self.products:
+            try:
+                product.aggregate(aggregated_at)
+            except InvalidStateError:
+                continue
+
+        self.updated_at = datetime_now()
+        self.add_domain_event(
+            BatchAggregatedEvent(aggregate_id=self.uuid, batch_id=self.uuid, aggregated_at=aggregated_at)
+        )
