@@ -1,4 +1,5 @@
 import asyncio
+
 from logging.config import fileConfig
 
 from alembic import context
@@ -46,7 +47,16 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{db_settings.schema}"'))
+    connection.execute(text(f'SET search_path TO "{db_settings.schema}";'))
+    connection.dialect.default_schema_name = db_settings.schema
+
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=db_settings.schema,
+        include_schemas=True,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

@@ -37,9 +37,30 @@ class DatabaseSettings:
     user: str = DB_USER
     password: str = DB_PASSWORD
 
+    def __post_init__(self) -> None:
+        if not self.host:
+            raise ValueError("DB_HOST is not set")
+        if not self.port:
+            raise ValueError("DB_PORT is not set")
+        if not self.name:
+            raise ValueError("DB_NAME is not set")
+        if not self.user:
+            raise ValueError("DB_USER is not set")
+        if not self.password:
+            raise ValueError("DB_PASSWORD is not set")
+
     @property
     def url(self) -> str:
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+
+    def get_safe_url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:***@{self.host}:{self.port}/{self.name}"
+
+    def __repr__(self) -> str:
+        return (
+            f"DatabaseSettings(host={self.host!r}, port={self.port}, "
+            f"schema={self.schema!r}, name={self.name!r}, user={self.user!r}, password='***')"
+        )
 
 
 @dataclass

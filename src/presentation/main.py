@@ -37,6 +37,8 @@ async def lifespan(app: FastAPI):
     logger.info("Application startup initiated")
     try:
         db_settings = DatabaseSettings()
+        logger.info(f"Database settings: {db_settings}")
+        logger.info(f"Database URL: {db_settings.get_safe_url()}")
         engine = init_engine(db_settings.url)
         session_factory = make_session_factory(engine)
         app.state.engine = engine

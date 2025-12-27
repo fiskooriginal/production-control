@@ -47,66 +47,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -fsSL http://localhost:8000/api/v1/healthcheck || exit 1",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  app_dev:
-    profiles: ["api", "dev"]
-    container_name: production-control.app.dev
-    image: production-control
-    build:
-      context: .
-    restart: unless-stopped
-    expose:
-      - "8000"
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - production-control.network
-    volumes:
-      - ./.env:/app/.env:ro
-      - ./src:/app/src:rw
-      - ./alembic.ini:/app/alembic.ini:ro
-      - ./pyproject.toml:/app/pyproject.toml:ro
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_URL=${REDIS_URL}
-      - REDIS_PREFIX=${REDIS_PREFIX}
-    command:
-      [
-        "python",
-        "-m",
-        "uvicorn",
-        "src.presentation.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-        "--reload-dir",
-        "src",
-      ]
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -fsSL http://localhost:8000/api/v1/healthcheck || exit 1",
+          "curl -fsSL http://localhost:8000/api/healthcheck/service || exit 1",
         ]
       interval: 10s
       timeout: 5s
