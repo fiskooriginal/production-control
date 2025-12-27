@@ -26,8 +26,6 @@ async def aggregate_product(
 ) -> ProductResponse:
     """
     Агрегирует продукт.
-
-    RESTful endpoint: PATCH /products/{product_id}/aggregate
     """
     input_dto = aggregate_request_to_input_dto(product_id, request)
     product_entity = await use_case.execute(input_dto)

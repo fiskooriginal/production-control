@@ -11,8 +11,6 @@ router = APIRouter(prefix="/api/healthcheck", tags=["healthcheck"])
 async def healthcheck() -> dict[str, str]:
     """
     Проверяет статус приложения.
-
-    RESTful endpoint: GET /healthcheck
     """
     return {"status": "ok"}
 
@@ -23,8 +21,6 @@ async def database_healthcheck(
 ) -> dict[str, str]:
     """
     Проверяет статус базы данных.
-
-    RESTful endpoint: GET /healthcheck/database
     """
     try:
         await session.execute(text("SELECT 1"))

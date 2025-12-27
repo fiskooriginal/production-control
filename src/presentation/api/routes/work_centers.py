@@ -41,8 +41,6 @@ async def create_work_center(
 ) -> WorkCenterResponse:
     """
     Создает новый рабочий центр.
-
-    RESTful endpoint: POST /work-centers
     """
     input_dto = create_request_to_input_dto(request)
     work_center_entity = await use_case.execute(input_dto)
@@ -56,8 +54,6 @@ async def get_work_center(
 ) -> WorkCenterResponse:
     """
     Получает рабочий центр по ID.
-
-    RESTful endpoint: GET /work-centers/{work_center_id}
     """
     work_center_dto = await use_case.execute(work_center_id)
     return work_center_read_dto_to_response(work_center_dto)
@@ -71,8 +67,6 @@ async def update_work_center(
 ) -> WorkCenterResponse:
     """
     Обновляет рабочий центр.
-
-    RESTful endpoint: PATCH /work-centers/{work_center_id}
     """
     input_dto = update_request_to_input_dto(work_center_id, request)
     work_center_entity = await use_case.execute(input_dto)
@@ -86,8 +80,6 @@ async def delete_work_center(
 ) -> None:
     """
     Удаляет рабочий центр.
-
-    RESTful endpoint: DELETE /work-centers/{work_center_id}
     """
 
     await use_case.execute(work_center_id)
@@ -102,8 +94,6 @@ async def list_work_centers(
 ) -> ListWorkCentersResponse:
     """
     Получает список рабочих центров с фильтрацией, пагинацией и сортировкой.
-
-    RESTful endpoint: GET /work-centers
     """
     query = build_list_work_centers_query(filter_params, pagination_params, sort_params)
     result = await use_case.execute(query)

@@ -54,8 +54,6 @@ async def create_batch(
 ) -> BatchResponse:
     """
     Создает новую партию.
-
-    RESTful endpoint: POST /batches
     """
     input_dto = create_batch_request_to_input_dto(request)
     batch_entity = await use_case.execute(input_dto)
@@ -70,8 +68,6 @@ async def close_batch(
 ) -> BatchResponse:
     """
     Закрывает партию.
-
-    RESTful endpoint: PATCH /batches/{batch_id}/close
     """
     input_dto = close_batch_request_to_input_dto(batch_id, request)
     batch_entity = await use_case.execute(input_dto)
@@ -86,8 +82,6 @@ async def add_product_to_batch(
 ) -> BatchResponse:
     """
     Добавляет продукт в партию.
-
-    RESTful endpoint: POST /batches/{batch_id}/products
     """
     batch_entity = await use_case.execute(batch_id, request.unique_code)
     return domain_to_response(batch_entity)
@@ -101,8 +95,6 @@ async def remove_product_from_batch(
 ) -> BatchResponse:
     """
     Удаляет продукт из партии.
-
-    RESTful endpoint: DELETE /batches/{batch_id}/products/{product_id}
 
     ВАЖНО: Продукт будет полностью удален из БД, так как batch_id NOT NULL.
     """
@@ -119,8 +111,6 @@ async def list_batches(
 ) -> ListBatchesResponse:
     """
     Получает список партий с фильтрацией, пагинацией и сортировкой.
-
-    RESTful endpoint: GET /batches
     """
     query = build_list_batches_query(filter_params, pagination_params, sort_params)
     result = await use_case.execute(query)
@@ -140,8 +130,6 @@ async def get_batch(
 ) -> BatchResponse:
     """
     Получает партию по UUID.
-
-    RESTful endpoint: GET /batches/{batch_id}
     """
     batch_dto = await use_case.execute(batch_id)
     return batch_read_dto_to_response(batch_dto)
@@ -155,8 +143,6 @@ async def aggregate_batch(
 ) -> BatchResponse:
     """
     Агрегирует партию и все продукты в ней.
-
-    RESTful endpoint: PATCH /batches/{batch_id}/aggregate
     """
     input_dto = aggregate_batch_request_to_input_dto(batch_id, request)
     batch_entity = await use_case.execute(input_dto)
@@ -184,8 +170,6 @@ async def delete_batch(
 ) -> None:
     """
     Удаляет закрытую партию и все связанные продукты.
-
-    RESTful endpoint: DELETE /batches/{batch_id}
 
     ВАЖНО: Можно удалить только закрытую партию. Все продукты будут автоматически удалены.
     """
