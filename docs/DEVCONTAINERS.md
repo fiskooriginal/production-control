@@ -331,3 +331,7 @@ Dev Container использует отдельный `docker-compose.yml` в п
 
 Основной `docker-compose.yml` можно использовать одновременно с Dev Container для запуска production-like окружения.
 
+
+
+
+
