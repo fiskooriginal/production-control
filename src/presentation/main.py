@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,27 +8,10 @@ from src.core.logging import get_logger, setup_logging
 from src.core.settings import DatabaseSettings
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
-from src.presentation.api.routes import batches, healthcheck, products, work_centers
+from src.presentation.api.routes import background_tasks, batches, healthcheck, products, work_centers
 
 setup_logging(LOG_LEVEL)
 logger = get_logger("app")
-
-
-def add_routes(app: FastAPI) -> None:
-    app.include_router(batches.router)
-    app.include_router(products.router)
-    app.include_router(work_centers.router)
-    app.include_router(healthcheck.router)
-
-
-def create_app(lifespan: Callable) -> FastAPI:
-    app = FastAPI(title="Production Control API", lifespan=lifespan)
-
-    app.add_middleware(LoggingMiddleware)
-    register_exception_handlers(app)
-    add_routes(app)
-
-    return app
 
 
 @asynccontextmanager
@@ -59,4 +41,20 @@ async def lifespan(app: FastAPI):
         raise
 
 
-app = create_app(lifespan)
+def add_routes(app: FastAPI) -> None:
+    app.include_router(batches.router)
+    app.include_router(products.router)
+    app.include_router(work_centers.router)
+    app.include_router(healthcheck.router)
+    app.include_router(background_tasks.router)
+
+
+def add_middlewares(app: FastAPI) -> None:
+    app.add_middleware(LoggingMiddleware)
+
+
+app = FastAPI(title="Production Control API", lifespan=lifespan)
+
+add_middlewares(app)
+register_exception_handlers(app)
+add_routes(app)
