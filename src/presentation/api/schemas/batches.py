@@ -20,6 +20,10 @@ class AggregateBatchRequest(BaseModel):
     """Request schema для агрегации партии"""
 
     aggregated_at: datetime | None = Field(None, description="Время агрегации (если не указано, используется текущее)")
+    unique_codes: list[str] | None = Field(
+        None,
+        description="Список уникальных кодов продуктов для агрегации. Если не указан, агрегируются все продукты партии.",
+    )
 
 
 class CreateBatchRequest(BaseModel):

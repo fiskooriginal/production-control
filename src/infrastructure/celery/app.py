@@ -1,10 +1,18 @@
-from celery import Celery
+import asyncio
 
+from celery import Celery
+from celery.signals import worker_process_init, worker_process_shutdown
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
-from src.core.settings import CelerySettings, RabbitMQSettings, RedisSettings
+from src.core.settings import CelerySettings, DatabaseSettings, RabbitMQSettings, RedisSettings
 from src.infrastructure.celery.beat_schedule import beat_schedule
 
 logger = get_logger("celery")
+
+_engine: AsyncEngine | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
 
 rabbitmq_settings = RabbitMQSettings()
 redis_settings = RedisSettings()
@@ -20,7 +28,9 @@ celery_app = Celery(
     "production_control",
     broker=broker_url,
     backend=result_backend,
-    include=["src.infrastructure.celery.tasks"],
+    include=[
+        "src.infrastructure.celery.tasks.aggregate_batch",
+    ],
 )
 
 celery_app.conf.update(
@@ -36,3 +46,47 @@ celery_app.conf.update(
 )
 
 logger.info(f"Celery app initialized successfully with {len(beat_schedule)} scheduled task(s)")
+
+
+@worker_process_init.connect
+def init_worker_db(**kwargs) -> None:
+    """Инициализирует database engine при старте worker процесса"""
+    global _engine, _session_factory
+    try:
+        db_settings = DatabaseSettings()
+        logger.info(f"Initializing database engine for worker: {db_settings.get_safe_url()}")
+        _engine = init_engine(db_settings.url)
+        _session_factory = make_session_factory(_engine)
+        logger.info("Database engine initialized for worker")
+    except Exception as e:
+        logger.exception(f"Failed to initialize database engine for worker: {e}")
+        raise
+
+
+@worker_process_shutdown.connect
+def shutdown_worker_db(**kwargs) -> None:
+    """Корректно закрывает database engine при остановке worker процесса"""
+    global _engine, _session_factory
+    if _engine:
+        try:
+            logger.info("Disposing database engine for worker")
+            asyncio.run(dispose_engine(_engine))
+            _engine = None
+            _session_factory = None
+            logger.info("Database engine disposed for worker")
+        except Exception as e:
+            logger.exception(f"Error disposing database engine for worker: {e}")
+
+
+def get_engine() -> AsyncEngine:
+    """Возвращает глобальный database engine для использования в задачах"""
+    if _engine is None:
+        raise RuntimeError("Database engine not initialized. Ensure worker_process_init signal was called.")
+    return _engine
+
+
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Возвращает session factory для использования в задачах"""
+    if _session_factory is None:
+        raise RuntimeError("Session factory not initialized. Ensure worker_process_init signal was called.")
+    return _session_factory

@@ -6,6 +6,8 @@ from src.core.config import (
     CELERY_RESULT_BACKEND,
     CELERY_TASK_ACKS_LATE,
     CELERY_TASK_DEFAULT_QUEUE,
+    CELERY_TASK_DEFAULT_RETRY_DELAY,
+    CELERY_TASK_MAX_RETRIES,
     CELERY_TASK_REJECT_ON_WORKER_LOST,
     CELERY_TIMEZONE,
     CELERY_WORKER_CONCURRENCY,
@@ -103,6 +105,8 @@ class CelerySettings:
     task_reject_on_worker_lost: bool = CELERY_TASK_REJECT_ON_WORKER_LOST
     worker_concurrency: int = CELERY_WORKER_CONCURRENCY
     redis_key_prefix: str = CELERY_REDIS_KEY_PREFIX
+    task_max_retries: int = CELERY_TASK_MAX_RETRIES
+    task_default_retry_delay: int = CELERY_TASK_DEFAULT_RETRY_DELAY
 
     def get_broker_url(self, rabbitmq_settings: RabbitMQSettings) -> str:
         """Get broker URL, use configured or build from RabbitMQ settings."""
