@@ -1,12 +1,25 @@
 from dataclasses import dataclass
 
 from src.core.config import (
+    CELERY_BROKER_URL,
+    CELERY_REDIS_KEY_PREFIX,
+    CELERY_RESULT_BACKEND,
+    CELERY_TASK_ACKS_LATE,
+    CELERY_TASK_DEFAULT_QUEUE,
+    CELERY_TASK_REJECT_ON_WORKER_LOST,
+    CELERY_TIMEZONE,
+    CELERY_WORKER_CONCURRENCY,
     DB_HOST,
     DB_NAME,
     DB_PASSWORD,
     DB_PORT,
     DB_SCHEMA,
     DB_USER,
+    RABBITMQ_HOST,
+    RABBITMQ_PASSWORD,
+    RABBITMQ_PORT,
+    RABBITMQ_USER,
+    RABBITMQ_VHOST,
     REDIS_HOST,
     REDIS_PASSWORD,
     REDIS_PORT,
@@ -44,3 +57,41 @@ class RedisSettings:
         if self.password:
             return f"redis://:{self.password}@{self.host}:{self.port}/{self.prefix}"
         return f"redis://{self.host}:{self.port}/{self.prefix}"
+
+
+@dataclass
+class RabbitMQSettings:
+    host: str = RABBITMQ_HOST
+    port: int = RABBITMQ_PORT
+    user: str = RABBITMQ_USER
+    password: str = RABBITMQ_PASSWORD
+    vhost: str = RABBITMQ_VHOST
+
+    def get_broker_url(self) -> str:
+        """Get RabbitMQ broker URL for Celery."""
+        return f"amqp://{self.user}:{self.password}@{self.host}:{self.port}/{self.vhost}"
+
+
+@dataclass
+class CelerySettings:
+    broker_url: str | None = CELERY_BROKER_URL
+    result_backend: str | None = CELERY_RESULT_BACKEND
+    timezone: str = CELERY_TIMEZONE
+    task_default_queue: str = CELERY_TASK_DEFAULT_QUEUE
+    task_acks_late: bool = CELERY_TASK_ACKS_LATE
+    task_reject_on_worker_lost: bool = CELERY_TASK_REJECT_ON_WORKER_LOST
+    worker_concurrency: int = CELERY_WORKER_CONCURRENCY
+    redis_key_prefix: str = CELERY_REDIS_KEY_PREFIX
+
+    def get_broker_url(self, rabbitmq_settings: RabbitMQSettings) -> str:
+        """Get broker URL, use configured or build from RabbitMQ settings."""
+        if self.broker_url and self.broker_url.strip():
+            return self.broker_url.strip()
+        return rabbitmq_settings.get_broker_url()
+
+    def get_result_backend_url(self, redis_settings: RedisSettings) -> str:
+        """Get result backend URL, use configured or build from Redis settings."""
+        if self.result_backend and self.result_backend.strip():
+            return self.result_backend.strip()
+        redis_url = redis_settings.get_url()
+        return f"{redis_url}?key_prefix={self.redis_key_prefix}"

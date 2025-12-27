@@ -134,7 +134,7 @@ services:
     command: ["python", "-m", "alembic", "upgrade", "head"]
 
   postgres:
-    profiles: ["api", "migration"]
+    profiles: ["api", "migration", "celery"]
     container_name: production-control.postgres
     image: "postgres:17-alpine"
     hostname: production-control.postgres
@@ -159,7 +159,7 @@ services:
       start_period: 10s
 
   redis:
-    profiles: ["api"]
+    profiles: ["api", "celery"]
     container_name: production-control.redis
     image: "redis:7-alpine"
     hostname: production-control.redis
@@ -215,11 +215,181 @@ services:
     volumes:
       - ${POSTGRES_BACKUP_DIR:-./.backups/postgres}:/backups
 
+  rabbitmq:
+    profiles: ["api", "celery"]
+    container_name: production-control.rabbitmq
+    image: "rabbitmq:3.13-management-alpine"
+    hostname: production-control.rabbitmq
+    restart: unless-stopped
+    expose:
+      - "5672"
+      - "15672"
+    ports:
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
+    networks:
+      - production-control.network
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - production-control.rabbitmq.data:/var/lib/rabbitmq:rw
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  celery_worker:
+    profiles: ["celery"]
+    container_name: production-control.celery_worker
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PREFIX=${REDIS_PREFIX}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.celery.app:celery_app",
+        "worker",
+        "-l",
+        "INFO",
+        "--concurrency=2",
+      ]
+
+  celery_beat:
+    profiles: ["celery"]
+    container_name: production-control.celery_beat
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+      - production-control.celery_beat.schedule:/app/celerybeat-schedule:rw
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PREFIX=${REDIS_PREFIX}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.celery.app:celery_app",
+        "beat",
+        "-l",
+        "INFO",
+        "-s",
+        "/app/celerybeat-schedule/schedule",
+      ]
+
+  flower:
+    profiles: ["celery"]
+    container_name: production-control.flower
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    expose:
+      - "5555"
+    ports:
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+    environment:
+      - PYTHONPATH=/app
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PREFIX=${REDIS_PREFIX}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.celery.app:celery_app",
+        "flower",
+        "--port=5555",
+      ]
+
 volumes:
   production-control.postgres.data:
     name: production-control.postgres.data
   production-control.redis.data:
     name: production-control.redis.data
+  production-control.rabbitmq.data:
+    name: production-control.rabbitmq.data
+  production-control.celery_beat.schedule:
+    name: production-control.celery_beat.schedule
 
 networks:
   production-control.network:

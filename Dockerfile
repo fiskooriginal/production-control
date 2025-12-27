@@ -30,6 +30,8 @@ RUN uv sync --all-extras --no-editable
 
 FROM python-base AS runner
 
+ENV PYTHONPATH="$APP_PATH"
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/

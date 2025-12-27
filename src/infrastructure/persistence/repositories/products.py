@@ -1,4 +1,5 @@
 import builtins
+
 from uuid import UUID
 
 from sqlalchemy import select
