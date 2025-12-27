@@ -77,10 +77,10 @@ def upgrade() -> None:
         sa.Column('uuid', sa.Uuid(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('event_type', sa.Enum('BATCH_CREATED', 'BATCH_CLOSED', name='webhookeventtype'), nullable=True),
-        sa.Column('status', sa.Enum('PENDING', 'SUCCESS', 'FAILED', name='webhookstatus'), nullable=True),
+        sa.Column('event_type', sa.Enum('BATCH_CREATED', 'BATCH_CLOSED', name='webhookeventtype'), nullable=False),
+        sa.Column('status', sa.Enum('PENDING', 'SUCCESS', 'FAILED', name='webhookstatus'), nullable=False),
         sa.Column('attempts', sa.Integer(), nullable=False),
-        sa.Column('payload', sa.JSON(), nullable=True),
+        sa.Column('payload', sa.JSON(), nullable=False),
         sa.Column('response_status', sa.Integer(), nullable=True),
         sa.Column('response_body', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('error_message', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -118,6 +118,8 @@ def downgrade() -> None:
     op.drop_index('idx_product_batch_id', table_name='products', schema='public')
     op.drop_table('products', schema='public')
     op.drop_table('webhook_deliveries', schema='public')
+    op.execute("DROP TYPE IF EXISTS webhookeventtype")
+    op.execute("DROP TYPE IF EXISTS webhookstatus")
     op.drop_index('idx_batch_number_date', table_name='batches', schema='public')
     op.drop_index('idx_batch_number', table_name='batches', schema='public')
     op.drop_index('idx_batch_date', table_name='batches', schema='public')
