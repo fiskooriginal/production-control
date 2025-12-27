@@ -1,11 +1,10 @@
 from uuid import uuid4
 
-from src.application.events.serializer import EventSerializer
-from src.application.uow.identity_map import IdentityMap
 from src.domain.common.events import DomainEvent
 from src.domain.common.time import utc_now
 from src.infrastructure.persistence.mappers.shared import datetime_aware_to_naive
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
+from src.infrastructure.uow.identity_map import IdentityMap
 
 
 class EventCollector:
@@ -42,6 +41,8 @@ class EventCollector:
 
     def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
+        from src.infrastructure.events import EventSerializer
+
         serialized = EventSerializer.serialize(event)
 
         dedup_key = self._generate_dedup_key(event)
@@ -50,7 +51,7 @@ class EventCollector:
             uuid=uuid4(),
             event_name=serialized["event_name"],
             event_version=serialized["event_version"],
-            aggregate_id=serialized["aggregate_id"],
+            aggregate_id=event.aggregate_id,
             payload=serialized["payload"],
             occurred_at=datetime_aware_to_naive(event.occurred_at),
             created_at=datetime_aware_to_naive(utc_now()),
@@ -64,7 +65,7 @@ class EventCollector:
         Генерирует ключ дедупликации для события.
         Формат: event_name:aggregate_id:occurred_at_iso
         """
-        from src.application.events.registry import EventRegistry
+        from src.infrastructure.events import EventRegistry
 
         event_name, _ = EventRegistry.get_event_metadata(type(event))
         occurred_at_str = event.occurred_at.isoformat()

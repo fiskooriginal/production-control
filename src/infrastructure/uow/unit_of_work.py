@@ -3,13 +3,7 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.uow.event_collector import EventCollector
-from src.application.uow.identity_map import IdentityMap
-from src.application.uow.proxy_repositories import (
-    BatchRepositoryProxy,
-    ProductRepositoryProxy,
-    WorkCenterRepositoryProxy,
-)
+from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
@@ -18,11 +12,13 @@ from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
 from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
+from src.infrastructure.uow.event_collector import EventCollector
+from src.infrastructure.uow.identity_map import IdentityMap
 
 logger = get_logger("uow")
 
 
-class UnitOfWork:
+class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     """
     Unit of Work для управления транзакциями и сбором доменных событий.
 
@@ -42,28 +38,24 @@ class UnitOfWork:
         self._event_collector = EventCollector(self._identity_map)
         self._outbox_repository = OutboxRepository(session)
 
-        batch_repo = BatchRepository(session)
-        product_repo = ProductRepository(session)
-        work_center_repo = WorkCenterRepository(session)
-
-        self._batches = BatchRepositoryProxy(batch_repo, self._identity_map)
-        self._products = ProductRepositoryProxy(product_repo, self._identity_map)
-        self._work_centers = WorkCenterRepositoryProxy(work_center_repo, self._identity_map)
+        self._batch_repo = BatchRepository(session)
+        self._product_repo = ProductRepository(session)
+        self._work_center_repo = WorkCenterRepository(session)
 
     @property
     def batches(self) -> BatchRepositoryProtocol:
         """Proxy репозиторий для партий с трекингом агрегатов"""
-        return self._batches
+        return _TrackedRepositoryWrapper(self._batch_repo, self._identity_map)
 
     @property
     def products(self) -> ProductRepositoryProtocol:
         """Proxy репозиторий для продуктов с трекингом агрегатов"""
-        return self._products
+        return _TrackedRepositoryWrapper(self._product_repo, self._identity_map)
 
     @property
     def work_centers(self) -> WorkCenterRepositoryProtocol:
         """Proxy репозиторий для рабочих центров с трекингом агрегатов"""
-        return self._work_centers
+        return _TrackedRepositoryWrapper(self._work_center_repo, self._identity_map)
 
     async def __aenter__(self) -> Self:
         """Начинает транзакцию UOW"""
@@ -107,7 +99,7 @@ class UnitOfWork:
             await self._outbox_repository.insert_events(outbox_events)
 
         await self._session.commit()
-        logger.info("Transaction committed successfully (commit)")
+        logger.info("Transaction committed successfully")
 
         self._event_collector.clear_events()
         self._identity_map.clear()
@@ -117,6 +109,33 @@ class UnitOfWork:
         Откатывает транзакцию.
         События НЕ очищаются - это позволяет им остаться для retry логики.
         """
-        logger.warning("Transtaction rolled back (rollback)")
+        logger.warning("Transaction rolled back")
         await self._session.rollback()
         self._identity_map.clear()
+
+
+class _TrackedRepositoryWrapper:
+    """Wrapper для автоматического трекинга сущностей в IdentityMap"""
+
+    def __init__(self, repository, identity_map: IdentityMap):
+        self._repository = repository
+        self._identity_map = identity_map
+
+    def __getattr__(self, name: str):
+        attr = getattr(self._repository, name)
+        if not callable(attr):
+            return attr
+
+        async def wrapper(*args, **kwargs):
+            result = await attr(*args, **kwargs)
+
+            if hasattr(result, "uuid"):
+                self._identity_map.add(result)
+            elif isinstance(result, list):
+                for entity in result:
+                    if hasattr(entity, "uuid"):
+                        self._identity_map.add(entity)
+
+            return result
+
+        return wrapper
