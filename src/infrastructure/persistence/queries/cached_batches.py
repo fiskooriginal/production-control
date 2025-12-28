@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.batches.queries import BatchReadDTO, ListBatchesQuery
+from src.application.batches.queries.dtos import ProductReadDTONested
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 from src.infrastructure.cache.keys import get_batch_key, get_batches_list_key
@@ -24,27 +25,23 @@ class CachedBatchQueryService(BatchQueryService):
 
     async def get(self, batch_id: UUID) -> BatchReadDTO | None:
         """Получает партию по UUID с кэшированием."""
-        cache_key = None
-        if self._cache_service and self._cache_service.enabled:
-            try:
-                cache_key = get_batch_key(batch_id, self._cache_service.key_prefix)
-                cached_data = await self._cache_service.get(cache_key)
-                if cached_data:
-                    dto = self._deserialize_batch_dto(cached_data)
-                    if dto:
-                        return dto
-            except Exception as e:
-                logger.warning(f"Failed to get batch from cache: {e}")
+        cache_key = get_batch_key(batch_id, self._cache_service.key_prefix)
+        try:
+            cached_data = await self._cache_service.get(cache_key)
+            if cached_data:
+                dto = self._deserialize_batch_dto(cached_data)
+                if dto:
+                    return dto
+        except Exception as e:
+            logger.warning(f"Failed to get batch from cache: {e}")
 
         dto = await super().get(batch_id)
 
-        if self._cache_service and self._cache_service.enabled and dto:
-            try:
-                cache_key = cache_key or get_batch_key(batch_id, self._cache_service.key_prefix)
-                serialized = self._serialize_batch_dto(dto)
-                await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_batch)
-            except Exception as e:
-                logger.warning(f"Failed to cache batch: {e}")
+        try:
+            serialized = self._serialize_batch_dto(dto)
+            await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_batch)
+        except Exception as e:
+            logger.warning(f"Failed to cache batch: {e}")
 
         return dto
 
@@ -83,7 +80,8 @@ class CachedBatchQueryService(BatchQueryService):
             dto_dict = json.loads(json_str)
             field_names = {f.name for f in fields(BatchReadDTO)}
             filtered_dict = {k: v for k, v in dto_dict.items() if k in field_names}
-            return BatchReadDTO(**filtered_dict)
+            products = [ProductReadDTONested(**p) for p in filtered_dict.pop("products", [])]
+            return BatchReadDTO(**filtered_dict, products=products)
         except Exception as e:
             logger.warning(f"Failed to deserialize BatchReadDTO: {e}")
             return None
