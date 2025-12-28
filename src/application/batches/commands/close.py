@@ -3,10 +3,10 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 
-logger = get_logger("use_case.batches")
+logger = get_logger("command.batches")
 
 
-class CloseBatchUseCase:
+class CloseBatchCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

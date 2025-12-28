@@ -7,13 +7,13 @@
 ### Write-side (Command)
 
 - **Repositories** (domain protocols + infrastructure) - только `get_or_raise`, `create`, `update`, `delete`
-- **Command Use Cases** - работают с репозиториями через UoW для транзакций
+- **Commands** - работают с репозиториями через UoW для транзакций
 - **Доменные сущности** - полные агрегаты с бизнес-логикой и событиями
 
 ### Read-side (Query)
 
 - **Query Objects** (application layer) - типизированные модели запросов
-- **Query Use Cases** (application layer) - бизнес-логика для чтения
+- **Query Handlers** (application layer) - бизнес-логика для чтения
 - **Query Service Protocols** (application layer) - порты/интерфейсы
 - **Query Services** (infrastructure layer) - SQLAlchemy реализации
 - **Read DTOs** (application layer) - проекции данных без бизнес-логики
@@ -23,7 +23,7 @@
 ### Read-side (GET /list, GET /id)
 
 ```
-API Route → Query Params → Query Object → Query Use Case → Query Service Protocol → SQLAlchemy Query Service → Database
+API Route → Query Params → Query Object → Query Handler → Query Service Protocol → SQLAlchemy Query Service → Database
                 ↓                                                                              ↓
         Mapper (presentation)                                                         Mapper (infrastructure)
                                                                                                 ↓
@@ -33,7 +33,7 @@ API Route → Query Params → Query Object → Query Use Case → Query Service
 ### Write-side (POST, PATCH, DELETE)
 
 ```
-API Route → Request → Input DTO → Command Use Case → Repository (через UoW) → Database
+API Route → Request → Input DTO → Command → Repository (через UoW) → Database
                 ↓                        ↓                    ↓
         Mapper (presentation)    Domain Logic      Domain Entity (полный агрегат)
 ```
@@ -365,8 +365,8 @@ class BatchReadDTO:
 2. Создайте порт в `src/application/queries/ports.py`:
    - `{Entity}QueryServiceProtocol`
 
-3. Создайте Query Use Case в `src/application/use_cases/queries/{entity}.py`:
-   - `List{Entity}QueryUseCase`
+3. Создайте Query Handler в `src/application/{entity}/queries/handlers/{entity}.py`:
+   - `List{Entity}QueryHandler`
 
 4. Создайте SQLAlchemy Query Service в `src/infrastructure/persistence/query_services/{entity}.py`:
    - `{Entity}QueryService` с методом `list(query)` и `_to_dto(model)`

@@ -4,10 +4,10 @@ from src.core.logging import get_logger
 from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity
 
-logger = get_logger("use_case.products")
+logger = get_logger("command.products")
 
 
-class AggregateProductUseCase:
+class AggregateProductCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

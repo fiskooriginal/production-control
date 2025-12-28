@@ -5,10 +5,10 @@ from src.core.logging import get_logger
 from src.domain.common.exceptions import InvalidStateError
 from src.domain.work_centers.entities import WorkCenterEntity
 
-logger = get_logger("use_case.work_centers")
+logger = get_logger("command.work_centers")
 
 
-class CreateWorkCenterUseCase:
+class CreateWorkCenterCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

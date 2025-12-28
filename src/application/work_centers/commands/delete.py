@@ -3,10 +3,10 @@ from uuid import UUID
 from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 
-logger = get_logger("use_case.work_centers")
+logger = get_logger("command.work_centers")
 
 
-class DeleteWorkCenterUseCase:
+class DeleteWorkCenterCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

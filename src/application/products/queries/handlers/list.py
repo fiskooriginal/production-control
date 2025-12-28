@@ -4,10 +4,10 @@ from src.application.products.queries.service import ProductQueryServiceProtocol
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 
-logger = get_logger("use_case.queries.products")
+logger = get_logger("query.handler.products")
 
 
-class ListProductsQueryUseCase:
+class ListProductsQueryHandler:
     def __init__(self, query_service: ProductQueryServiceProtocol):
         self._query_service = query_service
 

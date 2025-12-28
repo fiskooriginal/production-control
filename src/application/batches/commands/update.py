@@ -14,10 +14,10 @@ from src.domain.batches.value_objects import (
 )
 from src.domain.common.exceptions import InvalidStateError
 
-logger = get_logger("use_case.batches")
+logger = get_logger("command.batches")
 
 
-class UpdateBatchUseCase:
+class UpdateBatchCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

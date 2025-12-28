@@ -7,10 +7,10 @@ from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
 
-logger = get_logger("use_case.batches")
+logger = get_logger("command.batches")
 
 
-class AddProductToBatchUseCase:
+class AddProductToBatchCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

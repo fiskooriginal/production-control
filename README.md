@@ -7,7 +7,7 @@
 Проект следует принципам Clean Architecture с разделением на слои:
 
 - **Domain**: бизнес-логика, сущности, события, исключения
-- **Application**: use cases, CQRS queries, DTO
+- **Application**: commands, query handlers, DTO
 - **Infrastructure**: репозитории, БД, Celery, outbox
 - **Presentation**: FastAPI endpoints, schemas, mappers
 
@@ -122,7 +122,7 @@ LOG_LEVEL=INFO
 src/
 ├── core/               # Общие настройки, логирование, база данных
 ├── domain/             # Доменная модель (сущности, события, value objects)
-├── application/        # Use cases и CQRS queries
+├── application/        # Commands и query handlers
 ├── infrastructure/     # Реализация инфраструктуры
 │   ├── celery/         # Celery app и задачи
 │   │   ├── app.py              # Bootstrap Celery приложения

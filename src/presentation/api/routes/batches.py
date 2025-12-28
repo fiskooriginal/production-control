@@ -2,26 +2,26 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from src.application.batches.queries.use_cases import GetBatchQueryUseCase, ListBatchesQueryUseCase
-from src.application.batches.use_cases import (
-    AddProductToBatchUseCase,
-    CloseBatchUseCase,
-    CreateBatchUseCase,
-    DeleteBatchUseCase,
-    RemoveProductFromBatchUseCase,
-    UpdateBatchUseCase,
+from src.application.batches.commands import (
+    AddProductToBatchCommand,
+    AggregateBatchCommand,
+    CloseBatchCommand,
+    CreateBatchCommand,
+    DeleteBatchCommand,
+    RemoveProductFromBatchCommand,
+    UpdateBatchCommand,
 )
-from src.application.batches.use_cases.aggregate import AggregateBatchUseCase
+from src.application.batches.queries.handlers import GetBatchQueryHandler, ListBatchesQueryHandler
 from src.presentation.api.dependencies import (
-    get_add_product_to_batch_use_case,
-    get_aggregate_batch_use_case,
-    get_batch_query_use_case,
-    get_close_batch_use_case,
-    get_create_batch_use_case,
-    get_delete_batch_use_case,
-    get_list_batches_query_use_case,
-    get_remove_product_from_batch_use_case,
-    get_update_batch_use_case,
+    get_add_product_to_batch_command,
+    get_aggregate_batch_command,
+    get_batch_query_handler,
+    get_close_batch_command,
+    get_create_batch_command,
+    get_delete_batch_command,
+    get_list_batches_query_handler,
+    get_remove_product_from_batch_command,
+    get_update_batch_command,
 )
 from src.presentation.api.schemas.background_tasks import TaskStartedResponse
 from src.presentation.api.schemas.batches import (
@@ -51,13 +51,13 @@ router = APIRouter(prefix="/api/batches", tags=["batches"])
 @router.post("", response_model=BatchResponse, status_code=status.HTTP_201_CREATED)
 async def create_batch(
     request: CreateBatchRequest,
-    use_case: CreateBatchUseCase = Depends(get_create_batch_use_case),
+    command: CreateBatchCommand = Depends(get_create_batch_command),
 ) -> BatchResponse:
     """
     Создает новую партию.
     """
     input_dto = create_batch_request_to_input_dto(request)
-    batch_entity = await use_case.execute(input_dto)
+    batch_entity = await command.execute(input_dto)
     return domain_to_response(batch_entity)
 
 
@@ -65,13 +65,13 @@ async def create_batch(
 async def close_batch(
     batch_id: UUID,
     request: CloseBatchRequest,
-    use_case: CloseBatchUseCase = Depends(get_close_batch_use_case),
+    command: CloseBatchCommand = Depends(get_close_batch_command),
 ) -> BatchResponse:
     """
     Закрывает партию.
     """
     input_dto = close_batch_request_to_input_dto(batch_id, request)
-    batch_entity = await use_case.execute(input_dto)
+    batch_entity = await command.execute(input_dto)
     return domain_to_response(batch_entity)
 
 
@@ -79,12 +79,12 @@ async def close_batch(
 async def add_product_to_batch(
     batch_id: UUID,
     request: AddProductToBatchRequest,
-    use_case: AddProductToBatchUseCase = Depends(get_add_product_to_batch_use_case),
+    command: AddProductToBatchCommand = Depends(get_add_product_to_batch_command),
 ) -> BatchResponse:
     """
     Добавляет продукт в партию.
     """
-    batch_entity = await use_case.execute(batch_id, request.unique_code)
+    batch_entity = await command.execute(batch_id, request.unique_code)
     return domain_to_response(batch_entity)
 
 
@@ -92,14 +92,14 @@ async def add_product_to_batch(
 async def remove_product_from_batch(
     batch_id: UUID,
     product_id: UUID,
-    use_case: RemoveProductFromBatchUseCase = Depends(get_remove_product_from_batch_use_case),
+    command: RemoveProductFromBatchCommand = Depends(get_remove_product_from_batch_command),
 ) -> BatchResponse:
     """
     Удаляет продукт из партии.
 
     ВАЖНО: Продукт будет полностью удален из БД, так как batch_id NOT NULL.
     """
-    batch_entity = await use_case.execute(batch_id, product_id)
+    batch_entity = await command.execute(batch_id, product_id)
     return domain_to_response(batch_entity)
 
 
@@ -108,13 +108,13 @@ async def list_batches(
     filter_params: BatchFiltersParams = Depends(),
     pagination_params: PaginationParams = Depends(),
     sort_params: SortParams = Depends(),
-    use_case: ListBatchesQueryUseCase = Depends(get_list_batches_query_use_case),
+    query_handler: ListBatchesQueryHandler = Depends(get_list_batches_query_handler),
 ) -> ListBatchesResponse:
     """
     Получает список партий с фильтрацией, пагинацией и сортировкой.
     """
     query = build_list_batches_query(filter_params, pagination_params, sort_params)
-    result = await use_case.execute(query)
+    result = await query_handler.execute(query)
 
     return ListBatchesResponse(
         items=[batch_read_dto_to_response(dto) for dto in result.items],
@@ -127,12 +127,12 @@ async def list_batches(
 @router.get("/{batch_id}", response_model=BatchResponse)
 async def get_batch(
     batch_id: UUID,
-    use_case: GetBatchQueryUseCase = Depends(get_batch_query_use_case),
+    query_handler: GetBatchQueryHandler = Depends(get_batch_query_handler),
 ) -> BatchResponse:
     """
     Получает партию по UUID.
     """
-    batch_dto = await use_case.execute(batch_id)
+    batch_dto = await query_handler.execute(batch_id)
     return batch_read_dto_to_response(batch_dto)
 
 
@@ -140,13 +140,13 @@ async def get_batch(
 async def aggregate_batch(
     batch_id: UUID,
     request: AggregateBatchRequest,
-    use_case: AggregateBatchUseCase = Depends(get_aggregate_batch_use_case),
+    command: AggregateBatchCommand = Depends(get_aggregate_batch_command),
 ) -> TaskStartedResponse:
     """
     Агрегирует партию и все продукты в ней.
     """
     input_dto = aggregate_batch_request_to_input_dto(batch_id, request)
-    batch_entity = await use_case.execute(input_dto)
+    batch_entity = await command.execute(input_dto)
     return domain_to_response(batch_entity)
 
 
@@ -154,24 +154,24 @@ async def aggregate_batch(
 async def update_batch(
     batch_id: UUID,
     request: UpdateBatchRequest,
-    use_case: UpdateBatchUseCase = Depends(get_update_batch_use_case),
+    command: UpdateBatchCommand = Depends(get_update_batch_command),
 ) -> BatchResponse:
     """
     Обновляет партию частично: только указанные поля.
     """
     input_dto = update_batch_request_to_input_dto(batch_id, request)
-    batch_entity = await use_case.execute(input_dto)
+    batch_entity = await command.execute(input_dto)
     return domain_to_response(batch_entity)
 
 
 @router.delete("/{batch_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_batch(
     batch_id: UUID,
-    use_case: DeleteBatchUseCase = Depends(get_delete_batch_use_case),
+    command: DeleteBatchCommand = Depends(get_delete_batch_command),
 ) -> None:
     """
     Удаляет закрытую партию и все связанные продукты.
 
     ВАЖНО: Можно удалить только закрытую партию. Все продукты будут автоматически удалены.
     """
-    await use_case.execute(batch_id)
+    await command.execute(batch_id)

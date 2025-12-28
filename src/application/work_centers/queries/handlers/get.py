@@ -5,10 +5,10 @@ from src.application.work_centers.queries.service import WorkCenterQueryServiceP
 from src.core.logging import get_logger
 from src.domain.common.exceptions import DoesNotExistError
 
-logger = get_logger("use_case.queries.work_centers")
+logger = get_logger("query.handler.work_centers")
 
 
-class GetWorkCenterQueryUseCase:
+class GetWorkCenterQueryHandler:
     def __init__(self, query_service: WorkCenterQueryServiceProtocol):
         self._query_service = query_service
 

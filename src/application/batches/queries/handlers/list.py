@@ -4,10 +4,10 @@ from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 
-logger = get_logger("use_case.queries.batches")
+logger = get_logger("query.handler.batches")
 
 
-class ListBatchesQueryUseCase:
+class ListBatchesQueryHandler:
     def __init__(self, query_service: BatchQueryServiceProtocol):
         self._query_service = query_service
 

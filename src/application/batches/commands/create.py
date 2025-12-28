@@ -7,10 +7,10 @@ from src.domain.batches.events import BatchCreatedEvent
 from src.domain.batches.services import validate_batch_number_uniqueness, validate_shift_time_overlap
 from src.domain.common.exceptions import InvalidStateError
 
-logger = get_logger("use_case.batches")
+logger = get_logger("command.batches")
 
 
-class CreateBatchUseCase:
+class CreateBatchCommand:
     def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
 

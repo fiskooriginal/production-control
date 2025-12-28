@@ -4,10 +4,10 @@ from src.application.work_centers.queries.service import WorkCenterQueryServiceP
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 
-logger = get_logger("use_case.queries.work_centers")
+logger = get_logger("query.handler.work_centers")
 
 
-class ListWorkCentersQueryUseCase:
+class ListWorkCentersQueryHandler:
     def __init__(self, query_service: WorkCenterQueryServiceProtocol):
         self._query_service = query_service
 
