@@ -31,10 +31,12 @@ class CachedBatchQueryService(BatchQueryService):
             if cached_data:
                 dto = self._deserialize_batch_dto(cached_data)
                 if dto:
+                    logger.info(f"Batch {batch_id} found in cache")
                     return dto
         except Exception as e:
             logger.warning(f"Failed to get batch from cache: {e}")
 
+        logger.info("Fetching batch from database")
         dto = await super().get(batch_id)
 
         try:
@@ -53,10 +55,12 @@ class CachedBatchQueryService(BatchQueryService):
             if cached_data:
                 result = self._deserialize_query_result(cached_data)
                 if result:
+                    logger.info("Batches list found in cache")
                     return result
         except Exception as e:
             logger.warning(f"Failed to get batches list from cache: {e}")
 
+        logger.info("Fetching batches list from database")
         query_result = await super().list(query)
 
         try:
