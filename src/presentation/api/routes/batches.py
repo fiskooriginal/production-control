@@ -11,6 +11,7 @@ from src.application.batches.use_cases import (
     RemoveProductFromBatchUseCase,
     UpdateBatchUseCase,
 )
+from src.infrastructure.celery import states
 from src.infrastructure.celery.tasks import aggregate_batch as aggregate_batch_task
 from src.presentation.api.dependencies import (
     get_add_product_to_batch_use_case,
@@ -157,7 +158,7 @@ async def aggregate_batch(
 
     return TaskStartedResponse(
         task_id=task.id,
-        status="PENDING",
+        status=states.PENDING,
         message="Aggregation task started",
     )
 

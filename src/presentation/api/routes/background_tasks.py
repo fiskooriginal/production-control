@@ -1,5 +1,7 @@
+from celery.result import AsyncResult
 from fastapi import APIRouter, status
 
+from src.infrastructure.celery import states
 from src.infrastructure.celery.app import celery_app
 from src.presentation.api.schemas.background_tasks import TaskStatusResponse
 
@@ -17,36 +19,18 @@ async def get_task_status(task_id: str) -> TaskStatusResponse:
     - SUCCESS: задача завершена успешно (содержит результат)
     - FAILURE: задача завершена с ошибкой
     """
-    task_result = celery_app.AsyncResult(task_id)
+    task_result = AsyncResult(task_id, app=celery_app)
 
-    if task_result.state == "PENDING":
-        return TaskStatusResponse(
-            task_id=task_id,
-            status="PENDING",
-            result=None,
-        )
-    elif task_result.state == "PROGRESS":
-        meta = task_result.info or {}
-        return TaskStatusResponse(
-            task_id=task_id,
-            status="PROGRESS",
-            result=meta,
-        )
-    elif task_result.state == "SUCCESS":
-        return TaskStatusResponse(
-            task_id=task_id,
-            status="SUCCESS",
-            result=task_result.result,
-        )
-    elif task_result.state == "FAILURE":
-        return TaskStatusResponse(
-            task_id=task_id,
-            status="FAILURE",
-            result={"error": str(task_result.info)} if task_result.info else None,
-        )
-    else:
-        return TaskStatusResponse(
-            task_id=task_id,
-            status=task_result.state,
-            result=task_result.info,
-        )
+    status = task_result.state
+    if status == states.PENDING:
+        return TaskStatusResponse(task_id=task_id, status=status)
+    elif status == states.PROGRESS:
+        info = task_result.info or {}
+        return TaskStatusResponse(task_id=task_id, status=status, result=info)
+    elif status == states.SUCCESS:
+        result = task_result.result
+        return TaskStatusResponse(task_id=task_id, status=status, result=result)
+    elif status == states.FAILURE:
+        result = {"error": str(task_result.info)} if task_result.info else None
+        return TaskStatusResponse(task_id=task_id, status=status, result=result)
+    return TaskStatusResponse(task_id=task_id, status=status, result=task_result.info)

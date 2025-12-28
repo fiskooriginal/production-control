@@ -6,6 +6,7 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.core.time import datetime_now
+from src.infrastructure.celery import states
 from src.infrastructure.celery.app import celery_app, get_session_factory
 from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
 
@@ -154,7 +155,7 @@ async def _aggregate_batch_async(
                     if idx % max(1, total // 10) == 0 or idx == total:
                         progress = int((idx / total) * 100) if total > 0 else 0
                         task_instance.update_state(
-                            state="PROGRESS",
+                            state=states.PROGRESS,
                             meta={
                                 "current": idx,
                                 "total": total,
@@ -171,7 +172,7 @@ async def _aggregate_batch_async(
                 if total > 0:
                     progress = 100
                     task_instance.update_state(
-                        state="PROGRESS",
+                        state=states.PROGRESS,
                         meta={
                             "current": total,
                             "total": total,

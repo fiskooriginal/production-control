@@ -114,5 +114,4 @@ class CelerySettings:
         """Get result backend URL, use configured or build from Redis settings."""
         if self.result_backend and self.result_backend.strip():
             return self.result_backend.strip()
-        redis_url = redis_settings.get_url()
-        return f"{redis_url}?key_prefix={self.redis_key_prefix}"
+        return redis_settings.get_url()
