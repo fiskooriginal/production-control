@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from src.core.config import LOG_LEVEL
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger, setup_logging
-from src.core.settings import DatabaseSettings
+from src.core.settings import CacheSettings, DatabaseSettings
+from src.infrastructure.cache.cache_client import close_cache, init_cache
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import background_tasks, batches, healthcheck, products, work_centers
@@ -18,6 +19,7 @@ logger = get_logger("app")
 async def lifespan(app: FastAPI):
     logger.info("Application startup initiated")
     try:
+        # Database
         db_settings = DatabaseSettings()
         logger.info(f"Database settings: {db_settings}")
         logger.info(f"Database URL: {db_settings.get_safe_url()}")
@@ -25,6 +27,14 @@ async def lifespan(app: FastAPI):
         session_factory = make_session_factory(engine)
         app.state.engine = engine
         app.state.session_factory = session_factory
+
+        # Cache
+        cache_settings = CacheSettings()
+        logger.info(f"Cache settings: {cache_settings}")
+        cache_service, redis_pool = await init_cache(cache_settings)
+        app.state.cache_service = cache_service
+        app.state.redis_pool = redis_pool
+
         logger.info("Application started successfully")
     except Exception as e:
         logger.exception(f"Application startup failed: {e}")
@@ -34,6 +44,7 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application shutdown initiated")
     try:
+        await close_cache(redis_pool)
         await dispose_engine(engine)
         logger.info("Application shutdown completed")
     except Exception as e:

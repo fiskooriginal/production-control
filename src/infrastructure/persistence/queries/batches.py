@@ -10,10 +10,13 @@ from src.application.batches.queries import (
     BatchSortField,
     ListBatchesQuery,
 )
+from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.batch import Batch
 from src.infrastructure.persistence.queries.mappers import batch_model_to_read_dto
+
+logger = get_logger("query.batches")
 
 
 class BatchQueryService(BatchQueryServiceProtocol):

@@ -22,7 +22,13 @@ from src.application.work_centers.commands import (
     UpdateWorkCenterCommand,
 )
 from src.application.work_centers.queries.handlers import GetWorkCenterQueryHandler, ListWorkCentersQueryHandler
-from src.infrastructure.persistence.queries import BatchQueryService, ProductQueryService, WorkCenterQueryService
+from src.infrastructure.cache.protocol import CacheServiceProtocol
+from src.infrastructure.persistence.queries import (
+    BatchQueryService,
+    CachedBatchQueryService,
+    ProductQueryService,
+    WorkCenterQueryService,
+)
 from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
 
 # Session
@@ -43,45 +49,72 @@ async def get_uow(session: AsyncSession = Depends(get_session)) -> UnitOfWorkPro
     return SqlAlchemyUnitOfWork(session)
 
 
+# Cache Service
+
+
+async def get_cache_service(request: Request) -> CacheServiceProtocol | None:
+    """Dependency для получения CacheService из app.state."""
+    return getattr(request.app.state, "cache_service", None)
+
+
 # Commands
 
 
 # Batches
-async def get_create_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> CreateBatchCommand:
+async def get_create_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> CreateBatchCommand:
     """Dependency для CreateBatchCommand"""
-    return CreateBatchCommand(uow)
+    return CreateBatchCommand(uow, cache_service)
 
 
-async def get_close_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> CloseBatchCommand:
+async def get_close_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> CloseBatchCommand:
     """Dependency для CloseBatchCommand"""
-    return CloseBatchCommand(uow)
+    return CloseBatchCommand(uow, cache_service)
 
 
-async def get_add_product_to_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AddProductToBatchCommand:
+async def get_add_product_to_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> AddProductToBatchCommand:
     """Dependency для AddProductToBatchCommand"""
-    return AddProductToBatchCommand(uow)
+    return AddProductToBatchCommand(uow, cache_service)
 
 
 async def get_remove_product_from_batch_command(
     uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
 ) -> RemoveProductFromBatchCommand:
     """Dependency для RemoveProductFromBatchCommand"""
-    return RemoveProductFromBatchCommand(uow)
+    return RemoveProductFromBatchCommand(uow, cache_service)
 
 
-async def get_aggregate_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> AggregateBatchCommand:
+async def get_aggregate_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> AggregateBatchCommand:
     """Dependency для AggregateBatchCommand"""
-    return AggregateBatchCommand(uow)
+    return AggregateBatchCommand(uow, cache_service)
 
 
-async def get_update_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> UpdateBatchCommand:
+async def get_update_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> UpdateBatchCommand:
     """Dependency для UpdateBatchCommand"""
-    return UpdateBatchCommand(uow)
+    return UpdateBatchCommand(uow, cache_service)
 
 
-async def get_delete_batch_command(uow: UnitOfWorkProtocol = Depends(get_uow)) -> DeleteBatchCommand:
+async def get_delete_batch_command(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> DeleteBatchCommand:
     """Dependency для DeleteBatchCommand"""
-    return DeleteBatchCommand(uow)
+    return DeleteBatchCommand(uow, cache_service)
 
 
 # Products
@@ -114,8 +147,13 @@ async def get_work_center_query_service(session: AsyncSession = Depends(get_sess
     return WorkCenterQueryService(session)
 
 
-async def get_batch_query_service(session: AsyncSession = Depends(get_session)) -> BatchQueryService:
-    """Dependency для BatchQueryService"""
+async def get_batch_query_service(
+    session: AsyncSession = Depends(get_session),
+    cache_service: CacheServiceProtocol | None = Depends(get_cache_service),
+) -> BatchQueryService:
+    """Dependency для BatchQueryService с кэшированием."""
+    if cache_service and cache_service.enabled:
+        return CachedBatchQueryService(session, cache_service)
     return BatchQueryService(session)
 
 

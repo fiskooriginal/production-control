@@ -53,3 +53,9 @@ CELERY_WORKER_CONCURRENCY: int = int(getenv("CELERY_WORKER_CONCURRENCY", "2"))
 CELERY_REDIS_KEY_PREFIX: str = getenv("CELERY_REDIS_KEY_PREFIX", "celery")
 CELERY_TASK_MAX_RETRIES: int = int(getenv("CELERY_TASK_MAX_RETRIES", "3"))
 CELERY_TASK_DEFAULT_RETRY_DELAY: int = int(getenv("CELERY_TASK_DEFAULT_RETRY_DELAY", "60"))
+
+# Cache settings
+CACHE_ENABLED: bool = getenv("CACHE_ENABLED", "true") == "true"
+CACHE_TTL_BATCH: int = int(getenv("CACHE_TTL_BATCH", "3600"))
+CACHE_TTL_LIST: int = int(getenv("CACHE_TTL_LIST", "300"))
+CACHE_KEY_PREFIX: str = getenv("CACHE_KEY_PREFIX", "cache")

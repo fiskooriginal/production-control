@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 
 from src.core.config import (
+    CACHE_ENABLED,
+    CACHE_KEY_PREFIX,
+    CACHE_TTL_BATCH,
+    CACHE_TTL_LIST,
     CELERY_BROKER_URL,
     CELERY_REDIS_KEY_PREFIX,
     CELERY_RESULT_BACKEND,
@@ -115,3 +119,11 @@ class CelerySettings:
         if self.result_backend and self.result_backend.strip():
             return self.result_backend.strip()
         return redis_settings.get_url()
+
+
+@dataclass
+class CacheSettings:
+    enabled: bool = CACHE_ENABLED
+    ttl_batch: int = CACHE_TTL_BATCH
+    ttl_list: int = CACHE_TTL_LIST
+    key_prefix: str = CACHE_KEY_PREFIX
