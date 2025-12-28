@@ -5,8 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.batches.queries import BatchReadDTO, ListBatchesQuery
-from src.application.batches.queries.dtos import ProductReadDTONested
+from src.application.batches.queries import ListBatchesQuery
+from src.application.batches.queries.dtos import BatchReadDTO, ProductReadDTONested
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 from src.infrastructure.cache.keys import get_batch_key, get_batches_list_key
@@ -107,7 +107,7 @@ class CachedBatchQueryService(BatchQueryService):
             json_str = data.decode("utf-8")
             result_dict = json.loads(json_str)
             items = [self._deserialize_batch_dto_item(item) for item in result_dict.get("items", [])]
-            return QueryResult(
+            return QueryResult[BatchReadDTO](
                 items=items,
                 total=result_dict.get("total", 0),
                 limit=result_dict.get("limit"),

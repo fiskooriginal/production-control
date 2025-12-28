@@ -4,12 +4,9 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.work_centers.queries import (
-    ListWorkCentersQuery,
-    WorkCenterQueryServiceProtocol,
-    WorkCenterReadDTO,
-    WorkCenterSortField,
-)
+from src.application.work_centers.queries import ListWorkCentersQuery, WorkCenterQueryServiceProtocol
+from src.application.work_centers.queries.dtos import WorkCenterReadDTO
+from src.application.work_centers.queries.sort import WorkCenterSortField
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.work_center import WorkCenter
@@ -60,7 +57,7 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
 
             dtos = [work_center_model_to_read_dto(wc) for wc in work_centers]
 
-            return QueryResult(
+            return QueryResult[WorkCenterReadDTO](
                 items=dtos,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,

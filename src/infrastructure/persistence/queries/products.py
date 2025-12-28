@@ -4,12 +4,9 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.products.queries import (
-    ListProductsQuery,
-    ProductQueryServiceProtocol,
-    ProductReadDTO,
-    ProductSortField,
-)
+from src.application.products.queries import ListProductsQuery, ProductQueryServiceProtocol
+from src.application.products.queries.dtos import ProductReadDTO
+from src.application.products.queries.sort import ProductSortField
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.product import Product
@@ -58,7 +55,7 @@ class ProductQueryService(ProductQueryServiceProtocol):
 
             dtos = [product_model_to_read_dto(p) for p in products]
 
-            return QueryResult(
+            return QueryResult[ProductReadDTO](
                 items=dtos,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,

@@ -4,12 +4,9 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.batches.queries import (
-    BatchQueryServiceProtocol,
-    BatchReadDTO,
-    BatchSortField,
-    ListBatchesQuery,
-)
+from src.application.batches.queries import BatchQueryServiceProtocol, ListBatchesQuery
+from src.application.batches.queries.dtos import BatchReadDTO
+from src.application.batches.queries.sort import BatchSortField
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
@@ -68,7 +65,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
 
             dtos = [batch_model_to_read_dto(batch) for batch in batches]
 
-            return QueryResult(
+            return QueryResult[BatchReadDTO](
                 items=dtos,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,
