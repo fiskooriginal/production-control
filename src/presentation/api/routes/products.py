@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from src.presentation.api.schemas.products import AggregateProductRequest, ListProductsResponse, ProductResponse
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
-from src.presentation.di.batches import aggregate_product, get_product, list_products
+from src.presentation.di.products import aggregate_product, get_product, list_products
 from src.presentation.mappers.products import aggregate_request_to_input_dto, entity_to_response
 from src.presentation.mappers.query_params import build_list_products_query
 from src.presentation.mappers.query_responses import product_read_dto_to_response
