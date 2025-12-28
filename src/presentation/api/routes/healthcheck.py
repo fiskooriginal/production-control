@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.presentation.api.dependencies import get_session
+from src.presentation.di.common import async_session
 
 router = APIRouter(prefix="/api/healthcheck", tags=["healthcheck"])
 
@@ -16,9 +15,7 @@ async def healthcheck() -> dict[str, str]:
 
 
 @router.get("/database", status_code=status.HTTP_200_OK)
-async def database_healthcheck(
-    session: AsyncSession = Depends(get_session),
-) -> dict[str, str]:
+async def database_healthcheck(session: async_session) -> dict[str, str]:
     """
     Проверяет статус базы данных.
     """

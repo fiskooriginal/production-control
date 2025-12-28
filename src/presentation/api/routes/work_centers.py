@@ -2,19 +2,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from src.application.work_centers.commands import (
-    CreateWorkCenterCommand,
-    DeleteWorkCenterCommand,
-    UpdateWorkCenterCommand,
-)
-from src.application.work_centers.queries.handlers import GetWorkCenterQueryHandler, ListWorkCentersQueryHandler
-from src.presentation.api.dependencies import (
-    get_create_work_center_command,
-    get_delete_work_center_command,
-    get_list_work_centers_query_handler,
-    get_update_work_center_command,
-    get_work_center_query_handler,
-)
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
 from src.presentation.api.schemas.work_centers import (
     CreateWorkCenterRequest,
@@ -22,6 +9,13 @@ from src.presentation.api.schemas.work_centers import (
     UpdateWorkCenterRequest,
     WorkCenterFiltersParams,
     WorkCenterResponse,
+)
+from src.presentation.di.work_centers import (
+    create_work_center,
+    delete_work_center,
+    get_work_center,
+    list_work_centers,
+    update_work_center,
 )
 from src.presentation.mappers.query_params import build_list_work_centers_query
 from src.presentation.mappers.query_responses import work_center_read_dto_to_response
@@ -35,10 +29,7 @@ router = APIRouter(prefix="/api/work_centers", tags=["work-centers"])
 
 
 @router.post("", response_model=WorkCenterResponse, status_code=status.HTTP_201_CREATED)
-async def create_work_center(
-    request: CreateWorkCenterRequest,
-    command: CreateWorkCenterCommand = Depends(get_create_work_center_command),
-) -> WorkCenterResponse:
+async def create_work_center(request: CreateWorkCenterRequest, command: create_work_center) -> WorkCenterResponse:
     """
     Создает новый рабочий центр.
     """
@@ -48,10 +39,7 @@ async def create_work_center(
 
 
 @router.get("/{work_center_id}", response_model=WorkCenterResponse)
-async def get_work_center(
-    work_center_id: UUID,
-    query_handler: GetWorkCenterQueryHandler = Depends(get_work_center_query_handler),
-) -> WorkCenterResponse:
+async def get_work_center(work_center_id: UUID, query_handler: get_work_center) -> WorkCenterResponse:
     """
     Получает рабочий центр по ID.
     """
@@ -61,9 +49,7 @@ async def get_work_center(
 
 @router.patch("/{work_center_id}", response_model=WorkCenterResponse)
 async def update_work_center(
-    work_center_id: UUID,
-    request: UpdateWorkCenterRequest,
-    command: UpdateWorkCenterCommand = Depends(get_update_work_center_command),
+    work_center_id: UUID, request: UpdateWorkCenterRequest, command: update_work_center
 ) -> WorkCenterResponse:
     """
     Обновляет рабочий центр.
@@ -74,10 +60,7 @@ async def update_work_center(
 
 
 @router.delete("/{work_center_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_work_center(
-    work_center_id: UUID,
-    command: DeleteWorkCenterCommand = Depends(get_delete_work_center_command),
-) -> None:
+async def delete_work_center(work_center_id: UUID, command: delete_work_center) -> None:
     """
     Удаляет рабочий центр.
     """
@@ -87,10 +70,10 @@ async def delete_work_center(
 
 @router.get("", response_model=ListWorkCentersResponse)
 async def list_work_centers(
+    query_handler: list_work_centers,
     filter_params: WorkCenterFiltersParams = Depends(),
     pagination_params: PaginationParams = Depends(),
     sort_params: SortParams = Depends(),
-    query_handler: ListWorkCentersQueryHandler = Depends(get_list_work_centers_query_handler),
 ) -> ListWorkCentersResponse:
     """
     Получает список рабочих центров с фильтрацией, пагинацией и сортировкой.

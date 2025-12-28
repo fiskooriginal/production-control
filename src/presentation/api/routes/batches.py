@@ -2,27 +2,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from src.application.batches.commands import (
-    AddProductToBatchCommand,
-    AggregateBatchCommand,
-    CloseBatchCommand,
-    CreateBatchCommand,
-    DeleteBatchCommand,
-    RemoveProductFromBatchCommand,
-    UpdateBatchCommand,
-)
-from src.application.batches.queries.handlers import GetBatchQueryHandler, ListBatchesQueryHandler
-from src.presentation.api.dependencies import (
-    get_add_product_to_batch_command,
-    get_aggregate_batch_command,
-    get_batch_query_handler,
-    get_close_batch_command,
-    get_create_batch_command,
-    get_delete_batch_command,
-    get_list_batches_query_handler,
-    get_remove_product_from_batch_command,
-    get_update_batch_command,
-)
 from src.presentation.api.schemas.background_tasks import TaskStartedResponse
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
@@ -35,6 +14,17 @@ from src.presentation.api.schemas.batches import (
     UpdateBatchRequest,
 )
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
+from src.presentation.di.batches import (
+    add_product_to_batch,
+    aggregate_batch,
+    close_batch,
+    create_batch,
+    delete_batch,
+    get_batch,
+    list_batches,
+    remove_product_from_batch,
+    update_batch,
+)
 from src.presentation.mappers.batches import (
     aggregate_batch_request_to_input_dto,
     close_batch_request_to_input_dto,
@@ -49,10 +39,7 @@ router = APIRouter(prefix="/api/batches", tags=["batches"])
 
 
 @router.post("", response_model=BatchResponse, status_code=status.HTTP_201_CREATED)
-async def create_batch(
-    request: CreateBatchRequest,
-    command: CreateBatchCommand = Depends(get_create_batch_command),
-) -> BatchResponse:
+async def create_batch(request: CreateBatchRequest, command: create_batch) -> BatchResponse:
     """
     Создает новую партию.
     """
@@ -62,11 +49,7 @@ async def create_batch(
 
 
 @router.patch("/{batch_id}/close", response_model=BatchResponse)
-async def close_batch(
-    batch_id: UUID,
-    request: CloseBatchRequest,
-    command: CloseBatchCommand = Depends(get_close_batch_command),
-) -> BatchResponse:
+async def close_batch(batch_id: UUID, request: CloseBatchRequest, command: close_batch) -> BatchResponse:
     """
     Закрывает партию.
     """
@@ -77,9 +60,7 @@ async def close_batch(
 
 @router.post("/{batch_id}/products", response_model=BatchResponse)
 async def add_product_to_batch(
-    batch_id: UUID,
-    request: AddProductToBatchRequest,
-    command: AddProductToBatchCommand = Depends(get_add_product_to_batch_command),
+    batch_id: UUID, request: AddProductToBatchRequest, command: add_product_to_batch
 ) -> BatchResponse:
     """
     Добавляет продукт в партию.
@@ -90,9 +71,7 @@ async def add_product_to_batch(
 
 @router.delete("/{batch_id}/products/{product_id}", response_model=BatchResponse)
 async def remove_product_from_batch(
-    batch_id: UUID,
-    product_id: UUID,
-    command: RemoveProductFromBatchCommand = Depends(get_remove_product_from_batch_command),
+    batch_id: UUID, product_id: UUID, command: remove_product_from_batch
 ) -> BatchResponse:
     """
     Удаляет продукт из партии.
@@ -105,10 +84,10 @@ async def remove_product_from_batch(
 
 @router.get("", response_model=ListBatchesResponse)
 async def list_batches(
+    query_handler: list_batches,
     filter_params: BatchFiltersParams = Depends(),
     pagination_params: PaginationParams = Depends(),
     sort_params: SortParams = Depends(),
-    query_handler: ListBatchesQueryHandler = Depends(get_list_batches_query_handler),
 ) -> ListBatchesResponse:
     """
     Получает список партий с фильтрацией, пагинацией и сортировкой.
@@ -125,10 +104,7 @@ async def list_batches(
 
 
 @router.get("/{batch_id}", response_model=BatchResponse)
-async def get_batch(
-    batch_id: UUID,
-    query_handler: GetBatchQueryHandler = Depends(get_batch_query_handler),
-) -> BatchResponse:
+async def get_batch(batch_id: UUID, query_handler: get_batch) -> BatchResponse:
     """
     Получает партию по UUID.
     """
@@ -138,9 +114,7 @@ async def get_batch(
 
 @router.patch("/{batch_id}/aggregate", response_model=TaskStartedResponse, status_code=status.HTTP_202_ACCEPTED)
 async def aggregate_batch(
-    batch_id: UUID,
-    request: AggregateBatchRequest,
-    command: AggregateBatchCommand = Depends(get_aggregate_batch_command),
+    batch_id: UUID, request: AggregateBatchRequest, command: aggregate_batch
 ) -> TaskStartedResponse:
     """
     Агрегирует партию и все продукты в ней.
@@ -151,11 +125,7 @@ async def aggregate_batch(
 
 
 @router.patch("/{batch_id}", response_model=BatchResponse)
-async def update_batch(
-    batch_id: UUID,
-    request: UpdateBatchRequest,
-    command: UpdateBatchCommand = Depends(get_update_batch_command),
-) -> BatchResponse:
+async def update_batch(batch_id: UUID, request: UpdateBatchRequest, command: update_batch) -> BatchResponse:
     """
     Обновляет партию частично: только указанные поля.
     """
@@ -165,10 +135,7 @@ async def update_batch(
 
 
 @router.delete("/{batch_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_batch(
-    batch_id: UUID,
-    command: DeleteBatchCommand = Depends(get_delete_batch_command),
-) -> None:
+async def delete_batch(batch_id: UUID, command: delete_batch) -> None:
     """
     Удаляет закрытую партию и все связанные продукты.
 
