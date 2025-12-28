@@ -22,11 +22,10 @@ from src.core.config import (
     RABBITMQ_PORT,
     RABBITMQ_USER,
     RABBITMQ_VHOST,
+    REDIS_DB,
     REDIS_HOST,
     REDIS_PASSWORD,
     REDIS_PORT,
-    REDIS_PREFIX,
-    REDIS_URL,
 )
 
 
@@ -69,14 +68,11 @@ class DatabaseSettings:
 class RedisSettings:
     host: str = REDIS_HOST
     port: int = REDIS_PORT
-    prefix: str = REDIS_PREFIX
+    prefix: str = REDIS_DB
     password: str | None = REDIS_PASSWORD
-    url: str | None = REDIS_URL
 
     def get_url(self) -> str:
         """Get Redis connection URL."""
-        if self.url:
-            return self.url
         if self.password:
             return f"redis://:{self.password}@{self.host}:{self.port}/{self.prefix}"
         return f"redis://{self.host}:{self.port}/{self.prefix}"

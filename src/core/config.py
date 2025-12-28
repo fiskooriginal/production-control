@@ -26,9 +26,8 @@ DB_SCHEMA: str = getenv("DB_SCHEMA", "public")
 # Redis settings
 REDIS_HOST: str = getenv("REDIS_HOST", "localhost")
 REDIS_PORT: str = getenv("REDIS_PORT", "6379")
-REDIS_PREFIX: str = getenv("REDIS_PREFIX", "0")
+REDIS_DB: str = getenv("REDIS_DB", "0")
 REDIS_PASSWORD: str | None = getenv("REDIS_PASSWORD")
-REDIS_URL: str | None = getenv("REDIS_URL")
 
 # Validation
 TEXT_MAX_LENGTH: int | None = int(getenv("TEXT_MAX_LENGTH", "255"))

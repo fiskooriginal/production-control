@@ -31,7 +31,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PREFIX=${REDIS_PREFIX}
+      - REDIS_DB=${REDIS_DB}
     command:
       [
         "python",
@@ -212,7 +212,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PREFIX=${REDIS_PREFIX}
+      - REDIS_DB=${REDIS_DB}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
@@ -262,7 +262,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PREFIX=${REDIS_PREFIX}
+      - REDIS_DB=${REDIS_DB}
       - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - RABBITMQ_USER=${RABBITMQ_USER:-guest}
@@ -312,7 +312,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_URL=${REDIS_URL}
-      - REDIS_PREFIX=${REDIS_PREFIX}
+      - REDIS_DB=${REDIS_DB}
     command:
       [
         "celery",
