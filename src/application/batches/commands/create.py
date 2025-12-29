@@ -8,7 +8,7 @@ from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent
 from src.domain.batches.services import validate_batch_number_uniqueness, validate_shift_time_overlap
 from src.domain.common.exceptions import InvalidStateError
-from src.infrastructure.cache.keys import get_batch_key, get_batches_list_pattern
+from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_pattern
 from src.infrastructure.cache.protocol import CacheServiceProtocol
 
 logger = get_logger("command.batches")

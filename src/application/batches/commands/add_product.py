@@ -6,7 +6,7 @@ from src.domain.batches.entities import BatchEntity
 from src.domain.common.exceptions import InvalidStateError
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
-from src.infrastructure.cache.keys import get_batch_key, get_batches_list_pattern
+from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_pattern
 from src.infrastructure.cache.protocol import CacheServiceProtocol
 
 logger = get_logger("command.batches")

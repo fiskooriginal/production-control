@@ -9,7 +9,7 @@ from src.application.batches.queries import ListBatchesQuery
 from src.application.batches.queries.dtos import BatchReadDTO, ProductReadDTONested
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
-from src.infrastructure.cache.keys import get_batch_key, get_batches_list_key
+from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_key
 from src.infrastructure.cache.protocol import CacheServiceProtocol
 from src.infrastructure.persistence.queries.batches import BatchQueryService
 

@@ -5,7 +5,7 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.common.exceptions import InvalidStateError
-from src.infrastructure.cache.keys import get_batch_key, get_batches_list_pattern
+from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_pattern
 from src.infrastructure.cache.protocol import CacheServiceProtocol
 
 logger = get_logger("command.batches")

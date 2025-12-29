@@ -2,7 +2,7 @@ from redis.asyncio import ConnectionPool, Redis
 
 from src.core.logging import get_logger
 from src.core.settings import CacheSettings, RedisSettings
-from src.infrastructure.cache.service import RedisCacheService
+from src.infrastructure.cache.redis.service import RedisCacheService
 
 logger = get_logger("cache.client")
 

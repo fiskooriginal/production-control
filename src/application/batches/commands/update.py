@@ -15,7 +15,7 @@ from src.domain.batches.value_objects import (
     Team,
 )
 from src.domain.common.exceptions import InvalidStateError
-from src.infrastructure.cache.keys import get_batch_key, get_batches_list_pattern
+from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_pattern
 from src.infrastructure.cache.protocol import CacheServiceProtocol
 
 logger = get_logger("command.batches")
