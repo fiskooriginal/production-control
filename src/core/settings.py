@@ -36,6 +36,12 @@ from src.core.config import (
     REDIS_HOST,
     REDIS_PASSWORD,
     REDIS_PORT,
+    SMTP_FROM_EMAIL,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_USE_TLS,
+    SMTP_USER,
 )
 
 
@@ -157,4 +163,25 @@ class MinIOSettings:
             f"MinIOSettings(endpoint={self.endpoint!r}, "
             f"access_key={self.access_key!r}, secret_key='***', "
             f"buckets={self.buckets!r}, secure={self.secure}, region={self.region!r})"
+        )
+
+
+@dataclass
+class EmailSettings:
+    host: str | None = SMTP_HOST
+    port: int = int(SMTP_PORT) if SMTP_PORT and SMTP_PORT.strip() else 587
+    user: str | None = SMTP_USER
+    password: str | None = SMTP_PASSWORD
+    from_email: str | None = SMTP_FROM_EMAIL
+    use_tls: bool = SMTP_USE_TLS
+
+    def is_configured(self) -> bool:
+        """Проверяет, настроен ли email сервис."""
+        return self.host is not None and self.user is not None and self.password is not None
+
+    def __repr__(self) -> str:
+        return (
+            f"EmailSettings(host={self.host!r}, port={self.port}, "
+            f"user={self.user!r}, password='***', "
+            f"from_email={self.from_email!r}, use_tls={self.use_tls})"
         )

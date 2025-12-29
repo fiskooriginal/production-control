@@ -67,3 +67,11 @@ MINIO_SECRET_KEY: str = getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKETS: str = getenv("MINIO_BUCKETS", "reports,exports,imports")
 MINIO_SECURE: bool = getenv("MINIO_SECURE", "false") == "true"
 MINIO_REGION: str | None = getenv("MINIO_REGION")
+
+# Email settings
+SMTP_HOST: str | None = getenv("SMTP_HOST")
+SMTP_PORT: str | None = getenv("SMTP_PORT", "587")
+SMTP_USER: str | None = getenv("SMTP_USER")
+SMTP_PASSWORD: str | None = getenv("SMTP_PASSWORD")
+SMTP_FROM_EMAIL: str | None = getenv("SMTP_FROM_EMAIL")
+SMTP_USE_TLS: bool = getenv("SMTP_USE_TLS", "true") == "true"
