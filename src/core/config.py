@@ -59,3 +59,11 @@ CACHE_ENABLED: bool = getenv("CACHE_ENABLED", "true") == "true"
 CACHE_TTL_BATCH: int = int(getenv("CACHE_TTL_BATCH", "3600"))
 CACHE_TTL_LIST: int = int(getenv("CACHE_TTL_LIST", "300"))
 CACHE_KEY_PREFIX: str = getenv("CACHE_KEY_PREFIX", "cache")
+
+# MinIO settings
+MINIO_ENDPOINT: str = getenv("MINIO_ENDPOINT", "localhost:9000")
+MINIO_ACCESS_KEY: str = getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY: str = getenv("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKETS: str = getenv("MINIO_BUCKETS", "reports,exports,imports")
+MINIO_SECURE: bool = getenv("MINIO_SECURE", "false") == "true"
+MINIO_REGION: str | None = getenv("MINIO_REGION")

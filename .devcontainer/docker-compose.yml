@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   devcontainer:
     build:
@@ -10,23 +8,28 @@ services:
       - devcontainer-venv:/app/.venv
     command: sleep infinity
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_SCHEMA=${DB_SCHEMA}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_URL=${REDIS_URL}
-      - REDIS_DB=${REDIS_DB}
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST}
-      - LOG_LEVEL=${LOG_LEVEL}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-production_control}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_URL=${REDIS_URL:-}
+      - REDIS_DB=${REDIS_DB:-0}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKETS=${MINIO_BUCKETS:-reports,exports,imports}
+      - MINIO_SECURE=${MINIO_SECURE:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     networks:
       - devcontainer-network
     depends_on:
@@ -36,14 +39,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      minio:
+        condition: service_healthy
 
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-production_control}
     volumes:
       - devcontainer-postgres-data:/var/lib/postgresql/data
     networks:
@@ -62,13 +67,13 @@ services:
       - sh
       - -c
       - |
-        if [ -n "${REDIS_PASSWORD}" ]; then
+        if [ -n "$${REDIS_PASSWORD:-}" ]; then
           redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --appendfsync everysec
         else
           redis-server --appendonly yes --appendfsync everysec
         fi
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - devcontainer-redis-data:/data
     networks:
@@ -77,8 +82,8 @@ services:
       test:
         - CMD-SHELL
         - |
-          if [ -n "${REDIS_PASSWORD}" ]; then
-            redis-cli -a ${REDIS_PASSWORD} ping | grep PONG
+          if [ -n "$${REDIS_PASSWORD:-}" ]; then
+            redis-cli -a $$REDIS_PASSWORD ping | grep PONG
           else
             redis-cli ping | grep PONG
           fi
@@ -91,8 +96,8 @@ services:
     image: rabbitmq:3.13-management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     volumes:
       - devcontainer-rabbitmq-data:/var/lib/rabbitmq
     networks:
@@ -104,10 +109,37 @@ services:
       retries: 5
       start_period: 10s
 
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    hostname: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - devcontainer-minio-data:/data
+    networks:
+      - devcontainer-network
+    ports:
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:9000/minio/health/live || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   devcontainer-postgres-data:
   devcontainer-redis-data:
   devcontainer-rabbitmq-data:
+  devcontainer-minio-data:
   devcontainer-venv:
 
 networks:

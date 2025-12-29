@@ -21,6 +21,12 @@ from src.core.config import (
     DB_PORT,
     DB_SCHEMA,
     DB_USER,
+    MINIO_ACCESS_KEY,
+    MINIO_BUCKETS,
+    MINIO_ENDPOINT,
+    MINIO_REGION,
+    MINIO_SECRET_KEY,
+    MINIO_SECURE,
     RABBITMQ_HOST,
     RABBITMQ_PASSWORD,
     RABBITMQ_PORT,
@@ -127,3 +133,28 @@ class CacheSettings:
     ttl_batch: int = CACHE_TTL_BATCH
     ttl_list: int = CACHE_TTL_LIST
     key_prefix: str = CACHE_KEY_PREFIX
+
+
+@dataclass
+class MinIOSettings:
+    endpoint: str = MINIO_ENDPOINT
+    access_key: str = MINIO_ACCESS_KEY
+    secret_key: str = MINIO_SECRET_KEY
+    buckets: list[str] = None
+    secure: bool = MINIO_SECURE
+    region: str | None = MINIO_REGION
+
+    def __post_init__(self) -> None:
+        if self.buckets is None:
+            buckets_str = MINIO_BUCKETS
+            if buckets_str and buckets_str.strip():
+                self.buckets = [bucket.strip() for bucket in buckets_str.split(",") if bucket.strip()]
+            else:
+                self.buckets = []
+
+    def __repr__(self) -> str:
+        return (
+            f"MinIOSettings(endpoint={self.endpoint!r}, "
+            f"access_key={self.access_key!r}, secret_key='***', "
+            f"buckets={self.buckets!r}, secure={self.secure}, region={self.region!r})"
+        )

@@ -9,7 +9,9 @@
     5432,
     6379,
     5672,
-    15672
+    15672,
+    9000,
+    9001
   ],
   "portsAttributes": {
     "8000": {
@@ -31,6 +33,14 @@
     "15672": {
       "label": "RabbitMQ Management",
       "onAutoForward": "silent"
+    },
+    "9000": {
+      "label": "MinIO API",
+      "onAutoForward": "silent"
+    },
+    "9001": {
+      "label": "MinIO Console",
+      "onAutoForward": "notify"
     }
   },
   // "remoteUser": "vscode",
