@@ -2,10 +2,10 @@ from email.message import EmailMessage
 
 import aiosmtplib
 
+from src.application.common.email.interface.protocol import EmailServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import EmailSettings
 from src.infrastructure.email.exceptions import EmailConfigurationError, EmailConnectionError, EmailSendError
-from src.infrastructure.email.protocol import EmailServiceProtocol
 
 logger = get_logger("email.smtp")
 

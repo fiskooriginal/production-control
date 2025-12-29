@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from src.application.batches.dtos.update import UpdateBatchInputDTO
+from src.application.common.cache.interface.protocol import CacheServiceProtocol
+from src.application.common.cache.keys import get_batch_key, get_batches_list_pattern
 from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.core.time import datetime_now
@@ -15,8 +17,6 @@ from src.domain.batches.value_objects import (
     Team,
 )
 from src.domain.common.exceptions import InvalidStateError
-from src.infrastructure.cache.keys.batches import get_batch_key, get_batches_list_pattern
-from src.infrastructure.cache.protocol import CacheServiceProtocol
 
 logger = get_logger("command.batches")
 

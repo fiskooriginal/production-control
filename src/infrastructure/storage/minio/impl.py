@@ -7,6 +7,7 @@ from pathlib import Path
 from minio import Minio
 from minio.error import S3Error
 
+from src.application.common.storage.interface.protocol import FileInfo, StorageServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import MinIOSettings
 from src.infrastructure.storage.exceptions import (
@@ -16,8 +17,7 @@ from src.infrastructure.storage.exceptions import (
     StorageNotFoundError,
     StorageUploadError,
 )
-from src.infrastructure.storage.protocol import FileInfo, StorageServiceProtocol
-from src.infrastructure.storage.utils import _get_content_type
+from src.infrastructure.storage.utils import get_content_type
 
 logger = get_logger("storage.minio")
 
@@ -80,7 +80,7 @@ class MinIOStorageServiceImpl(StorageServiceProtocol):
             if content_type is None:
                 if file_extension is None:
                     file_extension = Path(object_name).suffix
-                content_type = _get_content_type(file_extension)
+                content_type = get_content_type(file_extension)
 
             result = await asyncio.to_thread(
                 self._client.put_object,

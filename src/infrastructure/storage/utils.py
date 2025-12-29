@@ -1,4 +1,4 @@
-def _get_content_type(file_extension: str | None = None) -> str:
+def get_content_type(file_extension: str | None = None) -> str:
     """
     Определить Content-Type по расширению файла.
 
