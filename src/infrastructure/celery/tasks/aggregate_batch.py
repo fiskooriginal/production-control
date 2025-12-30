@@ -1,5 +1,3 @@
-import asyncio
-
 from datetime import datetime
 from uuid import UUID
 
@@ -9,7 +7,7 @@ from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.core.time import datetime_now
 from src.infrastructure.celery import states
-from src.infrastructure.celery.app import celery_app, get_session_factory
+from src.infrastructure.celery.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
 
 logger = get_logger("celery.tasks.aggregate_batch")
@@ -61,7 +59,7 @@ def aggregate_batch(
         logger.error(f"Invalid aggregated_at format: {aggregated_at}")
         raise ValueError(f"Invalid aggregated_at format: {aggregated_at}") from e
 
-    return asyncio.run(_aggregate_batch_async(self, batch_uuid, unique_codes, agg_at))
+    return run_async_task(_aggregate_batch_async(self, batch_uuid, unique_codes, agg_at))
 
 
 def _is_retryable_error(exception: Exception) -> bool:

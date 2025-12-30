@@ -14,6 +14,7 @@ logger = get_logger("celery")
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
+_worker_loop: asyncio.AbstractEventLoop | None = None
 
 rabbitmq_settings = RabbitMQSettings()
 redis_settings = RedisSettings()
@@ -53,8 +54,12 @@ logger.info(f"Celery app initialized successfully with {len(beat_schedule)} sche
 @worker_process_init.connect
 def init_worker_db(**kwargs) -> None:
     """Инициализирует database engine при старте worker процесса"""
-    global _engine, _session_factory
+    global _engine, _session_factory, _worker_loop
     try:
+        _worker_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(_worker_loop)
+        logger.info("Event loop created for worker")
+
         db_settings = DatabaseSettings()
         logger.info(f"Initializing database engine for worker: {db_settings.get_safe_url()}")
         _engine = init_engine(db_settings.url)
@@ -71,13 +76,16 @@ def init_worker_db(**kwargs) -> None:
 @worker_process_shutdown.connect
 def shutdown_worker_db(**kwargs) -> None:
     """Корректно закрывает database engine при остановке worker процесса"""
-    global _engine, _session_factory
-    if _engine:
+    global _engine, _session_factory, _worker_loop
+    if _engine and _worker_loop:
         try:
             logger.info("Disposing database engine for worker")
-            asyncio.run(dispose_engine(_engine))
+            _worker_loop.run_until_complete(dispose_engine(_engine))
             _engine = None
             _session_factory = None
+            _worker_loop.close()
+            _worker_loop = None
+            asyncio.set_event_loop(None)
             logger.info("Database engine disposed for worker")
         except Exception as e:
             logger.exception(f"Error disposing database engine for worker: {e}")
@@ -95,3 +103,16 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:
         raise RuntimeError("Session factory not initialized. Ensure worker_process_init signal was called.")
     return _session_factory
+
+
+def run_async_task(coro):
+    """
+    Запускает async задачу в глобальном event loop worker процесса.
+
+    Использует один и тот же event loop для всех задач, чтобы избежать
+    конфликтов с соединениями из пула SQLAlchemy.
+    """
+    global _worker_loop
+    if _worker_loop is None:
+        raise RuntimeError("Worker event loop not initialized. Ensure worker_process_init signal was called.")
+    return _worker_loop.run_until_complete(coro)

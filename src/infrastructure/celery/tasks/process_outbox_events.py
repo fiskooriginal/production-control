@@ -1,11 +1,10 @@
-import asyncio
 import inspect
 
 from sqlalchemy.exc import DBAPIError, OperationalError
 
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
-from src.infrastructure.celery.app import celery_app, get_session_factory
+from src.infrastructure.celery.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.events import EventSerializer
 from src.infrastructure.events.handlers.registry import EventHandlerRegistry
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
@@ -36,7 +35,7 @@ def process_outbox_events(self) -> dict:
             "total": 12
         }
     """
-    return asyncio.run(_process_outbox_events_async(self))
+    return run_async_task(_process_outbox_events_async(self))
 
 
 async def _process_outbox_events_async(task_instance) -> dict:
