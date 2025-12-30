@@ -10,14 +10,14 @@ from minio.error import S3Error
 from src.application.common.storage.interface import FileInfo
 from src.core.logging import get_logger
 from src.core.settings import MinIOSettings
-from src.infrastructure.storage.exceptions import (
+from src.infrastructure.common.storage.exceptions import (
     StorageConnectionError,
     StorageDeleteError,
     StorageDownloadError,
     StorageNotFoundError,
     StorageUploadError,
 )
-from src.infrastructure.storage.utils import get_content_type
+from src.infrastructure.common.storage.utils import get_content_type
 
 logger = get_logger("storage.minio")
 

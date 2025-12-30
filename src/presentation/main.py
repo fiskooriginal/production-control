@@ -6,7 +6,7 @@ from src.core.config import LOG_LEVEL
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger, setup_logging
 from src.core.settings import CacheSettings, DatabaseSettings
-from src.infrastructure.cache.redis import close_cache, init_cache
+from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import background_tasks, batches, healthcheck, products, work_centers

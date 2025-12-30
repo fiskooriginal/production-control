@@ -3,8 +3,8 @@ from minio.error import S3Error
 
 from src.core.logging import get_logger
 from src.core.settings import MinIOSettings
-from src.infrastructure.storage.exceptions import StorageConnectionError
-from src.infrastructure.storage.minio import MinIOStorageServiceImpl
+from src.infrastructure.common.storage.exceptions import StorageConnectionError
+from src.infrastructure.common.storage.minio import MinIOStorageServiceImpl
 
 logger = get_logger("storage.minio")
 

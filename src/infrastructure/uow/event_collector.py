@@ -6,6 +6,18 @@ from src.infrastructure.persistence.models.outbox_event import OutboxEvent, Outb
 from src.infrastructure.uow.identity_map import IdentityMap
 
 
+def generate_dedup_key(event: DomainEvent) -> str:
+    """
+    Генерирует ключ дедупликации для события.
+    Формат: event_name:aggregate_id:occurred_at_iso
+    """
+    from src.infrastructure.events import EventRegistry
+
+    event_name, _ = EventRegistry.get_event_metadata(type(event))
+    occurred_at_str = event.occurred_at.isoformat()
+    return f"{event_name}:{event.aggregate_id}:{occurred_at_str}"
+
+
 class EventCollector:
     """
     Собирает доменные события из отслеживаемых агрегатов и преобразует их в OutboxEvent.
@@ -44,7 +56,7 @@ class EventCollector:
 
         serialized = EventSerializer.serialize(event)
 
-        dedup_key = self._generate_dedup_key(event)
+        dedup_key = generate_dedup_key(event)
 
         return OutboxEvent(
             uuid=uuid4(),
@@ -58,14 +70,3 @@ class EventCollector:
             attempts=0,
             dedup_key=dedup_key,
         )
-
-    def _generate_dedup_key(self, event: DomainEvent) -> str:
-        """
-        Генерирует ключ дедупликации для события.
-        Формат: event_name:aggregate_id:occurred_at_iso
-        """
-        from src.infrastructure.events import EventRegistry
-
-        event_name, _ = EventRegistry.get_event_metadata(type(event))
-        occurred_at_str = event.occurred_at.isoformat()
-        return f"{event_name}:{event.aggregate_id}:{occurred_at_str}"
