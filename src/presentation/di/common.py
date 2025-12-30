@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.cache.interface.protocol import CacheServiceProtocol
 from src.application.common.uow import UnitOfWorkProtocol
-from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
+from src.infrastructure.common.uow import SqlAlchemyUnitOfWork
 
 
 async def get_session(request: Request) -> AsyncGenerator[AsyncSession]:

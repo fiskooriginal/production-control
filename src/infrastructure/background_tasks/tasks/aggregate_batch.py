@@ -6,9 +6,9 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.core.time import datetime_now
-from src.infrastructure.celery import states
-from src.infrastructure.celery.app import celery_app, get_session_factory, run_async_task
-from src.infrastructure.uow.unit_of_work import SqlAlchemyUnitOfWork
+from src.infrastructure.background_tasks import states
+from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
+from src.infrastructure.common.uow.unit_of_work import SqlAlchemyUnitOfWork
 
 logger = get_logger("celery.tasks.aggregate_batch")
 

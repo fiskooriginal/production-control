@@ -224,7 +224,7 @@ services:
       [
         "celery",
         "-A",
-        "src.infrastructure.celery.app:celery_app",
+        "src.infrastructure.background_tasks.app:celery_app",
         "worker",
         "-l",
         "INFO",
@@ -274,7 +274,7 @@ services:
       [
         "celery",
         "-A",
-        "src.infrastructure.celery.app:celery_app",
+        "src.infrastructure.background_tasks.app:celery_app",
         "beat",
         "-l",
         "INFO",
@@ -317,7 +317,7 @@ services:
       [
         "celery",
         "-A",
-        "src.infrastructure.celery.app:celery_app",
+        "src.infrastructure.background_tasks.app:celery_app",
         "flower",
         "--port=5555",
       ]

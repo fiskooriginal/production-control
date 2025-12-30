@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings, DatabaseSettings, RabbitMQSettings, RedisSettings
-from src.infrastructure.celery.beat_schedule import beat_schedule
+from src.infrastructure.background_tasks.beat_schedule import beat_schedule
 from src.infrastructure.events.handlers import setup_event_handlers
 
 logger = get_logger("celery")
@@ -31,8 +31,8 @@ celery_app = Celery(
     broker=broker_url,
     backend=result_backend,
     include=[
-        "src.infrastructure.celery.tasks.aggregate_batch",
-        "src.infrastructure.celery.tasks.process_outbox_events",
+        "src.infrastructure.background_tasks.tasks.aggregate_batch",
+        "src.infrastructure.background_tasks.tasks.process_outbox_events",
     ],
 )
 

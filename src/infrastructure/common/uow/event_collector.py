@@ -2,8 +2,8 @@ from uuid import uuid4
 
 from src.core.time import datetime_aware_to_naive, datetime_now
 from src.domain.common.events import DomainEvent
+from src.infrastructure.common.uow.identity_map import IdentityMap
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
-from src.infrastructure.uow.identity_map import IdentityMap
 
 
 def generate_dedup_key(event: DomainEvent) -> str:

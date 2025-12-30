@@ -3,9 +3,9 @@ from uuid import UUID
 from celery.result import AsyncResult
 from fastapi import APIRouter, status
 
-from src.infrastructure.celery import states
-from src.infrastructure.celery.app import celery_app
-from src.infrastructure.celery.tasks import aggregate_batch as aggregate_batch_task
+from src.infrastructure.background_tasks import states
+from src.infrastructure.background_tasks.app import celery_app
+from src.infrastructure.background_tasks.tasks import aggregate_batch as aggregate_batch_task
 from src.presentation.api.schemas.background_tasks import TaskStartedResponse, TaskStatusResponse
 from src.presentation.api.schemas.batches import AggregateBatchTaskRequest
 

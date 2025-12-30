@@ -8,12 +8,12 @@ from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
+from src.infrastructure.common.uow.event_collector import EventCollector
+from src.infrastructure.common.uow.identity_map import IdentityMap
 from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
 from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
-from src.infrastructure.uow.event_collector import EventCollector
-from src.infrastructure.uow.identity_map import IdentityMap
 
 logger = get_logger("uow")
 

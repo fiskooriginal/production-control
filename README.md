@@ -141,7 +141,7 @@ src/
 1. Создайте модуль задачи в `src/infrastructure/celery/tasks/`:
 
 ```python
-from src.infrastructure.celery.app import celery_app
+from src.infrastructure.background_tasks.app import celery_app
 
 @celery_app.task(name="my_module.my_task")
 def my_task(arg1: str) -> dict:
@@ -152,7 +152,7 @@ def my_task(arg1: str) -> dict:
 1. Импортируйте задачу в `src/infrastructure/celery/tasks/__init__.py`:
 
 ```python
-from src.infrastructure.celery.tasks.my_module import my_task
+from src.infrastructure.background_tasks.tasks.my_module import my_task
 
 __all__ = ["my_task", ...]
 ```
@@ -165,8 +165,8 @@ celery_app = Celery(
     broker=broker_url,
     backend=result_backend,
     include=[
-        "src.infrastructure.celery.tasks.outbox",
-        "src.infrastructure.celery.tasks.my_module",
+        "src.infrastructure.background_tasks.tasks.outbox",
+        "src.infrastructure.background_tasks.tasks.my_module",
     ],
 )
 ```
@@ -220,10 +220,10 @@ beat_schedule = {
 
 ```bash
 # Список всех задач
-docker compose exec celery_worker celery -A src.infrastructure.celery.app:celery_app inspect registered
+docker compose exec celery_worker celery -A src.infrastructure.background_tasks.app:celery_app inspect registered
 
 # Активные периодические задачи
-docker compose exec celery_beat celery -A src.infrastructure.celery.app:celery_app inspect scheduled
+docker compose exec celery_beat celery -A src.infrastructure.background_tasks.app:celery_app inspect scheduled
 ```
 
 ## Мониторинг
