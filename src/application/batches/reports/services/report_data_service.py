@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from src.application.batches.queries import BatchQueryServiceProtocol
-from src.application.batches.reports.dtos import BatchReportOutputDTO
+from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.application.batches.reports.statistics import calculate_statistics
 from src.application.common.exceptions import ApplicationException
 from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
@@ -21,7 +21,7 @@ class ReportDataService:
         self._batch_query_service = batch_query_service
         self._work_center_query_service = work_center_query_service
 
-    async def get_batch_report_data(self, batch_id: UUID) -> BatchReportOutputDTO:
+    async def get_batch_report_data(self, batch_id: UUID) -> BatchReportDataDTO:
         """Получает данные для генерации отчета по партии"""
         logger.info(f"Getting report data for batch: batch_id={batch_id}")
 
@@ -39,7 +39,7 @@ class ReportDataService:
                 if work_center is not None:
                     work_center_name = work_center.name
 
-            return BatchReportOutputDTO(batch=batch, statistics=statistics, work_center_name=work_center_name)
+            return BatchReportDataDTO(batch=batch, statistics=statistics, work_center_name=work_center_name)
         except ApplicationException:
             raise
         except Exception as e:

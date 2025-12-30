@@ -1,7 +1,5 @@
-from src.application.batches.reports.ports.report_generator_protocol import ReportGeneratorProtocol
-from src.application.batches.reports.ports.report_storage_protocol import ReportStorageProtocol
+from src.application.batches.reports.ports.report_generator import ReportGeneratorProtocol
 
 __all__ = [
     "ReportGeneratorProtocol",
-    "ReportStorageProtocol",
 ]

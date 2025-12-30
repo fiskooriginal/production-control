@@ -11,7 +11,7 @@ class ReportFormatEnum(str, Enum):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class BatchReportOutputDTO:
+class BatchReportDataDTO:
     batch: BatchReadDTO
     statistics: ReportStatisticsDTO
     work_center_name: str | None

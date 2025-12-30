@@ -1,8 +1,9 @@
 from uuid import UUID
 
+from src.application.batches.reports.adapters import ReportStorageAdapter
 from src.application.batches.reports.dtos import ReportFormatEnum
-from src.application.batches.reports.ports import ReportGeneratorProtocol, ReportStorageProtocol
-from src.application.batches.reports.services.report_data_service import ReportDataService
+from src.application.batches.reports.ports import ReportGeneratorProtocol
+from src.application.batches.reports.services import ReportDataService
 from src.application.common.exceptions import ApplicationException
 from src.core.logging import get_logger
 
@@ -17,7 +18,7 @@ class ReportGenerationService:
         report_data_service: ReportDataService,
         pdf_generator: ReportGeneratorProtocol,
         excel_generator: ReportGeneratorProtocol,
-        report_storage: ReportStorageProtocol,
+        report_storage: ReportStorageAdapter,
     ) -> None:
         self._report_data_service = report_data_service
         self._pdf_generator = pdf_generator
