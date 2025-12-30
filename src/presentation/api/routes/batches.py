@@ -1,7 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
+from src.application.batches.commands.generate_report import GenerateReportCommand
+from src.application.batches.dtos.generate_report import GenerateReportInputDTO
+from src.application.batches.reports.dtos import ReportFormatEnum
 from src.presentation.api.schemas.background_tasks import TaskStartedResponse
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
@@ -10,6 +13,7 @@ from src.presentation.api.schemas.batches import (
     BatchResponse,
     CloseBatchRequest,
     CreateBatchRequest,
+    GenerateReportResponse,
     ListBatchesResponse,
     UpdateBatchRequest,
 )
@@ -25,6 +29,7 @@ from src.presentation.di.batches import (
     remove_product_from_batch,
     update_batch,
 )
+from src.presentation.di.reports import generate_report_command
 from src.presentation.mappers.batches import (
     aggregate_batch_request_to_input_dto,
     close_batch_request_to_input_dto,
@@ -142,3 +147,22 @@ async def delete_batch(batch_id: UUID, command: delete_batch) -> None:
     ВАЖНО: Можно удалить только закрытую партию. Все продукты будут автоматически удалены.
     """
     await command.execute(batch_id)
+
+
+@router.post(
+    "/{batch_id}/reports/generate",
+    response_model=GenerateReportResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def generate_report(
+    batch_id: UUID,
+    format: ReportFormatEnum = Query(..., description="Формат отчета (pdf или excel)"),
+    command: GenerateReportCommand = Depends(generate_report_command),
+) -> GenerateReportResponse:
+    """
+    Генерирует отчет для партии
+    """
+    input_dto = GenerateReportInputDTO(batch_id=batch_id, format=format)
+    report_path = await command.execute(input_dto)
+
+    return GenerateReportResponse(report_path=report_path, download_url=None)

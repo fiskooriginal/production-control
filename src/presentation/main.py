@@ -5,8 +5,9 @@ from fastapi import FastAPI
 from src.core.config import LOG_LEVEL
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger, setup_logging
-from src.core.settings import CacheSettings, DatabaseSettings
+from src.core.settings import CacheSettings, DatabaseSettings, MinIOSettings
 from src.infrastructure.common.cache.redis import close_cache, init_cache
+from src.infrastructure.common.storage.minio import init_storage_async
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import background_tasks, batches, healthcheck, products, work_centers
@@ -34,6 +35,13 @@ async def lifespan(app: FastAPI):
         cache_service, redis_pool = await init_cache(cache_settings)
         app.state.cache_service = cache_service
         app.state.redis_pool = redis_pool
+
+        # Storage
+        minio_settings = MinIOSettings()
+        logger.info(f"Initializing MinIO storage: endpoint={minio_settings.endpoint}")
+        storage_service = await init_storage_async(minio_settings, "reports")
+        app.state.storage_service = storage_service
+        logger.info("MinIO storage initialized successfully")
 
         logger.info("Application started successfully")
     except Exception as e:

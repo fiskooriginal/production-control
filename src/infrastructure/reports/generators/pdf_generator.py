@@ -1,3 +1,6 @@
+import asyncio
+
+from functools import partial
 from io import BytesIO
 
 from reportlab.lib import colors
@@ -16,9 +19,25 @@ logger = get_logger("batches.reports.pdf")
 class BatchPDFReportGenerator:
     """Генератор PDF отчетов для батчей."""
 
-    def generate(self, batch_data: BatchReportDataDTO) -> bytes:
+    async def generate(self, batch_data: BatchReportDataDTO) -> bytes:
         """
         Генерирует PDF отчет для батча.
+
+        Args:
+            batch_data: Данные для генерации отчета
+
+        Returns:
+            Байты сгенерированного PDF файла
+
+        Raises:
+            BatchPDFGenerationError: При ошибке генерации PDF
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, partial(self._generate_sync, batch_data))
+
+    def _generate_sync(self, batch_data: BatchReportDataDTO) -> bytes:
+        """
+        Синхронная генерация PDF отчета.
 
         Args:
             batch_data: Данные для генерации отчета

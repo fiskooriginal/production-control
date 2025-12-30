@@ -25,40 +25,27 @@ class ReportGenerationService:
         self._excel_generator = excel_generator
         self._report_storage = report_storage
 
-    async def generate_pdf_report(self, batch_id: UUID) -> str:
-        """Генерирует PDF отчет для партии"""
-        logger.info(f"Generating PDF report for batch: batch_id={batch_id}")
+    async def _get_generator_cls(self, format: ReportFormatEnum) -> ReportGeneratorProtocol:
+        generator_cls = {
+            ReportFormatEnum.PDF: self._pdf_generator,
+            ReportFormatEnum.EXCEL: self._excel_generator,
+        }
+        return generator_cls[format]
 
+    async def generate_report(self, batch_id: UUID, report_format: ReportFormatEnum):
+        """Генерирует отчёт для партии"""
+        logger.info(f"Начата генерация отчёта для партии: batch_id={batch_id}")
         try:
             batch_data = await self._report_data_service.get_batch_report_data(batch_id)
 
-            pdf_content = self._pdf_generator.generate(batch_data)
+            generator_cls = await self._get_generator_cls(report_format)
+            content = await generator_cls.generate(batch_data)
 
-            report_path = await self._report_storage.save_report(batch_id, pdf_content, ReportFormatEnum.PDF)
-
-            logger.info(f"PDF report generated successfully: batch_id={batch_id}, path={report_path}")
+            report_path = await self._report_storage.save_report(batch_id, content, report_format)
+            logger.info(f"Отчёт успешно сгенерирован: batch_id={batch_id}, path={report_path}")
             return report_path
         except ApplicationException:
             raise
         except Exception as e:
-            logger.exception(f"Failed to generate PDF report for batch {batch_id}: {e}")
-            raise ApplicationException(f"Ошибка при генерации PDF отчета: {e}") from e
-
-    async def generate_excel_report(self, batch_id: UUID) -> str:
-        """Генерирует Excel отчет для партии"""
-        logger.info(f"Generating Excel report for batch: batch_id={batch_id}")
-
-        try:
-            batch_data = await self._report_data_service.get_batch_report_data(batch_id)
-
-            excel_content = self._excel_generator.generate(batch_data)
-
-            report_path = await self._report_storage.save_report(batch_id, excel_content, ReportFormatEnum.EXCEL)
-
-            logger.info(f"Excel report generated successfully: batch_id={batch_id}, path={report_path}")
-            return report_path
-        except ApplicationException:
-            raise
-        except Exception as e:
-            logger.exception(f"Failed to generate Excel report for batch {batch_id}: {e}")
-            raise ApplicationException(f"Ошибка при генерации Excel отчета: {e}") from e
+            logger.exception(f"Ошибка при генерации отчтёта для партии {batch_id}: {e}")
+            raise ApplicationException(f"Ошибка при генерации отчета: {e}") from e

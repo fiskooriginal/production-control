@@ -6,6 +6,6 @@ from src.application.batches.reports.dtos import BatchReportDataDTO
 class ReportGeneratorProtocol(Protocol):
     """Протокол для генераторов отчетов"""
 
-    def generate(self, batch_data: BatchReportDataDTO) -> bytes:
+    async def generate(self, batch_data: BatchReportDataDTO) -> bytes:
         """Генерирует отчет в виде байтов"""
         ...

@@ -4,17 +4,19 @@ from celery import Celery
 from celery.signals import worker_process_init, worker_process_shutdown
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from src.application.common.storage.interface import StorageServiceProtocol
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
-from src.core.settings import CelerySettings, DatabaseSettings, RabbitMQSettings, RedisSettings
+from src.core.settings import CelerySettings, DatabaseSettings, MinIOSettings, RabbitMQSettings, RedisSettings
 from src.infrastructure.background_tasks.beat_schedule import beat_schedule
-from src.infrastructure.events.handlers import setup_event_handlers
+from src.infrastructure.common.storage.minio import init_storage_async
 
 logger = get_logger("celery")
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _worker_loop: asyncio.AbstractEventLoop | None = None
+_storage_service: StorageServiceProtocol | None = None
 
 rabbitmq_settings = RabbitMQSettings()
 redis_settings = RedisSettings()
@@ -53,8 +55,8 @@ logger.info(f"Celery app initialized successfully with {len(beat_schedule)} sche
 
 @worker_process_init.connect
 def init_worker_db(**kwargs) -> None:
-    """Инициализирует database engine при старте worker процесса"""
-    global _engine, _session_factory, _worker_loop
+    """Инициализирует ресурсы при старте worker процесса"""
+    global _engine, _session_factory, _worker_loop, _storage_service
     try:
         _worker_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(_worker_loop)
@@ -66,29 +68,37 @@ def init_worker_db(**kwargs) -> None:
         _session_factory = make_session_factory(_engine)
         logger.info("Database engine initialized for worker")
 
+        minio_settings = MinIOSettings()
+        logger.info(f"Initializing MinIO storage for worker: endpoint={minio_settings.endpoint}")
+        _storage_service = _worker_loop.run_until_complete(init_storage_async(minio_settings, "reports"))
+        logger.info("MinIO storage initialized for worker")
+
+        from src.infrastructure.events.handlers import setup_event_handlers
+
         setup_event_handlers()
         logger.info("Event handlers registered")
     except Exception as e:
-        logger.exception(f"Failed to initialize database engine for worker: {e}")
+        logger.exception(f"Failed to initialize worker resources: {e}")
         raise
 
 
 @worker_process_shutdown.connect
 def shutdown_worker_db(**kwargs) -> None:
-    """Корректно закрывает database engine при остановке worker процесса"""
-    global _engine, _session_factory, _worker_loop
+    """Корректно закрывает database engine и storage service при остановке worker процесса"""
+    global _engine, _session_factory, _worker_loop, _storage_service
     if _engine and _worker_loop:
         try:
-            logger.info("Disposing database engine for worker")
+            logger.info("Disposing worker resources")
             _worker_loop.run_until_complete(dispose_engine(_engine))
             _engine = None
             _session_factory = None
+            _storage_service = None
             _worker_loop.close()
             _worker_loop = None
             asyncio.set_event_loop(None)
-            logger.info("Database engine disposed for worker")
+            logger.info("Worker resources disposed")
         except Exception as e:
-            logger.exception(f"Error disposing database engine for worker: {e}")
+            logger.exception(f"Error disposing worker resources: {e}")
 
 
 def get_engine() -> AsyncEngine:
@@ -103,6 +113,13 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:
         raise RuntimeError("Session factory not initialized. Ensure worker_process_init signal was called.")
     return _session_factory
+
+
+def get_storage_service() -> StorageServiceProtocol:
+    """Возвращает глобальный storage service для использования в задачах"""
+    if _storage_service is None:
+        raise RuntimeError("Storage service not initialized. Ensure worker_process_init signal was called.")
+    return _storage_service
 
 
 def run_async_task(coro):

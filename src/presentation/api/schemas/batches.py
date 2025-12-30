@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import Query
 from pydantic import BaseModel, Field
 
+from src.application.batches.reports.dtos import ReportFormatEnum
 from src.presentation.api.schemas.base import TimestampSchema, UUIDSchema
 from src.presentation.api.schemas.products import ProductResponse
 
@@ -124,3 +125,16 @@ class ListBatchesResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class GenerateReportRequest(BaseModel):
+    """Запрос на генерацию отчета."""
+
+    format: ReportFormatEnum
+
+
+class GenerateReportResponse(BaseModel):
+    """Ответ с информацией о сгенерированном отчете."""
+
+    report_path: str
+    download_url: str | None = None

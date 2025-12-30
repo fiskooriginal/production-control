@@ -1,3 +1,6 @@
+import asyncio
+
+from functools import partial
 from io import BytesIO
 
 from openpyxl import Workbook
@@ -13,9 +16,25 @@ logger = get_logger("batches.reports.excel")
 class BatchExcelReportGenerator:
     """Генератор Excel отчетов для партий."""
 
-    def generate(self, batch_data: BatchReportDataDTO) -> bytes:
+    async def generate(self, batch_data: BatchReportDataDTO) -> bytes:
         """
         Генерирует Excel отчет для партий.
+
+        Args:
+            batch_data: Данные для генерации отчета
+
+        Returns:
+            Байты сгенерированного Excel файла
+
+        Raises:
+            BatchExcelGenerationError: При ошибке генерации Excel
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, partial(self._generate_sync, batch_data))
+
+    def _generate_sync(self, batch_data: BatchReportDataDTO) -> bytes:
+        """
+        Синхронная генерация Excel отчета.
 
         Args:
             batch_data: Данные для генерации отчета
