@@ -7,7 +7,7 @@ from pathlib import Path
 from minio import Minio
 from minio.error import S3Error
 
-from src.application.common.storage.interface.protocol import FileInfo, StorageServiceProtocol
+from src.application.common.storage.interface import FileInfo
 from src.core.logging import get_logger
 from src.core.settings import MinIOSettings
 from src.infrastructure.storage.exceptions import (
@@ -22,7 +22,7 @@ from src.infrastructure.storage.utils import get_content_type
 logger = get_logger("storage.minio")
 
 
-class MinIOStorageServiceImpl(StorageServiceProtocol):
+class MinIOStorageServiceImpl:
     """Сервис для работы с MinIO хранилищем."""
 
     def __init__(self, minio_client: Minio, minio_settings: MinIOSettings, bucket_name: str):
