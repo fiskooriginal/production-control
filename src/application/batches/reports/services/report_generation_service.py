@@ -32,7 +32,7 @@ class ReportGenerationService:
         try:
             batch_data = await self._report_data_service.get_batch_report_data(batch_id)
 
-            pdf_content = await self._pdf_generator.generate(batch_data)
+            pdf_content = self._pdf_generator.generate(batch_data)
 
             report_path = await self._report_storage.save_report(batch_id, pdf_content, ReportFormatEnum.PDF)
 
@@ -51,7 +51,7 @@ class ReportGenerationService:
         try:
             batch_data = await self._report_data_service.get_batch_report_data(batch_id)
 
-            excel_content = await self._excel_generator.generate(batch_data)
+            excel_content = self._excel_generator.generate(batch_data)
 
             report_path = await self._report_storage.save_report(batch_id, excel_content, ReportFormatEnum.EXCEL)
 
