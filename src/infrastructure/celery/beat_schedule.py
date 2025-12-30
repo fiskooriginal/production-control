@@ -12,7 +12,13 @@
 #
 # Подробнее: https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html
 
+from celery.schedules import crontab
+
 beat_schedule = {
+    "process-outbox-events": {
+        "task": "tasks.process_outbox_events",
+        "schedule": crontab(minute="*/1"),  # Каждую минуту
+    },
     # Пример: Закрытие просроченных партий - каждый день в 01:00
     # "auto-close-expired-batches": {
     #     "task": "tasks.auto_close_expired_batches",

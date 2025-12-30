@@ -8,6 +8,7 @@ from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings, DatabaseSettings, RabbitMQSettings, RedisSettings
 from src.infrastructure.celery.beat_schedule import beat_schedule
+from src.infrastructure.events.handlers import setup_event_handlers
 
 logger = get_logger("celery")
 
@@ -30,6 +31,7 @@ celery_app = Celery(
     backend=result_backend,
     include=[
         "src.infrastructure.celery.tasks.aggregate_batch",
+        "src.infrastructure.celery.tasks.process_outbox_events",
     ],
 )
 
@@ -58,6 +60,9 @@ def init_worker_db(**kwargs) -> None:
         _engine = init_engine(db_settings.url)
         _session_factory = make_session_factory(_engine)
         logger.info("Database engine initialized for worker")
+
+        setup_event_handlers()
+        logger.info("Event handlers registered")
     except Exception as e:
         logger.exception(f"Failed to initialize database engine for worker: {e}")
         raise
