@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 
 from sqlalchemy.exc import DBAPIError, OperationalError
@@ -20,7 +21,7 @@ def _is_retryable_error(exception: Exception) -> bool:
 
 
 @celery_app.task(bind=True, max_retries=None, name="tasks.process_outbox_events")
-async def process_outbox_events(self) -> dict:
+def process_outbox_events(self) -> dict:
     """
     Обрабатывает pending события из Transactional Outbox.
 
@@ -35,7 +36,7 @@ async def process_outbox_events(self) -> dict:
             "total": 12
         }
     """
-    return await _process_outbox_events_async(self)
+    return asyncio.run(_process_outbox_events_async(self))
 
 
 async def _process_outbox_events_async(task_instance) -> dict:
