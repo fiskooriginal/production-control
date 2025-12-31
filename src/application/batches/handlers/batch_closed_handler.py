@@ -1,21 +1,13 @@
-from typing import Protocol
-
 from src.application.batches.reports.dtos import ReportFormatEnum
 from src.application.batches.reports.services.report_generation_service import ReportGenerationService
 from src.core.logging import get_logger
 from src.domain.batches.events import BatchClosedEvent
+from src.infrastructure.events.handlers.decorator import event_handler
 
 logger = get_logger("handler.reports")
 
 
-class BatchClosedEventHandler(Protocol):
-    """Протокол для обработчиков события закрытия партии"""
-
-    async def handle(self, event: BatchClosedEvent) -> None:
-        """Обрабатывает событие закрытия партии"""
-        ...
-
-
+@event_handler(BatchClosedEvent)
 class GenerateReportOnBatchClosedHandler:
     """Обработчик события закрытия партии для автоматической генерации PDF отчета"""
 
