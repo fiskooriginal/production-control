@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
@@ -78,17 +79,20 @@ class BatchRepository(BatchRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при удалении партии: {e}") from e
 
-    async def get_by_batch_number(self, batch_number: int) -> BatchEntity | None:
-        """Находит партию по номеру партии"""
+    async def get_by_batch_number_and_date(self, batch_number: int, batch_date: date) -> BatchEntity | None:
+        """Находит партию по номеру партии и дате"""
         try:
-            stmt = select(Batch).where(Batch.batch_number == batch_number)
+            stmt = select(Batch).where(
+                Batch.batch_number == batch_number,
+                Batch.batch_date == batch_date,
+            )
             result = await self._session.execute(stmt)
             batch_model = result.scalar_one_or_none()
             if batch_model is None:
                 return None
             return to_domain_entity(batch_model)
         except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при поиске партии по номеру: {e}") from e
+            raise DatabaseException(f"Ошибка базы данных при поиске партии по номеру и дате: {e}") from e
 
     async def get_by_work_center(self, work_center_id: UUID) -> list[BatchEntity]:
         """Находит все партии рабочего центра"""

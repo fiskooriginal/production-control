@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import Index
+from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Field, Relationship
 
 from src.infrastructure.persistence.models.base import BaseModel
@@ -17,6 +17,7 @@ class Batch(BaseModel, table=True):
 
     __tablename__ = "batches"
     __table_args__ = (
+        UniqueConstraint("batch_number", "batch_date", name="uq_batch_number_date"),
         Index("idx_batch_number", "batch_number"),
         Index("idx_batch_date", "batch_date"),
         Index("idx_batch_number_date", "batch_number", "batch_date"),

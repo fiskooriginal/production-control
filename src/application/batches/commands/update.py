@@ -7,7 +7,7 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.core.time import datetime_now
 from src.domain.batches.entities import BatchEntity
-from src.domain.batches.services import validate_batch_number_uniqueness, validate_shift_time_overlap
+from src.domain.batches.services import validate_batch_uniqueness, validate_shift_time_overlap
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -42,15 +42,28 @@ class UpdateBatchCommand:
                 if input_dto.team is not None:
                     batch.team = Team(input_dto.team)
 
+                # проверяем, изменились ли номер партии или дата партии
+                batch_number_changed = False
+                batch_date_changed = False
+
                 if input_dto.batch_number is not None:
                     new_batch_number = BatchNumber(input_dto.batch_number)
-                    is_unique = await validate_batch_number_uniqueness(new_batch_number, self._uow.batches)
-                    if not is_unique:
-                        raise InvalidStateError(f"Партия с номером {new_batch_number.value} уже существует")
                     batch.batch_number = new_batch_number
+                    batch_number_changed = True
 
                 if input_dto.batch_date is not None:
                     batch.batch_date = input_dto.batch_date
+                    batch_date_changed = True
+
+                # проверяем уникальность комбинации номера партии и даты
+                if batch_number_changed or batch_date_changed:
+                    is_unique = await validate_batch_uniqueness(
+                        batch.batch_number, batch.batch_date, self._uow.batches, exclude_batch_id=batch.uuid
+                    )
+                    if not is_unique:
+                        raise InvalidStateError(
+                            f"Партия с номером {batch.batch_number.value} и датой {batch.batch_date} уже существует"
+                        )
 
                 if input_dto.nomenclature is not None:
                     batch.nomenclature = Nomenclature(input_dto.nomenclature)
