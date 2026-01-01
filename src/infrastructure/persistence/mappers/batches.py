@@ -98,13 +98,19 @@ def dict_to_domain(domain_dict: dict) -> BatchEntity:
 
 def domain_to_json_bytes(batch_entity: BatchEntity) -> bytes:
     """Сериализует BatchEntity в JSON bytes."""
-    domain_dict = asdict(batch_entity)
-    json_str = json.dumps(domain_dict, default=str)
-    return json_str.encode("utf-8")
+    try:
+        domain_dict = asdict(batch_entity)
+        json_str = json.dumps(domain_dict, default=str)
+        return json_str.encode("utf-8")
+    except Exception as e:
+        raise MappingException(f"Ошибка маппинга Domain Entity -> JSON bytes для Batch: {e}") from e
 
 
 def json_bytes_to_domain(json_bytes: bytes) -> BatchEntity:
     """Десериализирует JSON bytes в BatchEntity"""
-    json_str = json_bytes.decode("utf-8")
-    domain_dict = json.loads(json_str)
-    return dict_to_domain(domain_dict)
+    try:
+        json_str = json_bytes.decode("utf-8")
+        domain_dict = json.loads(json_str)
+        return dict_to_domain(domain_dict)
+    except Exception as e:
+        raise MappingException(f"Ошибка маппинга JSON bytes -> Domain Entity для Batch: {e}") from e

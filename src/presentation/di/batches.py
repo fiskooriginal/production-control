@@ -12,7 +12,7 @@ from src.application.batches.commands import (
     UpdateBatchCommand,
 )
 from src.application.batches.queries.handlers import GetBatchQueryHandler, ListBatchesQueryHandler
-from src.infrastructure.persistence.queries import BatchQueryService, CachedBatchQueryService
+from src.infrastructure.persistence.queries import BatchQueryService, CachedBatchQueryServiceProxy
 from src.presentation.di.common import async_session, cache, uow
 
 
@@ -56,7 +56,7 @@ async def get_delete_batch_command(uow: uow, cache_service: cache) -> DeleteBatc
 async def get_batch_query_service(session: async_session, cache_service: cache) -> BatchQueryService:
     """Dependency для BatchQueryService с кэшированием."""
     if cache_service and cache_service.enabled:
-        return CachedBatchQueryService(session, cache_service)
+        return CachedBatchQueryServiceProxy(session, cache_service)
     return BatchQueryService(session)
 
 

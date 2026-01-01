@@ -133,7 +133,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
         return stmt.order_by(column)
 
 
-class CachedBatchQueryService(BatchQueryService):
+class CachedBatchQueryServiceProxy(BatchQueryService):
     """Обертка над BatchQueryService с добавлением кэширования."""
 
     def __init__(self, session: AsyncSession, cache_service: CacheServiceProtocol | None = None):
