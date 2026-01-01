@@ -2,10 +2,10 @@ from dataclasses import dataclass
 
 from src.core.config import (
     ANALYTICS_DASHBOARD_TTL,
+    BATCH_CACHE_GET_TTL,
+    BATCH_CACHE_LIST_TTL,
     CACHE_ENABLED,
     CACHE_KEY_PREFIX,
-    CACHE_TTL_GET,
-    CACHE_TTL_LIST,
     CELERY_BROKER_URL,
     CELERY_REDIS_KEY_PREFIX,
     CELERY_RESULT_BACKEND,
@@ -137,8 +137,6 @@ class CelerySettings:
 @dataclass
 class CacheSettings:
     enabled: bool = CACHE_ENABLED
-    ttl_get: int = CACHE_TTL_GET
-    ttl_list: int = CACHE_TTL_LIST
     key_prefix: str = CACHE_KEY_PREFIX
 
 
@@ -186,6 +184,12 @@ class EmailSettings:
             f"user={self.user!r}, password='***', "
             f"from_email={self.from_email!r}, use_tls={self.use_tls})"
         )
+
+
+@dataclass
+class BatchCacheSettings:
+    ttl_get: int = BATCH_CACHE_GET_TTL
+    ttl_list: int = BATCH_CACHE_LIST_TTL
 
 
 @dataclass

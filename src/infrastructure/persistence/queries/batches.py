@@ -15,6 +15,7 @@ from src.application.batches.queries.sort import BatchSortField
 from src.application.common.cache.interface.protocol import CacheServiceProtocol
 from src.application.common.cache.keys import get_batch_key, get_batches_list_key
 from src.core.logging import get_logger
+from src.core.settings import BatchCacheSettings
 from src.domain.batches import BatchEntity
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
@@ -158,7 +159,8 @@ class CachedBatchQueryServiceProxy(BatchQueryService):
 
         try:
             serialized = domain_to_json_bytes(entity)
-            await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_get)
+            batch_cache_settings = BatchCacheSettings()
+            await self._cache_service.set(cache_key, serialized, ttl=batch_cache_settings.ttl_get)
         except Exception as e:
             logger.warning(f"Failed to cache batch: {e}")
 
@@ -182,7 +184,8 @@ class CachedBatchQueryServiceProxy(BatchQueryService):
 
         try:
             serialized = self._serialize_query_result(query_result)
-            await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_list)
+            batch_cache_settings = BatchCacheSettings()
+            await self._cache_service.set(cache_key, serialized, ttl=batch_cache_settings.ttl_list)
         except Exception as e:
             logger.warning(f"Failed to cache batches list: {e}")
 

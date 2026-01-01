@@ -21,16 +21,6 @@ class RedisCacheService(CacheServiceProtocol):
         return self._settings.enabled
 
     @property
-    def ttl_get(self) -> int:
-        """TTL для отдельной сущности в секундах."""
-        return self._settings.ttl_get
-
-    @property
-    def ttl_list(self) -> int:
-        """TTL для списков в секундах."""
-        return self._settings.ttl_list
-
-    @property
     def key_prefix(self) -> str:
         """Префикс для ключей кэша."""
         return self._settings.key_prefix

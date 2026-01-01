@@ -23,9 +23,3 @@ class CacheServiceProtocol(Protocol):
 
     @property
     def enabled(self) -> bool: ...
-
-    @property
-    def ttl_get(self) -> int: ...
-
-    @property
-    def ttl_list(self) -> int: ...
