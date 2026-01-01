@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from src.core.config import (
+    ANALYTICS_DASHBOARD_TTL,
     CACHE_ENABLED,
     CACHE_KEY_PREFIX,
     CACHE_TTL_GET,
@@ -185,3 +186,8 @@ class EmailSettings:
             f"user={self.user!r}, password='***', "
             f"from_email={self.from_email!r}, use_tls={self.use_tls})"
         )
+
+
+@dataclass
+class AnalyticsSettings:
+    ttl_dashboard: int = ANALYTICS_DASHBOARD_TTL

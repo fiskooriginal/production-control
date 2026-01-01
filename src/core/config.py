@@ -75,3 +75,6 @@ SMTP_USER: str | None = getenv("SMTP_USER")
 SMTP_PASSWORD: str | None = getenv("SMTP_PASSWORD")
 SMTP_FROM_EMAIL: str | None = getenv("SMTP_FROM_EMAIL")
 SMTP_USE_TLS: bool = getenv("SMTP_USE_TLS", "true").lower() == "true"
+
+# Analytics settings
+ANALYTICS_DASHBOARD_TTL: int = int(getenv("ANALYTICS_DASHBOARD_TTL", "300"))

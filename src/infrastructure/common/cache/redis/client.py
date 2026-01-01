@@ -7,7 +7,9 @@ from src.infrastructure.common.cache.redis.impl import RedisCacheService
 logger = get_logger("cache.client")
 
 
-async def init_cache(cache_settings: CacheSettings) -> tuple[RedisCacheService | None, ConnectionPool | None]:
+async def init_cache(
+    cache_settings: CacheSettings, raise_error: bool = False
+) -> tuple[RedisCacheService | None, ConnectionPool | None]:
     """
     Инициализирует Redis кэш сервис и connection pool.
     Возвращает (cache_service, redis_pool) или (None, None) если кэш отключен или произошла ошибка.
@@ -24,7 +26,7 @@ async def init_cache(cache_settings: CacheSettings) -> tuple[RedisCacheService |
             decode_responses=False,
         )
         redis_client = Redis(connection_pool=redis_pool)
-        cache_service = RedisCacheService(redis_client, cache_settings)
+        cache_service = RedisCacheService(redis_client, cache_settings, raise_error)
         logger.info("Redis cache initialized successfully")
         return cache_service, redis_pool
     except Exception as e:

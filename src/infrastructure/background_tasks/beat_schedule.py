@@ -19,6 +19,10 @@ beat_schedule = {
         "task": "tasks.process_outbox_events",
         "schedule": crontab(minute="*/1"),  # Каждую минуту
     },
+    "update-dashboard-statistics": {
+        "task": "tasks.update_dashboard_stats",
+        "schedule": crontab(minute="*/5"),  # Каждые 5 минут
+    },
     # Пример: Закрытие просроченных партий - каждый день в 01:00
     # "auto-close-expired-batches": {
     #     "task": "tasks.auto_close_expired_batches",
@@ -29,12 +33,6 @@ beat_schedule = {
     # "cleanup-old-files": {
     #     "task": "tasks.cleanup_old_files",
     #     "schedule": crontab(hour=2, minute=0),
-    # },
-    #
-    # Пример: Обновление статистики - каждые 5 минут
-    # "update-statistics": {
-    #     "task": "tasks.update_cached_statistics",
-    #     "schedule": crontab(minute="*/5"),
     # },
     #
     # Пример: Повторная отправка webhooks - каждые 15 минут

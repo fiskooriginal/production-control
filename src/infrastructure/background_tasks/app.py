@@ -35,6 +35,7 @@ celery_app = Celery(
     include=[
         "src.infrastructure.background_tasks.tasks.aggregate_batch",
         "src.infrastructure.background_tasks.tasks.process_outbox_events",
+        "src.infrastructure.background_tasks.tasks.update_dashboard_stats",
     ],
 )
 
