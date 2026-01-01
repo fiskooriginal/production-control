@@ -7,7 +7,7 @@ from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger, setup_logging
 from src.core.settings import CacheSettings, DatabaseSettings, MinIOSettings
 from src.infrastructure.common.cache.redis import close_cache, init_cache
-from src.infrastructure.common.storage.minio import init_storage_async
+from src.infrastructure.common.storage.minio import init_minio_storage
 from src.presentation.api import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import background_tasks, batches, healthcheck, products, work_centers
@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
         # Storage
         minio_settings = MinIOSettings()
         logger.info(f"Initializing MinIO storage: endpoint={minio_settings.endpoint}")
-        storage_service = await init_storage_async(minio_settings, "reports")
+        storage_service = await init_minio_storage(minio_settings)
         app.state.storage_service = storage_service
         logger.info("MinIO storage initialized successfully")
 

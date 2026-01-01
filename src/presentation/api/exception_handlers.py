@@ -234,28 +234,28 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(InvalidDateRangeError, invalid_date_range_error_handler)
     app.add_exception_handler(WebhookSubscriptionInvalidUrlError, webhook_invalid_url_error_handler)
     app.add_exception_handler(WebhookSubscriptionInvalidEventsError, webhook_invalid_events_error_handler)
-    app.add_exception_handler(MultipleFoundError, multiple_found_error_handler)
-    app.add_exception_handler(RepositoryOperationError, repository_operation_error_handler)
+    # app.add_exception_handler(MultipleFoundError, multiple_found_error_handler)
+    # app.add_exception_handler(RepositoryOperationError, repository_operation_error_handler)
     app.add_exception_handler(DomainException, domain_exception_handler)
 
     # Application exceptions
-    app.add_exception_handler(ValidationException, validation_exception_handler)
-    app.add_exception_handler(BusinessRuleViolationException, business_rule_violation_handler)
+    # app.add_exception_handler(ValidationException, validation_exception_handler)
+    # app.add_exception_handler(BusinessRuleViolationException, business_rule_violation_handler)
     app.add_exception_handler(ApplicationException, application_exception_handler)
 
     # Infrastructure exceptions
-    app.add_exception_handler(DatabaseException, database_exception_handler)
-    app.add_exception_handler(ConnectionException, connection_exception_handler)
-    app.add_exception_handler(MappingException, mapping_exception_handler)
-    app.add_exception_handler(OutboxRepositoryException, outbox_repository_exception_handler)
+    # app.add_exception_handler(DatabaseException, database_exception_handler)
+    # app.add_exception_handler(ConnectionException, connection_exception_handler)
+    # app.add_exception_handler(MappingException, mapping_exception_handler)
+    # app.add_exception_handler(OutboxRepositoryException, outbox_repository_exception_handler)
     app.add_exception_handler(InfrastructureException, infrastructure_exception_handler)
 
     # Presentation exceptions
-    app.add_exception_handler(SerializationException, serialization_exception_handler)
+    # app.add_exception_handler(SerializationException, serialization_exception_handler)
     app.add_exception_handler(PresentationException, presentation_exception_handler)
 
     # Pydantic exceptions
-    app.add_exception_handler(ValidationError, pydantic_validation_error_handler)
+    # app.add_exception_handler(ValidationError, pydantic_validation_error_handler)
     app.add_exception_handler(RequestValidationError, request_validation_error_handler)
 
     # Unexpected exceptions

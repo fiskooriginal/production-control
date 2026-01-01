@@ -29,7 +29,7 @@ def update_request_to_input_dto(work_center_id: UUID, request: UpdateWorkCenterR
         raise SerializationException(f"Ошибка сериализации UpdateWorkCenterRequest: {e}") from e
 
 
-def entity_to_response(entity: WorkCenterEntity) -> WorkCenterResponse:
+def domain_to_response(entity: WorkCenterEntity) -> WorkCenterResponse:
     """Конвертирует Domain WorkCenterEntity в Pydantic Response"""
     try:
         return WorkCenterResponse(

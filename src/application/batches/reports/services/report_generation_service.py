@@ -7,7 +7,7 @@ from src.application.batches.reports.services import ReportDataService
 from src.application.common.exceptions import ApplicationException
 from src.core.logging import get_logger
 
-logger = get_logger("service.reports")
+logger = get_logger("service.reports.generation_service")
 
 
 class ReportGenerationService:
@@ -28,12 +28,12 @@ class ReportGenerationService:
     async def _get_generator_cls(self, format: ReportFormatEnum) -> ReportGeneratorProtocol:
         generator_cls = {
             ReportFormatEnum.PDF: self._pdf_generator,
-            ReportFormatEnum.EXCEL: self._excel_generator,
+            ReportFormatEnum.XLSX: self._excel_generator,
         }
         return generator_cls[format]
 
-    async def generate_report(self, batch_id: UUID, report_format: ReportFormatEnum):
-        """Генерирует отчёт для партии"""
+    async def generate_report(self, batch_id: UUID, report_format: ReportFormatEnum) -> str:
+        """Генерирует отчёт для партии, загружает в MinIO и возвращает url_path к отчёту"""
         logger.info(f"Начата генерация отчёта для партии: batch_id={batch_id}")
         try:
             batch_data = await self._report_data_service.get_batch_report_data(batch_id)

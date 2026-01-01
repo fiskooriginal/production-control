@@ -209,3 +209,6 @@ __marimo__/
 
 # Celery Beat schedule
 celerybeat*
+
+# Fonts
+*.ttf

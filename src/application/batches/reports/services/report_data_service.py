@@ -7,7 +7,7 @@ from src.application.common.exceptions import ApplicationException
 from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 
-logger = get_logger("service.reports")
+logger = get_logger("service.reports.data_service")
 
 
 class ReportDataService:

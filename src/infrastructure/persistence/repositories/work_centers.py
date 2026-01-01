@@ -7,8 +7,8 @@ from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.work_centers.entities import WorkCenterEntity
 from src.domain.work_centers.interfaces import WorkCenterRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.work_centers import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.work_center import WorkCenter
-from src.infrastructure.persistence.repositories.mappers.work_centers import to_domain_entity, to_persistence_model
 
 
 class WorkCenterRepository(WorkCenterRepositoryProtocol):

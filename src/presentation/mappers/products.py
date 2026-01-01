@@ -14,7 +14,7 @@ def aggregate_request_to_input_dto(product_id: UUID, request: AggregateProductRe
         raise SerializationException(f"Ошибка сериализации AggregateProductRequest: {e}") from e
 
 
-def entity_to_response(entity: ProductEntity) -> ProductResponse:
+def domain_to_response(entity: ProductEntity) -> ProductResponse:
     """Конвертирует Domain ProductEntity в Pydantic Response"""
     try:
         return ProductResponse(

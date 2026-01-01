@@ -18,10 +18,9 @@ from src.presentation.di.work_centers import (
     update_work_center,
 )
 from src.presentation.mappers.query_params import build_list_work_centers_query
-from src.presentation.mappers.query_responses import work_center_read_dto_to_response
 from src.presentation.mappers.work_centers import (
     create_request_to_input_dto,
-    entity_to_response,
+    domain_to_response,
     update_request_to_input_dto,
 )
 
@@ -35,7 +34,7 @@ async def create_work_center(request: CreateWorkCenterRequest, command: create_w
     """
     input_dto = create_request_to_input_dto(request)
     work_center_entity = await command.execute(input_dto)
-    return entity_to_response(work_center_entity)
+    return domain_to_response(work_center_entity)
 
 
 @router.get("/{work_center_id}", response_model=WorkCenterResponse)
@@ -44,7 +43,7 @@ async def get_work_center(work_center_id: UUID, query_handler: get_work_center) 
     Получает рабочий центр по ID.
     """
     work_center_dto = await query_handler.execute(work_center_id)
-    return work_center_read_dto_to_response(work_center_dto)
+    return domain_to_response(work_center_dto)
 
 
 @router.patch("/{work_center_id}", response_model=WorkCenterResponse)
@@ -56,7 +55,7 @@ async def update_work_center(
     """
     input_dto = update_request_to_input_dto(work_center_id, request)
     work_center_entity = await command.execute(input_dto)
-    return entity_to_response(work_center_entity)
+    return domain_to_response(work_center_entity)
 
 
 @router.delete("/{work_center_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -82,7 +81,7 @@ async def list_work_centers(
     result = await query_handler.execute(query)
 
     return ListWorkCentersResponse(
-        items=[work_center_read_dto_to_response(dto) for dto in result.items],
+        items=[domain_to_response(dto) for dto in result.items],
         total=result.total,
         limit=result.limit,
         offset=result.offset,

@@ -1,3 +1,11 @@
+import json
+
+from dataclasses import asdict
+from datetime import date, datetime
+from uuid import UUID
+
+from dacite import Config, from_dict
+
 from src.core.time import datetime_aware_to_naive, datetime_naive_to_aware
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.value_objects import (
@@ -9,12 +17,11 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
+from src.domain.products.entities import ProductEntity
 from src.infrastructure.common.exceptions import MappingException
+from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
+from src.infrastructure.persistence.mappers.products import to_persistence_model as product_to_persistence_model
 from src.infrastructure.persistence.models.batch import Batch
-from src.infrastructure.persistence.repositories.mappers.products import to_domain_entity as product_to_domain
-from src.infrastructure.persistence.repositories.mappers.products import (
-    to_persistence_model as product_to_persistence_model,
-)
 
 
 def to_domain_entity(batch_model: Batch) -> BatchEntity:
@@ -67,3 +74,37 @@ def to_persistence_model(batch_entity: BatchEntity) -> Batch:
         )
     except Exception as e:
         raise MappingException(f"Ошибка маппинга domain -> persistence для Batch: {e}") from e
+
+
+def dict_to_domain(domain_dict: dict) -> BatchEntity:
+    """Конвертирует словарь в domain domain_entity BatchEntity (пропускается _domain_events)"""
+
+    def str_to_uuid(value: str) -> UUID:
+        return UUID(value)
+
+    def str_to_datetime(value: str) -> datetime:
+        dt = datetime.fromisoformat(value)
+        return datetime_naive_to_aware(dt) if dt.tzinfo is None else dt
+
+    def str_to_date(value: str) -> date:
+        return date.fromisoformat(value)
+
+    config = Config(
+        forward_references={"ProductEntity": ProductEntity},
+        type_hooks={UUID: str_to_uuid, datetime: str_to_datetime, date: str_to_date},
+    )
+    return from_dict(BatchEntity, domain_dict, config=config)
+
+
+def domain_to_json_bytes(batch_entity: BatchEntity) -> bytes:
+    """Сериализует BatchEntity в JSON bytes."""
+    domain_dict = asdict(batch_entity)
+    json_str = json.dumps(domain_dict, default=str)
+    return json_str.encode("utf-8")
+
+
+def json_bytes_to_domain(json_bytes: bytes) -> BatchEntity:
+    """Десериализирует JSON bytes в BatchEntity"""
+    json_str = json_bytes.decode("utf-8")
+    domain_dict = json.loads(json_str)
+    return dict_to_domain(domain_dict)

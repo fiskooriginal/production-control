@@ -12,6 +12,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.core.logging import get_logger
 from src.infrastructure.reports.exceptions import BatchPDFGenerationError
+from src.infrastructure.reports.fonts.cyrillic.register_fonts import FONT_NAME_BOLD, FONT_NAME_REGULAR, register_fonts
 
 logger = get_logger("batches.reports.pdf")
 
@@ -52,6 +53,8 @@ class BatchPDFReportGenerator:
             if not batch_data:
                 raise BatchPDFGenerationError("batch_data не может быть None")
 
+            register_fonts()
+
             buffer = BytesIO()
             doc = SimpleDocTemplate(
                 buffer, pagesize=A4, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=2 * cm, bottomMargin=2 * cm
@@ -88,6 +91,7 @@ class BatchPDFReportGenerator:
 
         title_style = styles["Heading1"]
         title_style.textColor = colors.HexColor("#4472C4")
+        title_style.fontName = FONT_NAME_BOLD
         story.append(Paragraph("Информация о партии", title_style))
         story.append(Spacer(1, 0.3 * cm))
 
@@ -106,8 +110,8 @@ class BatchPDFReportGenerator:
         data.extend(
             [
                 ("Описание задачи", batch.task_description),
-                ("Начало смены", batch.shift_start.strftime("%d.%m.%Y %H:%M")),
-                ("Конец смены", batch.shift_end.strftime("%d.%m.%Y %H:%M")),
+                ("Начало смены", batch.shift_time_range.start.strftime("%d.%m.%Y %H:%M")),
+                ("Конец смены", batch.shift_time_range.end.strftime("%d.%m.%Y %H:%M")),
                 ("Статус", "Закрыта" if batch.is_closed else "Открыта"),
             ]
         )
@@ -126,11 +130,11 @@ class BatchPDFReportGenerator:
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4472C4")),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
                     ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTNAME", (0, 0), (-1, 0), FONT_NAME_BOLD),
                     ("FONTSIZE", (0, 0), (-1, 0), 11),
                     ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
                     ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#E7E6E6")),
-                    ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+                    ("FONTNAME", (0, 1), (0, -1), FONT_NAME_BOLD),
                     ("FONTSIZE", (0, 1), (0, -1), 10),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -151,6 +155,7 @@ class BatchPDFReportGenerator:
 
         title_style = styles["Heading1"]
         title_style.textColor = colors.HexColor("#4472C4")
+        title_style.fontName = FONT_NAME_BOLD
         story.append(Paragraph("Продукция", title_style))
         story.append(Spacer(1, 0.3 * cm))
 
@@ -172,8 +177,9 @@ class BatchPDFReportGenerator:
                     ("ALIGN", (1, 1), (1, -1), "LEFT"),
                     ("ALIGN", (2, 1), (2, -1), "CENTER"),
                     ("ALIGN", (3, 1), (3, -1), "LEFT"),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTNAME", (0, 0), (-1, 0), FONT_NAME_BOLD),
                     ("FONTSIZE", (0, 0), (-1, 0), 11),
+                    ("FONTNAME", (0, 1), (-1, -1), FONT_NAME_REGULAR),
                     ("FONTSIZE", (0, 1), (-1, -1), 9),
                     ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
@@ -195,6 +201,7 @@ class BatchPDFReportGenerator:
 
         title_style = styles["Heading1"]
         title_style.textColor = colors.HexColor("#4472C4")
+        title_style.fontName = FONT_NAME_BOLD
         story.append(Paragraph("Статистика", title_style))
         story.append(Spacer(1, 0.3 * cm))
 
@@ -218,11 +225,11 @@ class BatchPDFReportGenerator:
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
                     ("ALIGN", (0, 0), (-1, -1), "LEFT"),
                     ("ALIGN", (1, 1), (1, -1), "RIGHT"),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTNAME", (0, 0), (-1, 0), FONT_NAME_BOLD),
                     ("FONTSIZE", (0, 0), (-1, 0), 11),
                     ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
                     ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#E7E6E6")),
-                    ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+                    ("FONTNAME", (0, 1), (0, -1), FONT_NAME_BOLD),
                     ("FONTSIZE", (0, 1), (0, -1), 10),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),

@@ -3,7 +3,7 @@ import json
 
 from uuid import UUID
 
-from src.application.batches.queries import ListBatchesQuery
+from src.application.batches.queries.queries import ListBatchesQuery
 from src.application.common.cache.keys.common import serialize_filters, serialize_pagination, serialize_sort
 
 

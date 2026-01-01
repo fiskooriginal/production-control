@@ -10,14 +10,14 @@ logger = get_logger("storage.reports")
 class ReportStorageAdapter:
     """Адаптер для работы с отчетами через StorageServiceProtocol"""
 
-    def __init__(self, storage_service: StorageServiceProtocol, reports_prefix: str = "reports"):
+    def __init__(self, storage_service: StorageServiceProtocol, bucket_name: str = "reports"):
         self._storage_service = storage_service
-        self._reports_prefix = reports_prefix
+        self._bucket_name = bucket_name
 
     def _build_object_name(self, batch_id: UUID, format: ReportFormatEnum) -> str:
         """Формирует имя объекта в хранилище для отчета"""
         extension = format.value
-        return f"{self._reports_prefix}/{batch_id}/{format.value}/report.{extension}"
+        return f"{batch_id}/{extension}/report.{extension}"
 
     async def save_report(self, batch_id: UUID, content: bytes, format: ReportFormatEnum) -> str:
         """Сохраняет отчет и возвращает путь к файлу"""
@@ -27,6 +27,7 @@ class ReportStorageAdapter:
 
         try:
             await self._storage_service.upload_file(
+                bucket_name=self._bucket_name,
                 object_name=object_name,
                 file_data=content,
                 file_extension=format.value,
@@ -47,7 +48,7 @@ class ReportStorageAdapter:
         )
 
         try:
-            exists = await self._storage_service.file_exists(object_name)
+            exists = await self._storage_service.file_exists(bucket_name=self._bucket_name, object_name=object_name)
             if exists:
                 return object_name
             return None
@@ -62,8 +63,34 @@ class ReportStorageAdapter:
         logger.info(f"Deleting report: batch_id={batch_id}, format={format.value}, object_name={object_name}")
 
         try:
-            await self._storage_service.delete_file(object_name)
+            await self._storage_service.delete_file(bucket_name=self._bucket_name, object_name=object_name)
             logger.info(f"Report deleted successfully: object_name={object_name}")
         except Exception as e:
             logger.exception(f"Failed to delete report for batch {batch_id}: {e}")
+            raise
+
+    async def get_presigned_url(self, object_name: str, expires_seconds: int = 3600) -> str:
+        """Получает presigned URL для скачивания отчета"""
+        logger.debug(f"Generating download URL for object: {object_name}")
+
+        try:
+            url = await self._storage_service.get_presigned_url(
+                bucket_name=self._bucket_name, object_name=object_name, expires_seconds=expires_seconds
+            )
+            logger.debug(f"Download URL generated successfully for object: {object_name}")
+            return url
+        except Exception as e:
+            logger.exception(f"Failed to generate download URL for object {object_name}: {e}")
+            raise
+
+    async def download_report(self, object_name: str) -> bytes:
+        """Скачивает файл отчета из хранилища"""
+        logger.debug(f"Downloading report: object_name={object_name}")
+
+        try:
+            content = await self._storage_service.download_file(bucket_name=self._bucket_name, object_name=object_name)
+            logger.debug(f"Report downloaded successfully: object_name={object_name}")
+            return content
+        except Exception as e:
+            logger.exception(f"Failed to download report for object {object_name}: {e}")
             raise

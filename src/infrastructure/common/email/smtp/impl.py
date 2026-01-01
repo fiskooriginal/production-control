@@ -27,6 +27,7 @@ class SMTPEmailService(EmailServiceProtocol):
         subject: str,
         body: str,
         html_body: str | None = None,
+        attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> None:
         """
         Отправляет email.
@@ -36,6 +37,7 @@ class SMTPEmailService(EmailServiceProtocol):
             subject: Тема письма
             body: Текст письма (plain text)
             html_body: HTML версия письма (опционально)
+            attachments: Список вложений в формате (имя файла, содержимое, MIME-тип)
 
         Raises:
             EmailSendError: При ошибке отправки
@@ -54,6 +56,15 @@ class SMTPEmailService(EmailServiceProtocol):
             message.add_alternative(html_body, subtype="html")
         else:
             message.set_content(body)
+
+        if attachments:
+            for filename, content, content_type in attachments:
+                if "/" in content_type:
+                    maintype, subtype = content_type.split("/", 1)
+                else:
+                    maintype = content_type
+                    subtype = ""
+                message.add_attachment(content, filename=filename, maintype=maintype, subtype=subtype)
 
         try:
             async with aiosmtplib.SMTP(

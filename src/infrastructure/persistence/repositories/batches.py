@@ -7,27 +7,31 @@ from src.domain.batches.entities import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.batches import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.batch import Batch
-from src.infrastructure.persistence.repositories.mappers.batches import to_domain_entity, to_persistence_model
 
 
 class BatchRepository(BatchRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get_or_raise(self, uuid: UUID) -> BatchEntity:
-        """Получает партию по UUID для write-операций"""
+    async def _get_or_raise(self, uuid: UUID) -> Batch:
         try:
             stmt = select(Batch).where(Batch.uuid == uuid)
             result = await self._session.execute(stmt)
             batch_model = result.scalar_one_or_none()
             if batch_model is None:
                 raise DoesNotExistError(f"Партия с UUID {uuid} не найдена")
-            return to_domain_entity(batch_model)
+            return batch_model
         except DoesNotExistError:
             raise
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении партии: {e}") from e
+
+    async def get_or_raise(self, uuid: UUID) -> BatchEntity:
+        """Получает партию по UUID для write-операций"""
+        batch_model = await self._get_or_raise(uuid)
+        return to_domain_entity(batch_model)
 
     async def create(self, domain_entity: BatchEntity) -> BatchEntity:
         """Создает новую партию в репозитории"""
@@ -52,10 +56,7 @@ class BatchRepository(BatchRepositoryProtocol):
 
     async def update(self, domain_entity: BatchEntity) -> BatchEntity:
         """Обновляет существующую партию"""
-        batch_model = await self._session.get(Batch, domain_entity.uuid)
-        if batch_model is None:
-            raise DoesNotExistError(f"Партия с UUID {domain_entity.uuid} не найдена")
-
+        batch_model = await self._get_or_raise(domain_entity.uuid)
         updated_model = to_persistence_model(domain_entity)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(batch_model, key, value)
@@ -70,9 +71,7 @@ class BatchRepository(BatchRepositoryProtocol):
     async def delete(self, uuid: UUID) -> None:
         """Удаляет партию по UUID"""
         try:
-            batch_model = await self._session.get(Batch, uuid)
-            if batch_model is None:
-                raise DoesNotExistError(f"Партия с UUID {uuid} не найдена")
+            batch_model = await self._get_or_raise(uuid)
             await self._session.delete(batch_model)
         except DoesNotExistError:
             raise

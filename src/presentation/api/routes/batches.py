@@ -2,10 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from src.application.batches.commands.generate_report import GenerateReportCommand
 from src.application.batches.dtos.generate_report import GenerateReportInputDTO
 from src.application.batches.reports.dtos import ReportFormatEnum
-from src.presentation.api.schemas.background_tasks import TaskStartedResponse
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
     AggregateBatchRequest,
@@ -38,7 +36,6 @@ from src.presentation.mappers.batches import (
     update_batch_request_to_input_dto,
 )
 from src.presentation.mappers.query_params import build_list_batches_query
-from src.presentation.mappers.query_responses import batch_read_dto_to_response
 
 router = APIRouter(prefix="/api/batches", tags=["batches"])
 
@@ -101,7 +98,7 @@ async def list_batches(
     result = await query_handler.execute(query)
 
     return ListBatchesResponse(
-        items=[batch_read_dto_to_response(dto) for dto in result.items],
+        items=[domain_to_response(dto) for dto in result.items],
         total=result.total,
         limit=result.limit,
         offset=result.offset,
@@ -114,13 +111,11 @@ async def get_batch(batch_id: UUID, query_handler: get_batch) -> BatchResponse:
     Получает партию по UUID.
     """
     batch_dto = await query_handler.execute(batch_id)
-    return batch_read_dto_to_response(batch_dto)
+    return domain_to_response(batch_dto)
 
 
-@router.patch("/{batch_id}/aggregate", response_model=TaskStartedResponse, status_code=status.HTTP_202_ACCEPTED)
-async def aggregate_batch(
-    batch_id: UUID, request: AggregateBatchRequest, command: aggregate_batch
-) -> TaskStartedResponse:
+@router.patch("/{batch_id}/aggregate", response_model=BatchResponse, status_code=status.HTTP_202_ACCEPTED)
+async def aggregate_batch(batch_id: UUID, request: AggregateBatchRequest, command: aggregate_batch) -> BatchResponse:
     """
     Агрегирует партию и все продукты в ней.
     """
@@ -156,13 +151,14 @@ async def delete_batch(batch_id: UUID, command: delete_batch) -> None:
 )
 async def generate_report(
     batch_id: UUID,
+    command: generate_report_command,
     format: ReportFormatEnum = Query(..., description="Формат отчета (pdf или excel)"),
-    command: GenerateReportCommand = Depends(generate_report_command),
+    user_email: str | None = Query(None, description="Email адрес для отправки уведомления с отчетом"),
 ) -> GenerateReportResponse:
     """
     Генерирует отчет для партии
     """
-    input_dto = GenerateReportInputDTO(batch_id=batch_id, format=format)
-    report_path = await command.execute(input_dto)
+    input_dto = GenerateReportInputDTO(batch_id=batch_id, format=format, user_email=user_email)
+    result = await command.execute(input_dto)
 
-    return GenerateReportResponse(report_path=report_path, download_url=None)
+    return GenerateReportResponse(report_path=result.report_path, download_url=result.download_url)

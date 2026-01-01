@@ -5,13 +5,23 @@ from fastapi import Depends, Request
 from src.application.batches.commands.generate_report import GenerateReportCommand
 from src.application.batches.reports.adapters import ReportStorageAdapter
 from src.application.batches.reports.ports import ReportGeneratorProtocol
-from src.application.batches.reports.services import ReportDataService, ReportGenerationService
+from src.application.batches.reports.services import (
+    ReportDataService,
+    ReportEmailService,
+    ReportGenerationService,
+)
+from src.application.common.email.interface.protocol import EmailServiceProtocol
 from src.application.common.storage.interface import StorageServiceProtocol
 from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
+from src.core.logging import get_logger
+from src.core.settings import EmailSettings
+from src.infrastructure.common.email.smtp import SMTPEmailService
 from src.infrastructure.persistence.queries import WorkCenterQueryService
 from src.infrastructure.reports.generators import BatchExcelReportGenerator, BatchPDFReportGenerator
 from src.presentation.di.batches import batch_query
 from src.presentation.di.common import async_session
+
+logger = get_logger("di.reports")
 
 
 async def get_storage_service(request: Request) -> StorageServiceProtocol:
@@ -50,7 +60,10 @@ async def get_excel_generator() -> ReportGeneratorProtocol:
 
 async def get_report_storage_adapter(storage: storage_service) -> ReportStorageAdapter:
     """Dependency для получения ReportStorageAdapter."""
-    return ReportStorageAdapter(storage, reports_prefix="reports")
+    return ReportStorageAdapter(storage, bucket_name="reports")
+
+
+report_storage = Annotated[ReportStorageAdapter, Depends(get_report_storage_adapter)]
 
 
 async def get_report_generation_service(
@@ -68,11 +81,54 @@ async def get_report_generation_service(
     )
 
 
+report_generation_service = Annotated[ReportGenerationService, Depends(get_report_generation_service)]
+
+
+async def get_email_service() -> EmailServiceProtocol | None:
+    """Dependency для получения EmailServiceProtocol (если настроен)."""
+    try:
+        email_settings = EmailSettings()
+        if email_settings.is_configured():
+            return SMTPEmailService(email_settings)
+        logger.info("Email service is not configured")
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to initialize email service: {e}")
+        return None
+
+
+email_service = Annotated[EmailServiceProtocol | None, Depends(get_email_service)]
+
+
+async def get_report_email_service(
+    email_service: email_service,
+    report_storage: report_storage,
+    batch_query_service: batch_query,
+) -> ReportEmailService | None:
+    """Dependency для получения ReportEmailService (если email настроен)."""
+    if email_service is None:
+        return None
+    return ReportEmailService(
+        email_service=email_service,
+        report_storage=report_storage,
+        batch_query_service=batch_query_service,
+    )
+
+
+report_email_service = Annotated[ReportEmailService | None, Depends(get_report_email_service)]
+
+
 async def get_generate_report_command(
-    report_generation_service: Annotated[ReportGenerationService, Depends(get_report_generation_service)],
+    report_generation_service: report_generation_service,
+    report_storage: report_storage,
+    report_email_service: report_email_service,
 ) -> GenerateReportCommand:
     """Dependency для получения GenerateReportCommand."""
-    return GenerateReportCommand(report_generation_service)
+    return GenerateReportCommand(
+        report_generation_service=report_generation_service,
+        report_storage=report_storage,
+        report_email_service=report_email_service,
+    )
 
 
 generate_report_command = Annotated[GenerateReportCommand, Depends(get_generate_report_command)]

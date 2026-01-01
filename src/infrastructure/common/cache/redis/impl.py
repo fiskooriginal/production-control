@@ -19,9 +19,9 @@ class RedisCacheService:
         return self._settings.enabled
 
     @property
-    def ttl_batch(self) -> int:
-        """TTL для отдельной партии в секундах."""
-        return self._settings.ttl_batch
+    def ttl_get(self) -> int:
+        """TTL для отдельной сущности в секундах."""
+        return self._settings.ttl_get
 
     @property
     def ttl_list(self) -> int:

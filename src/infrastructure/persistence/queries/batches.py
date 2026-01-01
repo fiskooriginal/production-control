@@ -1,17 +1,30 @@
+import json
+
+from dataclasses import asdict
 from typing import ClassVar
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.batches.queries import BatchQueryServiceProtocol, ListBatchesQuery
-from src.application.batches.queries.dtos import BatchReadDTO
+from src.application.batches.queries import (
+    BatchQueryServiceProtocol,
+    ListBatchesQuery,
+)
 from src.application.batches.queries.sort import BatchSortField
+from src.application.common.cache.interface.protocol import CacheServiceProtocol
+from src.application.common.cache.keys import get_batch_key, get_batches_list_key
 from src.core.logging import get_logger
+from src.domain.batches import BatchEntity
 from src.domain.common.queries import QueryResult
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.batches import (
+    dict_to_domain,
+    domain_to_json_bytes,
+    json_bytes_to_domain,
+    to_domain_entity,
+)
 from src.infrastructure.persistence.models.batch import Batch
-from src.infrastructure.persistence.queries.mappers import batch_model_to_read_dto
 
 logger = get_logger("query.batches")
 
@@ -30,7 +43,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get(self, batch_id: UUID) -> BatchReadDTO | None:
+    async def get(self, batch_id: UUID) -> BatchEntity | None:
         """Получает партию по UUID"""
         try:
             stmt = select(Batch).where(Batch.uuid == batch_id)
@@ -38,11 +51,11 @@ class BatchQueryService(BatchQueryServiceProtocol):
             batch_model = result.scalar_one_or_none()
             if batch_model is None:
                 return None
-            return batch_model_to_read_dto(batch_model)
+            return to_domain_entity(batch_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении партии: {e}") from e
 
-    async def list(self, query: ListBatchesQuery) -> QueryResult[BatchReadDTO]:
+    async def list(self, query: ListBatchesQuery) -> QueryResult[BatchEntity]:
         """Получает список партий с фильтрацией, пагинацией и сортировкой"""
         try:
             stmt = select(Batch)
@@ -63,10 +76,10 @@ class BatchQueryService(BatchQueryServiceProtocol):
             result = await self._session.execute(stmt)
             batches = result.scalars().all()
 
-            dtos = [batch_model_to_read_dto(batch) for batch in batches]
+            entities = [to_domain_entity(batch) for batch in batches]
 
-            return QueryResult[BatchReadDTO](
-                items=dtos,
+            return QueryResult[BatchEntity](
+                items=entities,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,
                 offset=query.pagination.offset if query.pagination else None,
@@ -105,7 +118,7 @@ class BatchQueryService(BatchQueryServiceProtocol):
 
     def _apply_sort(self, stmt, sort):
         """Применяет сортировку к запросу"""
-        from src.application.batches.queries import BatchSortSpec
+        from src.application.batches.queries.sort import BatchSortSpec
 
         if not isinstance(sort, BatchSortSpec):
             raise ValueError("sort должен быть типа BatchSortSpec")
@@ -118,3 +131,88 @@ class BatchQueryService(BatchQueryServiceProtocol):
             column = column.desc()
 
         return stmt.order_by(column)
+
+
+class CachedBatchQueryService(BatchQueryService):
+    """Обертка над BatchQueryService с добавлением кэширования."""
+
+    def __init__(self, session: AsyncSession, cache_service: CacheServiceProtocol | None = None):
+        super().__init__(session)
+        self._cache_service = cache_service
+
+    async def get(self, batch_id: UUID) -> BatchEntity | None:
+        """Получает партию по UUID с кэшированием."""
+        cache_key = get_batch_key(batch_id, self._cache_service.key_prefix)
+        try:
+            cached_data = await self._cache_service.get(cache_key)
+            if cached_data:
+                entity = json_bytes_to_domain(cached_data)
+                if entity:
+                    logger.info(f"Batch {batch_id} found in cache")
+                    return entity
+        except Exception as e:
+            logger.warning(f"Failed to get batch from cache: {e}")
+
+        logger.info("Fetching batch from database")
+        entity = await super().get(batch_id)
+
+        try:
+            serialized = domain_to_json_bytes(entity)
+            await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_get)
+        except Exception as e:
+            logger.warning(f"Failed to cache batch: {e}")
+
+        return entity
+
+    async def list(self, query: ListBatchesQuery) -> QueryResult[BatchEntity]:
+        """Получает список партий с фильтрацией, пагинацией и сортировкой с кэшированием."""
+        cache_key = get_batches_list_key(query, self._cache_service.key_prefix)
+        try:
+            cached_data = await self._cache_service.get(cache_key)
+            if cached_data:
+                result = self._deserialize_query_result(cached_data)
+                if result:
+                    logger.info("Batches list found in cache")
+                    return result
+        except Exception as e:
+            logger.warning(f"Failed to get batches list from cache: {e}")
+
+        logger.info("Fetching batches list from database")
+        query_result = await super().list(query)
+
+        try:
+            serialized = self._serialize_query_result(query_result)
+            await self._cache_service.set(cache_key, serialized, ttl=self._cache_service.ttl_list)
+        except Exception as e:
+            logger.warning(f"Failed to cache batches list: {e}")
+
+        return query_result
+
+    @staticmethod
+    def _serialize_query_result(result: QueryResult[BatchEntity]) -> bytes:
+        """Сериализует QueryResult в JSON bytes."""
+        result_dict = {
+            "items": [asdict(item) for item in result.items],
+            "total": result.total,
+            "limit": result.limit,
+            "offset": result.offset,
+        }
+        json_str = json.dumps(result_dict, default=str)
+        return json_str.encode("utf-8")
+
+    @staticmethod
+    def _deserialize_query_result(data: bytes) -> QueryResult[BatchEntity] | None:
+        """Десериализует JSON bytes в QueryResult[BatchEntity]."""
+        try:
+            json_str = data.decode("utf-8")
+            result_dict = json.loads(json_str)
+            items = [dict_to_domain(item) for item in result_dict.get("items", [])]
+            return QueryResult[BatchEntity](
+                items=items,
+                total=result_dict.get("total", 0),
+                limit=result_dict.get("limit"),
+                offset=result_dict.get("offset"),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to deserialize QueryResult: {e}")
+            return None

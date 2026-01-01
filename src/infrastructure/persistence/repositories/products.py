@@ -9,8 +9,8 @@ from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.products.entities import ProductEntity
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.products import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.product import Product
-from src.infrastructure.persistence.repositories.mappers.products import to_domain_entity, to_persistence_model
 
 
 class ProductRepository(ProductRepositoryProtocol):
@@ -32,10 +32,10 @@ class ProductRepository(ProductRepositoryProtocol):
     async def create(self, domain_entity: ProductEntity) -> ProductEntity:
         """Создает новый продукт в репозитории"""
         try:
-            stmt = select(Product.uuid).where(Product.uuid == domain_entity.uuid)
+            stmt = select(Product.unique_code).where(Product.unique_code == str(domain_entity.unique_code))
             result = await self._session.execute(stmt)
             if result.scalar_one_or_none() is not None:
-                raise AlreadyExistsError(f"Продукт с UUID {domain_entity.uuid} уже существует")
+                raise AlreadyExistsError(f"Продукт с кодом {domain_entity.unique_code} уже существует")
         except AlreadyExistsError:
             raise
         except Exception as e:

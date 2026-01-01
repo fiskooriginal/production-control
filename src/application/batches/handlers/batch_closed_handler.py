@@ -21,5 +21,8 @@ class GenerateReportOnBatchClosedHandler:
         try:
             await self._report_generation_service.generate_report(event.aggregate_id, ReportFormatEnum.PDF)
             logger.info(f"Report generated successfully for batch: batch_id={event.aggregate_id}")
+
+            # ну и далее используется продюсер кафки/реббита для отправки сообщения в сервис уведомлений
+            # о том, что партия закрыта и отчёт готов
         except Exception as e:
             logger.error(f"Failed to generate report for batch {event.aggregate_id}: {e}", exc_info=True)

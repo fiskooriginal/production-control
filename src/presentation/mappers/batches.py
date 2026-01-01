@@ -16,7 +16,7 @@ from src.presentation.api.schemas.batches import (
     UpdateBatchRequest,
 )
 from src.presentation.exceptions import SerializationException
-from src.presentation.mappers.products import entity_to_response as product_to_response
+from src.presentation.mappers.products import domain_to_response as product_to_response
 
 
 def create_batch_request_to_input_dto(request: CreateBatchRequest) -> CreateBatchInputDTO:

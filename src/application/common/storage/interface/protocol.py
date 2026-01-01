@@ -16,8 +16,15 @@ class FileInfo:
 class StorageServiceProtocol(Protocol):
     """Протокол для сервиса хранения файлов в MinIO."""
 
+    async def ensure_buckets(self) -> None:
+        """
+        Создаёт необходимые bucket'ы в хранилище. Список имён bucket'ов получается из переменных окружения.
+        """
+        ...
+
     async def upload_file(
         self,
+        bucket_name: str,
         object_name: str,
         file_data: bytes | BytesIO,
         file_extension: str | None = None,
@@ -28,9 +35,10 @@ class StorageServiceProtocol(Protocol):
         Загружает файл в хранилище.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             object_name: Имя объекта в хранилище
             file_data: Данные файла (bytes или BytesIO)
-            file_extension: Расширение файла (например, "xlsx" или ".xlsx")
+            file_extension: Расширение файла (например, pdf или .pdf, xlsx или .xlsx, etc.)
             content_type: MIME-тип файла (если None, определяется по расширению)
             metadata: Метаданные объекта
 
@@ -42,11 +50,12 @@ class StorageServiceProtocol(Protocol):
         """
         ...
 
-    async def download_file(self, object_name: str) -> bytes:
+    async def download_file(self, bucket_name: str, object_name: str) -> bytes:
         """
         Скачивает файл из хранилища.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             object_name: Имя объекта в хранилище
 
         Returns:
@@ -57,11 +66,12 @@ class StorageServiceProtocol(Protocol):
         """
         ...
 
-    async def delete_file(self, object_name: str) -> None:
+    async def delete_file(self, bucket_name: str, object_name: str) -> None:
         """
         Удаляет файл из хранилища.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             object_name: Имя объекта в хранилище
 
         Raises:
@@ -69,11 +79,12 @@ class StorageServiceProtocol(Protocol):
         """
         ...
 
-    async def file_exists(self, object_name: str) -> bool:
+    async def file_exists(self, bucket_name: str, object_name: str) -> bool:
         """
         Проверяет существование файла в хранилище.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             object_name: Имя объекта в хранилище
 
         Returns:
@@ -81,11 +92,12 @@ class StorageServiceProtocol(Protocol):
         """
         ...
 
-    async def get_presigned_url(self, object_name: str, expires_seconds: int = 3600) -> str:
+    async def get_presigned_url(self, bucket_name: str, object_name: str, expires_seconds: int = 3600) -> str:
         """
         Генерирует presigned URL для доступа к файлу.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             object_name: Имя объекта в хранилище
             expires_seconds: Время жизни URL в секундах
 
@@ -99,6 +111,7 @@ class StorageServiceProtocol(Protocol):
 
     async def list_files(
         self,
+        bucket_name: str,
         prefix: str | None = None,
         recursive: bool = True,
     ) -> list[FileInfo]:
@@ -106,6 +119,7 @@ class StorageServiceProtocol(Protocol):
         Получает список всех файлов в bucket'е.
 
         Args:
+            bucket_name: Имя bucket'а в хранилище
             prefix: Префикс для фильтрации файлов
             recursive: Рекурсивный поиск (включая подпапки)
 

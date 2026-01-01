@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from src.application.batches.queries.dtos import BatchReadDTO
 from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.core.logging import get_logger
+from src.domain.batches import BatchEntity
 from src.domain.common.exceptions import DoesNotExistError
 
 logger = get_logger("query.handler.batches")
@@ -12,7 +12,7 @@ class GetBatchQueryHandler:
     def __init__(self, query_service: BatchQueryServiceProtocol):
         self._query_service = query_service
 
-    async def execute(self, batch_id: UUID) -> BatchReadDTO:
+    async def execute(self, batch_id: UUID) -> BatchEntity:
         """Получает партию по UUID"""
         logger.debug(f"Getting batch: batch_id={batch_id}")
         try:

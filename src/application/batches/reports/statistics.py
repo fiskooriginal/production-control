@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from src.application.batches.queries import BatchReadDTO
 from src.core.time import datetime_now
+from src.domain.batches import BatchEntity
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -13,7 +13,7 @@ class ReportStatisticsDTO:
     average_speed: float
 
 
-def calculate_statistics(batch: BatchReadDTO) -> ReportStatisticsDTO:
+def calculate_statistics(batch: BatchEntity) -> ReportStatisticsDTO:
     """Вычисляет статистику для отчета на основе данных партии"""
     total_products = len(batch.products)
     aggregated_products = sum(1 for product in batch.products if product.is_aggregated)
@@ -24,7 +24,7 @@ def calculate_statistics(batch: BatchReadDTO) -> ReportStatisticsDTO:
     # Вычисляем среднюю скорость (продуктов в час)
     end_time = batch.closed_at or datetime_now()
 
-    time_delta = end_time - batch.shift_start
+    time_delta = end_time - batch.shift_time_range.start
     hours_worked = time_delta.total_seconds() / 3600.0
 
     average_speed = aggregated_products / hours_worked if hours_worked > 0 else 0.0

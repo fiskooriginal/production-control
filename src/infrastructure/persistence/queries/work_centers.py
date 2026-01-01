@@ -5,12 +5,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.work_centers.queries import ListWorkCentersQuery, WorkCenterQueryServiceProtocol
-from src.application.work_centers.queries.dtos import WorkCenterReadDTO
 from src.application.work_centers.queries.sort import WorkCenterSortField
 from src.domain.common.queries import QueryResult
+from src.domain.work_centers.entities import WorkCenterEntity
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.work_centers import to_domain_entity
 from src.infrastructure.persistence.models.work_center import WorkCenter
-from src.infrastructure.persistence.queries.mappers import work_center_model_to_read_dto
 
 
 class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
@@ -24,17 +24,19 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get(self, work_center_id: UUID) -> WorkCenterReadDTO | None:
+    async def get(self, work_center_id: UUID) -> WorkCenterEntity | None:
         """Получает рабочий центр по UUID"""
         try:
-            work_center_model = await self._session.get(WorkCenter, work_center_id)
+            stmt = select(WorkCenter).where(WorkCenter.uuid == work_center_id)
+            result = await self._session.execute(stmt)
+            work_center_model = result.scalar_one_or_none()
             if work_center_model is None:
                 return None
-            return work_center_model_to_read_dto(work_center_model)
+            return to_domain_entity(work_center_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении рабочего центра: {e}") from e
 
-    async def list(self, query: ListWorkCentersQuery) -> QueryResult[WorkCenterReadDTO]:
+    async def list(self, query: ListWorkCentersQuery) -> QueryResult[WorkCenterEntity]:
         """Получает список рабочих центров с фильтрацией, пагинацией и сортировкой"""
         try:
             stmt = select(WorkCenter)
@@ -55,10 +57,10 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
             result = await self._session.execute(stmt)
             work_centers = result.scalars().all()
 
-            dtos = [work_center_model_to_read_dto(wc) for wc in work_centers]
+            entities = [to_domain_entity(wc) for wc in work_centers]
 
-            return QueryResult[WorkCenterReadDTO](
-                items=dtos,
+            return QueryResult[WorkCenterEntity](
+                items=entities,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,
                 offset=query.pagination.offset if query.pagination else None,

@@ -5,12 +5,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.products.queries import ListProductsQuery, ProductQueryServiceProtocol
-from src.application.products.queries.dtos import ProductReadDTO
 from src.application.products.queries.sort import ProductSortField
 from src.domain.common.queries import QueryResult
+from src.domain.products import ProductEntity
 from src.infrastructure.common.exceptions import DatabaseException
+from src.infrastructure.persistence.mappers.products import to_domain_entity
 from src.infrastructure.persistence.models.product import Product
-from src.infrastructure.persistence.queries.mappers import product_model_to_read_dto
 
 
 class ProductQueryService(ProductQueryServiceProtocol):
@@ -25,17 +25,19 @@ class ProductQueryService(ProductQueryServiceProtocol):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get(self, product_id: UUID) -> ProductReadDTO | None:
+    async def get(self, product_id: UUID) -> ProductEntity | None:
         """Получает продукт по UUID"""
         try:
-            product_model = await self._session.get(Product, product_id)
+            stmt = select(Product).where(Product.uuid == product_id)
+            result = await self._session.execute(stmt)
+            product_model = result.scalar_one_or_none()
             if product_model is None:
                 return None
-            return product_model_to_read_dto(product_model)
+            return to_domain_entity(product_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении продукта: {e}") from e
 
-    async def list(self, query: ListProductsQuery) -> QueryResult[ProductReadDTO]:
+    async def list(self, query: ListProductsQuery) -> QueryResult[ProductEntity]:
         """Получает список продуктов с пагинацией и сортировкой"""
         try:
             stmt = select(Product)
@@ -53,10 +55,10 @@ class ProductQueryService(ProductQueryServiceProtocol):
             result = await self._session.execute(stmt)
             products = result.scalars().all()
 
-            dtos = [product_model_to_read_dto(p) for p in products]
+            entities = [to_domain_entity(p) for p in products]
 
-            return QueryResult[ProductReadDTO](
-                items=dtos,
+            return QueryResult[ProductEntity](
+                items=entities,
                 total=total,
                 limit=query.pagination.limit if query.pagination else None,
                 offset=query.pagination.offset if query.pagination else None,

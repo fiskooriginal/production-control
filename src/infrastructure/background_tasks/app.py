@@ -9,7 +9,7 @@ from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings, DatabaseSettings, MinIOSettings, RabbitMQSettings, RedisSettings
 from src.infrastructure.background_tasks.beat_schedule import beat_schedule
-from src.infrastructure.common.storage.minio import init_storage_async
+from src.infrastructure.common.storage.minio import init_minio_storage
 
 logger = get_logger("celery")
 
@@ -70,13 +70,8 @@ def init_worker_db(**kwargs) -> None:
 
         minio_settings = MinIOSettings()
         logger.info(f"Initializing MinIO storage for worker: endpoint={minio_settings.endpoint}")
-        _storage_service = _worker_loop.run_until_complete(init_storage_async(minio_settings, "reports"))
+        _storage_service = _worker_loop.run_until_complete(init_minio_storage(minio_settings))
         logger.info("MinIO storage initialized for worker")
-
-        from src.infrastructure.events.handlers import setup_event_handlers
-
-        setup_event_handlers()
-        logger.info("Event handlers registered")
     except Exception as e:
         logger.exception(f"Failed to initialize worker resources: {e}")
         raise

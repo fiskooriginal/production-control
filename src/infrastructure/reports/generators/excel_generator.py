@@ -100,20 +100,20 @@ class BatchExcelReportGenerator:
         data = [
             ("Номер партии", str(batch.batch_number)),
             ("Дата партии", batch.batch_date.strftime("%d.%m.%Y")),
-            ("Номенклатура", batch.nomenclature),
-            ("Код ЕКН", batch.ekn_code),
-            ("Смена", batch.shift),
-            ("Бригада", batch.team),
+            ("Номенклатура", str(batch.nomenclature)),
+            ("Код ЕКН", str(batch.ekn_code)),
+            ("Смена", str(batch.shift)),
+            ("Бригада", str(batch.team)),
         ]
 
         if batch_data.work_center_name:
-            data.append(("Рабочий центр", batch_data.work_center_name))
+            data.append(("Рабочий центр", str(batch_data.work_center_name)))
 
         data.extend(
             [
-                ("Описание задачи", batch.task_description),
-                ("Начало смены", batch.shift_start.strftime("%d.%m.%Y %H:%M")),
-                ("Конец смены", batch.shift_end.strftime("%d.%m.%Y %H:%M")),
+                ("Описание задачи", str(batch.task_description)),
+                ("Начало смены", batch.shift_time_range.start.strftime("%d.%m.%Y %H:%M")),
+                ("Конец смены", batch.shift_time_range.end.strftime("%d.%m.%Y %H:%M")),
                 ("Статус", "Закрыта" if batch.is_closed else "Открыта"),
             ]
         )
@@ -166,7 +166,7 @@ class BatchExcelReportGenerator:
         row = 2
         for product in batch_data.batch.products:
             ws.cell(row=row, column=1).value = str(product.uuid)
-            ws.cell(row=row, column=2).value = product.unique_code
+            ws.cell(row=row, column=2).value = str(product.unique_code)
 
             aggregated_value = "Да" if product.is_aggregated else "Нет"
             ws.cell(row=row, column=3).value = aggregated_value

@@ -56,7 +56,7 @@ CELERY_TASK_DEFAULT_RETRY_DELAY: int = int(getenv("CELERY_TASK_DEFAULT_RETRY_DEL
 
 # Cache settings
 CACHE_ENABLED: bool = getenv("CACHE_ENABLED", "true") == "true"
-CACHE_TTL_BATCH: int = int(getenv("CACHE_TTL_BATCH", "3600"))
+CACHE_TTL_GET: int = int(getenv("CACHE_TTL_GET", "3600"))
 CACHE_TTL_LIST: int = int(getenv("CACHE_TTL_LIST", "300"))
 CACHE_KEY_PREFIX: str = getenv("CACHE_KEY_PREFIX", "cache")
 
@@ -74,4 +74,4 @@ SMTP_PORT: str | None = getenv("SMTP_PORT", "587")
 SMTP_USER: str | None = getenv("SMTP_USER")
 SMTP_PASSWORD: str | None = getenv("SMTP_PASSWORD")
 SMTP_FROM_EMAIL: str | None = getenv("SMTP_FROM_EMAIL")
-SMTP_USE_TLS: bool = getenv("SMTP_USE_TLS", "true") == "true"
+SMTP_USE_TLS: bool = getenv("SMTP_USE_TLS", "true").lower() == "true"

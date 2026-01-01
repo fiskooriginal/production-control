@@ -10,6 +10,7 @@ class EmailServiceProtocol(Protocol):
         subject: str,
         body: str,
         html_body: str | None = None,
+        attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> None:
         """
         Отправляет email.
@@ -19,6 +20,7 @@ class EmailServiceProtocol(Protocol):
             subject: Тема письма
             body: Текст письма (plain text)
             html_body: HTML версия письма (опционально)
+            attachments: Список вложений в формате (имя файла, содержимое, MIME-тип)
 
         Raises:
             EmailError: При ошибке отправки
