@@ -107,6 +107,14 @@ class BatchQueryService(BatchQueryServiceProtocol):
             stmt = stmt.where(Batch.batch_date == filters.batch_date)
             count_stmt = count_stmt.where(Batch.batch_date == filters.batch_date)
 
+        if filters.batch_date_from is not None:
+            stmt = stmt.where(Batch.batch_date >= filters.batch_date_from)
+            count_stmt = count_stmt.where(Batch.batch_date >= filters.batch_date_from)
+
+        if filters.batch_date_to is not None:
+            stmt = stmt.where(Batch.batch_date <= filters.batch_date_to)
+            count_stmt = count_stmt.where(Batch.batch_date <= filters.batch_date_to)
+
         if filters.work_center_id is not None:
             stmt = stmt.where(Batch.work_center_id == filters.work_center_id)
             count_stmt = count_stmt.where(Batch.work_center_id == filters.work_center_id)

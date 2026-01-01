@@ -50,6 +50,12 @@ def batch_filters_params_to_query(params: BatchFiltersParams) -> BatchReadFilter
         if params.batch_date:
             filter_dict["batch_date"] = date.fromisoformat(params.batch_date)
 
+        if params.batch_date_from:
+            filter_dict["batch_date_from"] = date.fromisoformat(params.batch_date_from)
+
+        if params.batch_date_to:
+            filter_dict["batch_date_to"] = date.fromisoformat(params.batch_date_to)
+
         if params.work_center_id:
             filter_dict["work_center_id"] = UUID(params.work_center_id)
 
