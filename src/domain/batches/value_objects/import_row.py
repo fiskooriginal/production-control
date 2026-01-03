@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
-from uuid import UUID
 
 from src.domain.batches import ShiftTimeRange
 from src.domain.batches.value_objects import (
@@ -32,7 +31,8 @@ class BatchImportRow:
     shift_time_range: ShiftTimeRange
     is_closed: bool
     closed_at: datetime | None
-    work_center_id: UUID
+    work_center_identifier: str
+    work_center_name: str
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "BatchImportRow":
@@ -57,7 +57,8 @@ class BatchImportRow:
                 ),
                 is_closed=bool(data.get("is_closed", False)),
                 closed_at=cls._parse_datetime(data.get("closed_at")) if data.get("closed_at") else None,
-                work_center_id=UUID(data["work_center_id"]),
+                work_center_identifier=str(data["work_center_identifier"]),
+                work_center_name=str(data["work_center_name"]),
             )
         except (KeyError, ValueError, TypeError) as e:
             raise ValueError(f"Ошибка создания BatchImportRow: {e}") from e

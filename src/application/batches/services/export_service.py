@@ -1,21 +1,25 @@
+from uuid import uuid4
+
 from src.application.batches.dtos.export_batches import ExportBatchesInputDTO, ExportBatchesOutputDTO
 from src.application.batches.mappers import entity_to_raw_data_dto
 from src.application.batches.queries import BatchQueryServiceProtocol, ListBatchesQuery
 from src.application.common.exceptions import ApplicationException
 from src.application.common.ports import FileGeneratorProtocol
 from src.application.common.storage import StorageServiceProtocol
+from src.application.work_centers.queries import ListWorkCentersQuery, WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 
 logger = get_logger("entities.export.service")
 
 
-def generate_file_name(format: str) -> str:
+def generate_file_name(file_extension: str) -> str:
     """Генерирует имя файла с timestamp."""
     from datetime import datetime
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    extension = format if format.startswith(".") else f".{format}"
-    return f"batches_export_{timestamp}{extension}"
+    file_id = str(uuid4())[:8]
+
+    return f"batches/{timestamp}_{file_id}.{file_extension}"
 
 
 class BatchesExportService:
@@ -33,10 +37,12 @@ class BatchesExportService:
     def __init__(
         self,
         query_service: BatchQueryServiceProtocol,
+        work_center_query_service: WorkCenterQueryServiceProtocol,
         generator: FileGeneratorProtocol,
         storage_service: StorageServiceProtocol,
     ):
         self._query_service = query_service
+        self._work_center_query_service = work_center_query_service
         self._generator = generator
         self._storage_service = storage_service
 
@@ -65,12 +71,18 @@ class BatchesExportService:
                 logger.warning("No entities found for export")
                 return ExportBatchesOutputDTO(file_url="", total_batches=0)
 
+            # 2. Загрузка рабочих центров
+            query = ListWorkCentersQuery()
+            result = await self._work_center_query_service.list(query)
+            work_centers = result.items
+
             # 3. Генерация файла
-            raw_data = [entity_to_raw_data_dto(batch) for batch in batches]
+            work_centers_by_id = {work_center.uuid: work_center for work_center in work_centers}
+            raw_data = [entity_to_raw_data_dto(batch, work_centers_by_id[batch.work_center_id]) for batch in batches]
             file_data = await self._generator.generate(raw_data)
 
             # 4. Сохранение в Storage
-            file_name = generate_file_name(input_dto.format)
+            file_name = generate_file_name(str(input_dto.format))
             file_url = await self._storage_service.upload_file(
                 bucket_name=self.EXPORT_BUCKET,
                 object_name=file_name,
@@ -78,9 +90,12 @@ class BatchesExportService:
                 file_extension=input_dto.format,
             )
 
-            logger.info(f"Export completed: file_url={file_url}, total_batches={len(batches)}")
+            presigned_url = await self._storage_service.get_presigned_url(
+                bucket_name=self.EXPORT_BUCKET, object_name=file_url, expires_seconds=3600
+            )
 
-            return ExportBatchesOutputDTO(file_url=file_url, total_batches=len(batches))
+            logger.info(f"Export completed: file_url={file_url}, total_batches={len(batches)}")
+            return ExportBatchesOutputDTO(file_url=file_url, presigned_url=presigned_url, total_batches=len(batches))
 
         except Exception as e:
             logger.exception(f"Export failed: {e}")

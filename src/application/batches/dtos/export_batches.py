@@ -14,3 +14,4 @@ class ExportBatchesInputDTO:
 class ExportBatchesOutputDTO:
     total_batches: int
     file_url: str
+    presigned_url: str

@@ -4,10 +4,12 @@ from uuid import UUID
 
 from sqlalchemy.exc import DBAPIError, OperationalError
 
+from src.application.batches.commands.add_product import AddProductToBatchCommand
 from src.application.batches.commands.create import CreateBatchCommand
 from src.application.batches.commands.update import UpdateBatchCommand
 from src.application.batches.services.import_service import BatchesImportService
 from src.application.common.exceptions import FileParseError
+from src.application.work_centers.commands.create import CreateWorkCenterCommand
 from src.core.logging import get_logger
 from src.core.settings import CacheSettings, CelerySettings
 from src.domain.batches.events.import_completed import BatchesImportCompletedEvent
@@ -16,7 +18,6 @@ from src.infrastructure.background_tasks.app import celery_app, get_session_fact
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.file_parsers import FileParserFactory
 from src.infrastructure.common.uow.unit_of_work import SqlAlchemyUnitOfWork
-from src.infrastructure.persistence.repositories import BatchRepository
 
 logger = get_logger("celery.tasks.import_batches")
 
@@ -90,7 +91,8 @@ async def _import_batches_async(
                 validator = BatchImportRowValidator(uow.batches, uow.work_centers)
                 create_command = CreateBatchCommand(uow, cache_service)
                 update_command = UpdateBatchCommand(uow, cache_service)
-                batch_repository = BatchRepository(session)
+                add_product_command = AddProductToBatchCommand(uow, cache_service)
+                create_work_center_command = CreateWorkCenterCommand(uow)
 
                 # Создание сервиса импорта
                 import_service = BatchesImportService(
@@ -98,7 +100,10 @@ async def _import_batches_async(
                     validator=validator,
                     create_command=create_command,
                     update_command=update_command,
-                    repository=batch_repository,
+                    add_product_command=add_product_command,
+                    create_work_center_command=create_work_center_command,
+                    work_center_repository=uow.work_centers,
+                    batch_repository=uow.batches,
                 )
 
                 # Запуск импорта

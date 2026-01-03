@@ -2,13 +2,23 @@ import asyncio
 
 from celery import Celery
 from celery.signals import worker_process_init, worker_process_shutdown
+from redis.asyncio import ConnectionPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from src.application.common.cache.interface.protocol import CacheServiceProtocol
 from src.application.common.storage.interface import StorageServiceProtocol
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
-from src.core.settings import CelerySettings, DatabaseSettings, MinIOSettings, RabbitMQSettings, RedisSettings
+from src.core.settings import (
+    CacheSettings,
+    CelerySettings,
+    DatabaseSettings,
+    MinIOSettings,
+    RabbitMQSettings,
+    RedisSettings,
+)
 from src.infrastructure.background_tasks.beat_schedule import beat_schedule
+from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
 
 logger = get_logger("celery")
@@ -17,6 +27,8 @@ _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _worker_loop: asyncio.AbstractEventLoop | None = None
 _storage_service: StorageServiceProtocol | None = None
+_cache_service: CacheServiceProtocol | None = None
+_redis_pool: ConnectionPool | None = None
 
 rabbitmq_settings = RabbitMQSettings()
 redis_settings = RedisSettings()
@@ -59,7 +71,7 @@ logger.info(f"Celery app initialized successfully with {len(beat_schedule)} sche
 @worker_process_init.connect
 def init_worker_db(**kwargs) -> None:
     """Инициализирует ресурсы при старте worker процесса"""
-    global _engine, _session_factory, _worker_loop, _storage_service
+    global _engine, _session_factory, _worker_loop, _storage_service, _cache_service, _redis_pool
     try:
         _worker_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(_worker_loop)
@@ -70,6 +82,14 @@ def init_worker_db(**kwargs) -> None:
         _engine = init_engine(db_settings.url)
         _session_factory = make_session_factory(_engine)
         logger.info("Database engine initialized for worker")
+
+        cache_settings = CacheSettings()
+        logger.info(f"Initializing cache for worker: enabled={cache_settings.enabled}")
+        _cache_service, _redis_pool = _worker_loop.run_until_complete(init_cache(cache_settings, raise_error=False))
+        if _cache_service:
+            logger.info("Cache initialized for worker")
+        else:
+            logger.info("Cache is disabled or failed to initialize")
 
         minio_settings = MinIOSettings()
         logger.info(f"Initializing MinIO storage for worker: endpoint={minio_settings.endpoint}")
@@ -83,14 +103,17 @@ def init_worker_db(**kwargs) -> None:
 @worker_process_shutdown.connect
 def shutdown_worker_db(**kwargs) -> None:
     """Корректно закрывает database engine и storage service при остановке worker процесса"""
-    global _engine, _session_factory, _worker_loop, _storage_service
+    global _engine, _session_factory, _worker_loop, _storage_service, _cache_service, _redis_pool
     if _engine and _worker_loop:
         try:
             logger.info("Disposing worker resources")
             _worker_loop.run_until_complete(dispose_engine(_engine))
+            _worker_loop.run_until_complete(close_cache(_redis_pool))
             _engine = None
             _session_factory = None
             _storage_service = None
+            _cache_service = None
+            _redis_pool = None
             _worker_loop.close()
             _worker_loop = None
             asyncio.set_event_loop(None)
@@ -118,6 +141,11 @@ def get_storage_service() -> StorageServiceProtocol:
     if _storage_service is None:
         raise RuntimeError("Storage service not initialized. Ensure worker_process_init signal was called.")
     return _storage_service
+
+
+def get_cache_service() -> CacheServiceProtocol | None:
+    """Возвращает глобальный cache service для использования в задачах"""
+    return _cache_service
 
 
 def run_async_task(coro):

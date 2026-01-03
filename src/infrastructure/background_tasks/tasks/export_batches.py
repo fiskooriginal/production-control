@@ -1,18 +1,14 @@
-from datetime import datetime
-from uuid import uuid4
-
 from sqlalchemy.exc import DBAPIError, OperationalError
 
-from src.application.batches.mappers import entity_to_raw_data_dto
-from src.application.batches.queries.queries import ListBatchesQuery
+from src.application.batches.dtos.export_batches import ExportBatchesInputDTO
+from src.application.batches.services.export_service import BatchesExportService
 from src.application.common.dtos import ExportImportFileFormatEnum
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, get_storage_service, run_async_task
 from src.infrastructure.common.file_generators.batches.exports.factory import BatchesExportGeneratorFactory
-from src.infrastructure.persistence.queries import BatchQueryService
+from src.infrastructure.persistence.queries import BatchQueryService, WorkCenterQueryService
 from src.presentation.api.schemas.batches import BatchFiltersParams
-from src.presentation.mappers.query_params import batch_filters_params_to_query
 
 logger = get_logger("celery.tasks.export_batches")
 
@@ -60,42 +56,31 @@ async def _export_batches_async(
     try:
         async with session_factory() as session:
             query_service = BatchQueryService(session)
+            work_center_query_service = WorkCenterQueryService(session)
+            generator = BatchesExportGeneratorFactory.create(str(format))
 
+            export_service = BatchesExportService(
+                query_service=query_service,
+                work_center_query_service=work_center_query_service,
+                generator=generator,
+                storage_service=storage_service,
+            )
+            input_dto = ExportBatchesInputDTO(format=format, filters=filters)
             try:
-                filters = batch_filters_params_to_query(filters)
+                result = await export_service.export_batches(input_dto)
             except Exception as e:
-                logger.warning(f"Failed to parse filters: {e}, using empty filters")
-                filters = None
+                logger.exception(f"Failed to export batches: {e}")
+                raise task_instance.retry(
+                    exc=e,
+                    countdown=celery_settings.task_default_retry_delay,
+                ) from e
 
-            query = ListBatchesQuery(filters=filters, pagination=None, sort=None)
-            result = await query_service.list(query)
-            batches = result.items
-            logger.info(f"Exporting {len(batches)} batches to {format} file")
-
-            file_extension = str(format)
-            generator = BatchesExportGeneratorFactory.create(file_extension)
-
-            file_content = await generator.generate(raw_data=[entity_to_raw_data_dto(batch) for batch in batches])
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_id = str(uuid4())[:8]
-            object_name = f"batches/{timestamp}_{file_id}.{file_extension}"
-
-            await storage_service.upload_file(
-                bucket_name="exports", object_name=object_name, file_data=file_content, file_extension=file_extension
-            )
-
-            download_url = await storage_service.get_presigned_url(
-                bucket_name="exports", object_name=object_name, expires_seconds=3600
-            )
-
-            logger.info(f"Export completed: {len(batches)} batches exported to {object_name}")
-
+            logger.info(f"Export completed: {result.total_batches} batches exported to {result.file_url}")
             return {
                 "success": True,
-                "file_path": object_name,
-                "download_url": download_url,
-                "total": len(batches),
+                "file_path": result.file_url,
+                "download_url": result.presigned_url,
+                "total": result.total_batches,
             }
 
     except Exception as e:

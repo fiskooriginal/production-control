@@ -38,9 +38,10 @@ class BatchRawDataDTO:
     task_description: str
     shift_start: datetime
     shift_end: datetime
-    work_center_id: UUID
+    work_center_identifier: str
+    work_center_name: str
 
-    # products: list[ProductRawDataDTO]
+    products: str  # JSON строка со списком ProductRawDataDTO
 
     uuid: UUID | None = None
     created_at: datetime | None = None

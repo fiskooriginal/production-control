@@ -6,7 +6,7 @@ from src.domain.batches.events import (
     ProductRemovedFromBatchEvent,
 )
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
-from src.domain.batches.services import validate_batch_uniqueness, validate_shift_time_overlap
+from src.domain.batches.services import is_batch_exist, validate_shift_time_overlap
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -31,6 +31,6 @@ __all__ = [
     "ShiftTimeRange",
     "TaskDescription",
     "Team",
-    "validate_batch_uniqueness",
+    "is_batch_exist",
     "validate_shift_time_overlap",
 ]
