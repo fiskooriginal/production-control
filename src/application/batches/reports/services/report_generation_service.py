@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import UUID
 
 from src.application.batches.reports.adapters import ReportStorageAdapter
@@ -5,7 +6,10 @@ from src.application.batches.reports.dtos import ReportFormatEnum
 from src.application.batches.reports.ports import ReportGeneratorProtocol
 from src.application.batches.reports.services import ReportDataService
 from src.application.common.exceptions import ApplicationException
+from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
+from src.core.time import datetime_now
+from src.domain.batches.events.report_generated import ReportGeneratedEvent
 
 logger = get_logger("service.reports.generation_service")
 
@@ -15,11 +19,13 @@ class ReportGenerationService:
 
     def __init__(
         self,
+        uow: UnitOfWorkProtocol,
         report_data_service: ReportDataService,
         pdf_generator: ReportGeneratorProtocol,
         excel_generator: ReportGeneratorProtocol,
         report_storage: ReportStorageAdapter,
     ) -> None:
+        self._uow = uow
         self._report_data_service = report_data_service
         self._pdf_generator = pdf_generator
         self._excel_generator = excel_generator
@@ -36,14 +42,24 @@ class ReportGenerationService:
         """Генерирует отчёт для партии, загружает в MinIO и возвращает url_path к отчёту"""
         logger.info(f"Начата генерация отчёта для партии: batch_id={batch_id}")
         try:
-            batch_data = await self._report_data_service.get_batch_report_data(batch_id)
+            async with self._uow:
+                batch_data = await self._report_data_service.get_batch_report_data(batch_id)
 
-            generator_cls = await self._get_generator_cls(report_format)
-            content = await generator_cls.generate(batch_data)
+                generator_cls = await self._get_generator_cls(report_format)
+                content = await generator_cls.generate(batch_data)
+                report_path = await self._report_storage.save_report(batch_id, content, report_format)
 
-            report_path = await self._report_storage.save_report(batch_id, content, report_format)
-            logger.info(f"Отчёт успешно сгенерирован: batch_id={batch_id}, path={report_path}")
-            return report_path
+                self._uow.register_event(
+                    ReportGeneratedEvent(
+                        aggregate_id=batch_id,
+                        batch_id=batch_id,
+                        report_type=report_format.value,
+                        file_url=report_path,
+                        expires_at=datetime_now(naive=True) + timedelta(days=1),
+                    )
+                )
+                logger.info(f"Отчёт успешно сгенерирован: batch_id={batch_id}, path={report_path}")
+                return report_path
         except ApplicationException:
             raise
         except Exception as e:
