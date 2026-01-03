@@ -5,7 +5,7 @@ from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.batches.value_objects import BatchNumber
 
 
-async def validate_batch_uniqueness(
+async def is_batch_exist(
     batch_number: BatchNumber,
     batch_date: date,
     repository: BatchRepositoryProtocol,
@@ -13,6 +13,6 @@ async def validate_batch_uniqueness(
 ) -> bool:
     """Проверяет уникальность комбинации номера партии и даты"""
     existing_batch = await repository.get_by_batch_number_and_date(batch_number.value, batch_date)
-    if exclude_batch_id is not None:
-        return existing_batch is not None and existing_batch.uuid == exclude_batch_id
-    return existing_batch is not None
+    if exclude_batch_id is None:
+        return False
+    return existing_batch.uuid != exclude_batch_id

@@ -3,9 +3,8 @@ from typing import Any
 
 from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
-from src.domain.batches.services.validate_batch_uniqueness import validate_batch_uniqueness
+from src.domain.batches.services.validate_batch_uniqueness import is_batch_exist
 from src.domain.batches.value_objects.import_row import BatchImportRow
-from src.domain.common.exceptions import DoesNotExistError
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 
 logger = get_logger("entities.import.validator")
@@ -65,20 +64,11 @@ class BatchImportRowValidator:
             errors.append(f"Ошибка валидации форматов: {e}")
             return ValidationResult(is_valid=False, errors=errors)
 
-        # 2. Проверка существования work_center
-        try:
-            await self._work_center_repository.get_or_raise(import_row.work_center_id)
-        except DoesNotExistError:
-            errors.append(f"Рабочий центр '{import_row.work_center_id}' не найден")
-
-        # 3. Проверка уникальности (если не обновление)
-        if not update_existing:
-            exists = await validate_batch_uniqueness(
-                batch_number=import_row.batch_number,
-                batch_date=import_row.batch_date,
-                repository=self._batch_repository,
-            )
-            if exists:
+        # 2. Проверка уникальности (если не обновление)
+        if update_existing:
+            pass
+        else:
+            if await is_batch_exist(import_row.batch_number, import_row.batch_date, self._batch_repository):
                 errors.append(
                     f"Партия с номером {import_row.batch_number.value} и датой {import_row.batch_date} уже существует"
                 )

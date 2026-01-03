@@ -8,7 +8,7 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.batches.events import BatchCreatedEvent
-from src.domain.batches.services import validate_batch_uniqueness, validate_shift_time_overlap
+from src.domain.batches.services import is_batch_exist, validate_shift_time_overlap
 from src.domain.common.exceptions import InvalidStateError
 
 logger = get_logger("command.batches")
@@ -27,10 +27,7 @@ class CreateBatchCommand:
             async with self._uow:
                 batch_entity = create_input_dto_to_entity(input_dto)
 
-                is_unique = await validate_batch_uniqueness(
-                    batch_entity.batch_number, batch_entity.batch_date, self._uow.batches
-                )
-                if not is_unique:
+                if await is_batch_exist(batch_entity.batch_number, batch_entity.batch_date, self._uow.batches):
                     raise InvalidStateError(
                         f"Партия с номером {batch_entity.batch_number.value} и датой {batch_entity.batch_date} уже существует"
                     )

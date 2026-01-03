@@ -7,7 +7,7 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.core.time import datetime_now
 from src.domain.batches.entities import BatchEntity
-from src.domain.batches.services import validate_batch_uniqueness, validate_shift_time_overlap
+from src.domain.batches.services import is_batch_exist, validate_shift_time_overlap
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -55,12 +55,11 @@ class UpdateBatchCommand:
                     batch.batch_date = input_dto.batch_date
                     batch_date_changed = True
 
+                if not batch_number_changed and not batch_date_changed:
+                    pass
                 # проверяем уникальность комбинации номера партии и даты
-                if batch_number_changed or batch_date_changed:
-                    is_unique = await validate_batch_uniqueness(
-                        batch.batch_number, batch.batch_date, self._uow.batches, exclude_batch_id=batch.uuid
-                    )
-                    if not is_unique:
+                else:
+                    if await is_batch_exist(batch.batch_number, batch.batch_date, self._uow.batches):
                         raise InvalidStateError(
                             f"Партия с номером {batch.batch_number.value} и датой {batch.batch_date} уже существует"
                         )
