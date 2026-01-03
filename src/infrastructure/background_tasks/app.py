@@ -61,7 +61,6 @@ celery_app = Celery(
         "src.infrastructure.background_tasks.tasks.export_batches",
         "src.infrastructure.background_tasks.tasks.import_batches",
         "src.infrastructure.background_tasks.tasks.process_outbox_events",
-        "src.infrastructure.background_tasks.tasks.rabbitmq_consumer",
         "src.infrastructure.background_tasks.tasks.update_dashboard_stats",
     ],
 )
