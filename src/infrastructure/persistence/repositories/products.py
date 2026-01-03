@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
+from src.domain.common.exceptions import DoesNotExistError
 from src.domain.products.entities import ProductEntity
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
@@ -31,16 +31,6 @@ class ProductRepository(ProductRepositoryProtocol):
 
     async def create(self, domain_entity: ProductEntity) -> ProductEntity:
         """Создает новый продукт в репозитории"""
-        try:
-            stmt = select(Product.unique_code).where(Product.unique_code == str(domain_entity.unique_code))
-            result = await self._session.execute(stmt)
-            if result.scalar_one_or_none() is not None:
-                raise AlreadyExistsError(f"Продукт с кодом {domain_entity.unique_code} уже существует")
-        except AlreadyExistsError:
-            raise
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при проверке существования продукта: {e}") from e
-
         product_model = to_persistence_model(domain_entity)
 
         try:
@@ -80,10 +70,10 @@ class ProductRepository(ProductRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка при удалении продукта: {e}") from e
 
-    async def get_by_unique_code(self, unique_code: str) -> ProductEntity | None:
-        """Находит продукт по уникальному коду"""
+    async def get_by_unique_code(self, unique_code: str, batch_id: UUID) -> ProductEntity | None:
+        """Находит продукт по уникальному коду и идентификатору партии"""
         try:
-            stmt = select(Product).where(Product.unique_code == unique_code)
+            stmt = select(Product).where(Product.unique_code == unique_code, Product.batch_id == batch_id)
             result = await self._session.execute(stmt)
             product_model = result.scalar_one_or_none()
             if product_model is None:

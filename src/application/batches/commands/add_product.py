@@ -6,6 +6,7 @@ from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.entities import BatchEntity
 from src.domain.common.exceptions import AlreadyExistsError, InvalidStateError
+from src.domain.products import validate_product_code_uniqueness
 from src.domain.products.entities import ProductEntity
 from src.domain.products.value_objects import ProductCode
 
@@ -29,11 +30,14 @@ class AddProductToBatchCommand:
 
                 product = ProductEntity(unique_code=ProductCode(unique_code), batch_id=batch_id)
 
-                try:
-                    await self._uow.products.create(product)
-                except AlreadyExistsError:
-                    raise
+                if not await validate_product_code_uniqueness(
+                    product.unique_code, product.batch_id, self._uow.products
+                ):
+                    raise AlreadyExistsError(
+                        f"Продукт с кодом {product.unique_code} уже существует в партии {product.batch_id}"
+                    )
 
+                await self._uow.products.create(product)
                 batch.add_product(product)
                 await self._uow.batches.update(batch)
                 logger.info(f"Product added to batch successfully: product_id={product.uuid}")

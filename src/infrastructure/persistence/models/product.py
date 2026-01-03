@@ -16,7 +16,7 @@ class Product(BaseModel, table=True):
 
     __tablename__ = "products"
     __table_args__ = (
-        UniqueConstraint("unique_code", name="uq_product_unique_code"),
+        UniqueConstraint("batch_id", "unique_code", name="uq_product_batch_id_unique_code"),
         Index("idx_product_unique_code", "unique_code"),
         Index("idx_product_batch_id", "batch_id"),
         Index("idx_product_is_aggregated", "is_aggregated"),

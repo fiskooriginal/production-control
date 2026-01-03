@@ -6,8 +6,8 @@ from src.domain.products.entities import ProductEntity
 
 
 class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol):
-    async def get_by_unique_code(self, unique_code: str) -> ProductEntity | None:
-        """Возвращает продукт по уникальному коду."""
+    async def get_by_unique_code(self, unique_code: str, batch_id: UUID) -> ProductEntity | None:
+        """Возвращает продукт по уникальному коду и идентификатору партии."""
         ...
 
     async def get_aggregated(self) -> list[ProductEntity]:
