@@ -33,11 +33,15 @@ FROM python-base AS runner
 ENV PYTHONPATH="$APP_PATH"
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl postgresql-client \
     && rm -rf /var/lib/apt/lists/
 
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY ./src ./src
 COPY ./alembic.ini ./alembic.ini
+COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
+RUN chmod +x ./scripts/docker-entrypoint.sh
+
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["python", "-m", "uvicorn", "src.presentation.main:app", "--host", "0.0.0.0", "--port", "8000"]
