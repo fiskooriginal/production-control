@@ -23,12 +23,10 @@ beat_schedule = {
         "task": "tasks.update_dashboard_stats",
         "schedule": crontab(minute="*/5"),  # Каждые 5 минут
     },
-    # Пример: Закрытие просроченных партий - каждый день в 01:00
-    # "auto-close-expired-batches": {
-    #     "task": "tasks.auto_close_expired_batches",
-    #     "schedule": crontab(hour=1, minute=0),
-    # },
-    #
+    "auto-close-expired-batches": {
+        "task": "tasks.auto_close_expired_batches",
+        "schedule": crontab(hour=1, minute=0),  # Каждый день в 01:00
+    },
     # Пример: Очистка старых файлов - каждый день в 02:00
     # "cleanup-old-files": {
     #     "task": "tasks.cleanup_old_files",

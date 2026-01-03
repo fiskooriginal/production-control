@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.time import datetime_aware_to_naive
 from src.domain.batches import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
@@ -103,3 +104,14 @@ class BatchRepository(BatchRepositoryProtocol):
             return [to_domain_entity(batch) for batch in batch_models]
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске партий по рабочему центру: {e}") from e
+
+    async def get_expired_open_batches(self, before_time: datetime) -> list[BatchEntity]:
+        """Находит открытые партии с shift_end_time < before_time"""
+        try:
+            before_time_naive = datetime_aware_to_naive(before_time)
+            stmt = select(Batch).where(not Batch.is_closed, Batch.shift_end_time < before_time_naive)
+            result = await self._session.execute(stmt)
+            batch_models = result.scalars().all()
+            return [to_domain_entity(batch) for batch in batch_models]
+        except Exception as e:
+            raise DatabaseException(f"Ошибка базы данных при поиске просроченных партий: {e}") from e

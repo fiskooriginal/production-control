@@ -46,6 +46,7 @@ celery_app = Celery(
     backend=result_backend,
     include=[
         "src.infrastructure.background_tasks.tasks.aggregate_batch",
+        "src.infrastructure.background_tasks.tasks.auto_close_expired_batches",
         "src.infrastructure.background_tasks.tasks.export_batches",
         "src.infrastructure.background_tasks.tasks.import_batches",
         "src.infrastructure.background_tasks.tasks.process_outbox_events",
