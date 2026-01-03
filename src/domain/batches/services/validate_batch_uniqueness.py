@@ -15,4 +15,4 @@ async def validate_batch_uniqueness(
     existing_batch = await repository.get_by_batch_number_and_date(batch_number.value, batch_date)
     if exclude_batch_id is not None:
         return existing_batch is not None and existing_batch.uuid == exclude_batch_id
-    return existing_batch is None
+    return existing_batch is not None

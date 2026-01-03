@@ -9,6 +9,8 @@ from src.domain.batches.events import (
     ProductAddedToBatchEvent,
     ProductRemovedFromBatchEvent,
 )
+from src.domain.batches.events.import_completed import BatchesImportCompletedEvent
+from src.domain.batches.events.report_generated import ReportGeneratedEvent
 from src.domain.common.events import DomainEvent
 from src.domain.products.events import ProductAggregatedEvent
 
@@ -63,7 +65,9 @@ def _initialize_registry() -> None:
     EventRegistry.register("batch.product_removed", 1, ProductRemovedFromBatchEvent)
     EventRegistry.register("batch.aggregated", 1, BatchAggregatedEvent)
     EventRegistry.register("batch.deleted", 1, BatchDeletedEvent)
+    EventRegistry.register("batch.report_generated", 1, ReportGeneratedEvent)
     EventRegistry.register("product.aggregated", 1, ProductAggregatedEvent)
+    EventRegistry.register("batch.import_completed", 1, BatchesImportCompletedEvent)
 
 
 _initialize_registry()

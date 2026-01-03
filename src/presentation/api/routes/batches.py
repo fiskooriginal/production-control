@@ -1,12 +1,21 @@
+import base64
+
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 
 from src.application.batches.dtos.generate_report import GenerateReportInputDTO
 from src.application.batches.reports.dtos import ReportFormatEnum
+from src.application.common.dtos import ExportImportFileFormatEnum
+from src.infrastructure.background_tasks import states
+from src.infrastructure.background_tasks.tasks import aggregate_batch as aggregate_batch_task
+from src.infrastructure.background_tasks.tasks import export_batches as export_batches_task
+from src.infrastructure.background_tasks.tasks import import_batches as import_batches_task
+from src.presentation.api.schemas.background_tasks import TaskStartedResponse
 from src.presentation.api.schemas.batches import (
     AddProductToBatchRequest,
     AggregateBatchRequest,
+    AggregateBatchTaskRequest,
     BatchFiltersParams,
     BatchResponse,
     CloseBatchRequest,
@@ -124,6 +133,32 @@ async def aggregate_batch(batch_id: UUID, request: AggregateBatchRequest, comman
     return domain_to_response(batch_entity)
 
 
+@router.patch("/{batch_id}/aggregate_async", response_model=TaskStartedResponse, status_code=status.HTTP_202_ACCEPTED)
+async def aggregate_batch_async(
+    batch_id: UUID,
+    request: AggregateBatchTaskRequest,
+) -> TaskStartedResponse:
+    """
+    Запускает фоновую задачу для агрегации партии и продуктов в ней.
+
+    Если указаны unique_codes, агрегируются только указанные продукты.
+    Если unique_codes не указан, агрегируются все продукты партии.
+    """
+    aggregated_at_str = None
+    if request.aggregated_at:
+        aggregated_at_str = request.aggregated_at.isoformat()
+
+    task = aggregate_batch_task.delay(
+        batch_id=str(batch_id), unique_codes=request.unique_codes, aggregated_at=aggregated_at_str
+    )
+
+    return TaskStartedResponse(
+        task_id=task.id,
+        status=states.PENDING,
+        message="Aggregation task started",
+    )
+
+
 @router.patch("/{batch_id}", response_model=BatchResponse)
 async def update_batch(batch_id: UUID, request: UpdateBatchRequest, command: update_batch) -> BatchResponse:
     """
@@ -162,3 +197,55 @@ async def generate_report(
     result = await command.execute(input_dto)
 
     return GenerateReportResponse(report_path=result.report_path, download_url=result.download_url)
+
+
+@router.post("/import", response_model=TaskStartedResponse, status_code=status.HTTP_202_ACCEPTED)
+async def import_batches(
+    file: UploadFile = File(..., description="Файл с партиями (xlsx/csv)"),
+    update_existing: bool = False,
+) -> TaskStartedResponse:
+    """
+    Импортирует партии из файла.
+
+    Импорт выполняется асинхронно в фоновой задаче.
+    """
+    file_extension = file.filename.split(".")[-1].lower() if file.filename else ""
+
+    allowed_extensions = [fmt.value for fmt in ExportImportFileFormatEnum]
+
+    if file_extension not in allowed_extensions:
+        raise ValueError(
+            f"Unsupported file format: {file_extension}. Supported formats: {', '.join(allowed_extensions)}"
+        )
+
+    file_data = await file.read()
+    file_data_base64 = base64.b64encode(file_data).decode("utf-8")
+
+    task = import_batches_task.delay(
+        file_data_base64=file_data_base64, file_extension=file_extension, update_existing=update_existing
+    )
+
+    return TaskStartedResponse(
+        task_id=task.id,
+        status=states.PENDING,
+        message="Import task started",
+    )
+
+
+@router.post("/export", response_model=TaskStartedResponse, status_code=status.HTTP_202_ACCEPTED)
+async def export_batches(
+    format: ExportImportFileFormatEnum,
+    filters: BatchFiltersParams | None = None,
+) -> TaskStartedResponse:
+    """
+    Экспортирует партии в файл.
+
+    Экспорт выполняется асинхронно в фоновой задаче.
+    """
+    task = export_batches_task.delay(format=format, filters=filters)
+
+    return TaskStartedResponse(
+        task_id=task.id,
+        status=states.PENDING,
+        message="Export task started",
+    )

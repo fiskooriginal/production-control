@@ -11,8 +11,12 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.core.logging import get_logger
-from src.infrastructure.reports.exceptions import BatchPDFGenerationError
-from src.infrastructure.reports.fonts.cyrillic.register_fonts import FONT_NAME_BOLD, FONT_NAME_REGULAR, register_fonts
+from src.infrastructure.common.exceptions.batches import BatchPDFGenerationError
+from src.infrastructure.common.file_generators.batches.reports.fonts.cyrillic.register_fonts import (
+    FONT_NAME_BOLD,
+    FONT_NAME_REGULAR,
+    register_fonts,
+)
 
 logger = get_logger("batches.reports.pdf")
 

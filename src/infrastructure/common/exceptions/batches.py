@@ -1,4 +1,4 @@
-from src.infrastructure.common.exceptions.base import InfrastructureException
+from src.infrastructure.common.exceptions import InfrastructureException
 
 
 class BatchReportGenerationError(InfrastructureException):

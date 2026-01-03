@@ -16,10 +16,10 @@ from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import EmailSettings
 from src.infrastructure.common.email.smtp import SMTPEmailService
+from src.infrastructure.common.file_generators.batches.reports import BatchExcelReportGenerator, BatchPDFReportGenerator
 from src.infrastructure.persistence.queries import WorkCenterQueryService
-from src.infrastructure.reports.generators import BatchExcelReportGenerator, BatchPDFReportGenerator
 from src.presentation.di.batches import batch_query
-from src.presentation.di.common import async_session
+from src.presentation.di.common import async_session, uow
 
 logger = get_logger("di.reports")
 
@@ -67,6 +67,7 @@ report_storage = Annotated[ReportStorageAdapter, Depends(get_report_storage_adap
 
 
 async def get_report_generation_service(
+    uow: uow,
     report_data_service: Annotated[ReportDataService, Depends(get_report_data_service)],
     pdf_generator: Annotated[ReportGeneratorProtocol, Depends(get_pdf_generator)],
     excel_generator: Annotated[ReportGeneratorProtocol, Depends(get_excel_generator)],
@@ -74,6 +75,7 @@ async def get_report_generation_service(
 ) -> ReportGenerationService:
     """Dependency для получения ReportGenerationService."""
     return ReportGenerationService(
+        uow=uow,
         report_data_service=report_data_service,
         pdf_generator=pdf_generator,
         excel_generator=excel_generator,

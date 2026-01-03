@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.core.logging import get_logger
-from src.infrastructure.reports.exceptions import BatchExcelGenerationError
+from src.infrastructure.common.exceptions.batches import BatchExcelGenerationError
 
 logger = get_logger("batches.reports.excel")
 
