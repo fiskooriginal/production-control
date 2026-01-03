@@ -1,13 +1,13 @@
 from uuid import UUID
 
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
-from src.application.common.cache.keys import get_batch_key, get_batches_list_pattern
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.cache.keys.batches import get_batch_key, get_batches_list_pattern
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 from src.domain.common.exceptions import AlreadyExistsError, InvalidStateError
-from src.domain.products import validate_product_code_uniqueness
-from src.domain.products.entities import ProductEntity
+from src.domain.products import ProductEntity
+from src.domain.products.services import validate_product_code_uniqueness
 from src.domain.products.value_objects import ProductCode
 
 logger = get_logger("command.batches")

@@ -2,9 +2,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src.application.products.commands import AggregateProductCommand
+from src.application.products.commands.aggregate_product import AggregateProductCommand
 from src.application.products.queries.handlers import GetProductQueryHandler, ListProductsQueryHandler
-from src.infrastructure.persistence.queries import ProductQueryService
+from src.infrastructure.persistence.queries.products import ProductQueryService
 from src.presentation.di.common import async_session, uow
 
 

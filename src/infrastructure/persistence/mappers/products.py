@@ -1,5 +1,5 @@
 from src.core.time import datetime_aware_to_naive, datetime_naive_to_aware
-from src.domain.products.entities import ProductEntity
+from src.domain.products import ProductEntity
 from src.domain.products.value_objects import ProductCode
 from src.infrastructure.common.exceptions import MappingException
 from src.infrastructure.persistence.models.product import Product

@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
-from src.application.common.cache.keys import get_batch_key, get_batches_list_pattern
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.cache.keys.batches import get_batch_key, get_batches_list_pattern
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.events import BatchDeletedEvent
 from src.domain.common.exceptions import InvalidStateError

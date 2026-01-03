@@ -24,7 +24,7 @@ from src.domain.common.entities import BaseEntity
 from src.domain.common.exceptions import InvalidStateError
 
 if TYPE_CHECKING:
-    from src.domain.products.entities import ProductEntity
+    from src.domain.products import ProductEntity
 
 
 @dataclass(slots=True, kw_only=True)

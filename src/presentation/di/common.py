@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.infrastructure.common.uow import SqlAlchemyUnitOfWork
 
 

@@ -4,11 +4,11 @@ from src.core.logging import get_logger
 from src.domain.batches.events import BatchClosedEvent
 from src.infrastructure.events.handlers.decorator import event_handler
 
-logger = get_logger("handler.reports")
+logger = get_logger("handler.batches.closed")
 
 
 @event_handler(BatchClosedEvent)
-class GenerateReportOnBatchClosedHandler:
+class BatchClosedHandler:
     """Обработчик события закрытия партии для автоматической генерации PDF отчета"""
 
     def __init__(self, report_generation_service: ReportGenerationService) -> None:

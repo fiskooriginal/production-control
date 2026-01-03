@@ -8,7 +8,7 @@ from src.core.logging import get_logger, setup_logging
 from src.core.settings import CacheSettings, DatabaseSettings, MinIOSettings
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
-from src.presentation.api import register_exception_handlers
+from src.presentation.api.exceptions import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import analytics, background_tasks, batches, healthcheck, products, work_centers
 

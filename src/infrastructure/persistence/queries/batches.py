@@ -7,13 +7,11 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.batches.queries import (
-    BatchQueryServiceProtocol,
-    ListBatchesQuery,
-)
+from src.application.batches.queries.queries import ListBatchesQuery
+from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.application.batches.queries.sort import BatchSortField
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
-from src.application.common.cache.keys import get_batch_key, get_batches_list_key
+from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.cache.keys.batches import get_batch_key, get_batches_list_key
 from src.core.logging import get_logger
 from src.core.settings import BatchCacheSettings
 from src.domain.batches import BatchEntity

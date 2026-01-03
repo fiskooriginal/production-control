@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from src.application.batches.reports.dtos import ReportFormatEnum
-from src.application.common.storage.interface import StorageServiceProtocol
+from src.application.common.storage.interfaces import StorageServiceProtocol
 from src.core.logging import get_logger
 
 logger = get_logger("storage.reports")

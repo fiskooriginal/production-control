@@ -2,7 +2,7 @@ from datetime import date
 from typing import Protocol
 from uuid import UUID
 
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 from src.domain.common.repository_protocol import BaseRepositoryProtocol
 
 

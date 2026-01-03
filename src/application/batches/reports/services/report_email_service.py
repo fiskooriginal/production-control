@@ -1,12 +1,12 @@
 from datetime import datetime
 from uuid import UUID
 
-from src.application.batches.queries import BatchQueryServiceProtocol
+from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.application.batches.reports.adapters import ReportStorageAdapter
 from src.application.batches.reports.dtos import ReportFormatEnum
-from src.application.common.email.interface.protocol import EmailServiceProtocol
+from src.application.common.email.interfaces import EmailServiceProtocol
 from src.core.logging import get_logger
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 
 logger = get_logger("service.reports.email_service")
 

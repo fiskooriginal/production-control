@@ -3,7 +3,7 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.events import DomainEvent

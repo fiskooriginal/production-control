@@ -4,7 +4,8 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.products.queries import ListProductsQuery, ProductQueryServiceProtocol
+from src.application.products.queries.queries import ListProductsQuery
+from src.application.products.queries.service import ProductQueryServiceProtocol
 from src.application.products.queries.sort import ProductSortField
 from src.domain.common.queries import QueryResult
 from src.domain.products import ProductEntity

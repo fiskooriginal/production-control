@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.infrastructure.common.exceptions import DatabaseException

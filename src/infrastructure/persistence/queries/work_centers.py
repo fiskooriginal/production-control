@@ -4,10 +4,11 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.work_centers.queries import ListWorkCentersQuery, WorkCenterQueryServiceProtocol
+from src.application.work_centers.queries.queries import ListWorkCentersQuery
+from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
 from src.application.work_centers.queries.sort import WorkCenterSortField
 from src.domain.common.queries import QueryResult
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.work_centers import WorkCenterEntity
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.work_centers import to_domain_entity
 from src.infrastructure.persistence.models.work_center import WorkCenter

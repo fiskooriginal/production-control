@@ -1,9 +1,9 @@
-from src.application.common.uow import UnitOfWorkProtocol
-from src.application.work_centers.dtos import CreateWorkCenterInputDTO
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
+from src.application.work_centers.dtos.create import CreateWorkCenterInputDTO
 from src.application.work_centers.mappers import create_input_dto_to_entity
 from src.core.logging import get_logger
 from src.domain.common.exceptions import InvalidStateError
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.work_centers import WorkCenterEntity
 
 logger = get_logger("command.work_centers")
 

@@ -4,7 +4,7 @@ import json
 from uuid import UUID
 
 from src.application.batches.queries.queries import ListBatchesQuery
-from src.application.common.cache.keys.common import serialize_filters, serialize_pagination, serialize_sort
+from src.application.common.cache.keys import serialize_filters, serialize_pagination, serialize_sort
 
 
 def get_batch_key(batch_id: UUID, prefix: str = "cache") -> str:

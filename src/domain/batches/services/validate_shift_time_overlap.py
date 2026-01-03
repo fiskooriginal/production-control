@@ -1,4 +1,4 @@
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 
 

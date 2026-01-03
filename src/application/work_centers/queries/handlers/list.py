@@ -2,7 +2,7 @@ from src.application.work_centers.queries.queries import ListWorkCentersQuery
 from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 from src.domain.common.queries import QueryResult
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.work_centers import WorkCenterEntity
 
 logger = get_logger("query.handler.work_centers")
 

@@ -6,7 +6,7 @@ from src.application.batches.reports.dtos import ReportFormatEnum
 from src.application.batches.reports.ports import ReportGeneratorProtocol
 from src.application.batches.reports.services import ReportDataService
 from src.application.common.exceptions import ApplicationException
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.core.time import datetime_now
 from src.domain.batches.events.report_generated import ReportGeneratedEvent

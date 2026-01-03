@@ -5,10 +5,12 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from src.application.batches.dtos import CreateBatchInputDTO, UpdateBatchInputDTO
+from src.application.batches.dtos.create import CreateBatchInputDTO
 from src.application.batches.dtos.raw_data import BatchRawDataDTO, ProductRawDataDTO
-from src.domain.batches.entities import BatchEntity
+from src.application.batches.dtos.update import UpdateBatchInputDTO
+from src.domain.batches import BatchEntity
 from src.domain.batches.value_objects import (
+    BatchImportRow,
     BatchNumber,
     EknCode,
     Nomenclature,
@@ -17,9 +19,8 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
-from src.domain.batches.value_objects.import_row import BatchImportRow
-from src.domain.products.entities import ProductEntity
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.products import ProductEntity
+from src.domain.work_centers import WorkCenterEntity
 
 
 def product_entity_to_raw_data_dto(product: ProductEntity) -> ProductRawDataDTO:

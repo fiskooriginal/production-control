@@ -7,7 +7,8 @@ from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, get_storage_service, run_async_task
 from src.infrastructure.common.file_generators.batches.exports.factory import BatchesExportGeneratorFactory
-from src.infrastructure.persistence.queries import BatchQueryService, WorkCenterQueryService
+from src.infrastructure.persistence.queries.batches import BatchQueryService
+from src.infrastructure.persistence.queries.work_centers import WorkCenterQueryService
 from src.presentation.api.schemas.batches import BatchFiltersParams
 
 logger = get_logger("celery.tasks.export_batches")

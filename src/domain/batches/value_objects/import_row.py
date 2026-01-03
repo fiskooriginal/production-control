@@ -2,15 +2,13 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
 
-from src.domain.batches import ShiftTimeRange
-from src.domain.batches.value_objects import (
-    BatchNumber,
-    EknCode,
-    Nomenclature,
-    Shift,
-    TaskDescription,
-    Team,
-)
+from src.domain.batches.value_objects.batch_number import BatchNumber
+from src.domain.batches.value_objects.ekn_code import EknCode
+from src.domain.batches.value_objects.nomenclature import Nomenclature
+from src.domain.batches.value_objects.shift import Shift
+from src.domain.batches.value_objects.shift_time import ShiftTimeRange
+from src.domain.batches.value_objects.task_description import TaskDescription
+from src.domain.batches.value_objects.team import Team
 
 
 @dataclass(frozen=True, slots=True)

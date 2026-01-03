@@ -2,7 +2,7 @@ from typing import Protocol
 from uuid import UUID
 
 from src.domain.common.repository_protocol import BaseRepositoryProtocol
-from src.domain.products.entities import ProductEntity
+from src.domain.products import ProductEntity
 
 
 class ProductRepositoryProtocol(BaseRepositoryProtocol[ProductEntity], Protocol):

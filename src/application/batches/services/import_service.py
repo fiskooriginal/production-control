@@ -9,12 +9,12 @@ from src.application.batches.dtos.import_batches import ImportBatchesOutputDTO, 
 from src.application.batches.dtos.raw_data import ProductRawDataDTO
 from src.application.batches.mappers import import_row_to_create_dto, import_row_to_update_dto
 from src.application.common.exceptions import FileParseError
-from src.application.common.ports import FileParserProtocol
+from src.application.common.ports.file_parser import FileParserProtocol
 from src.application.work_centers.commands.create import CreateWorkCenterCommand
-from src.application.work_centers.dtos import CreateWorkCenterInputDTO
+from src.application.work_centers.dtos.create import CreateWorkCenterInputDTO
 from src.core.logging import get_logger
-from src.domain.batches import BatchRepositoryProtocol
-from src.domain.batches.services.validate_import_row import BatchImportRowValidator
+from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.batches.services import BatchImportRowValidator
 from src.domain.common.exceptions import AlreadyExistsError
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 

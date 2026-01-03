@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from src.application.work_centers.dtos import CreateWorkCenterInputDTO, UpdateWorkCenterInputDTO
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.application.work_centers.dtos.create import CreateWorkCenterInputDTO
+from src.application.work_centers.dtos.update import UpdateWorkCenterInputDTO
+from src.domain.work_centers import WorkCenterEntity
 from src.presentation.api.schemas.work_centers import (
     CreateWorkCenterRequest,
     UpdateWorkCenterRequest,

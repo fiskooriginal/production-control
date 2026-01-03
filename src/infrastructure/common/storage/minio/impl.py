@@ -7,7 +7,8 @@ from pathlib import Path
 from minio import Minio
 from minio.error import S3Error
 
-from src.application.common.storage.interface import FileInfo, StorageServiceProtocol
+from src.application.common.storage.dtos import FileInfo
+from src.application.common.storage.interfaces import StorageServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import MinIOSettings
 from src.infrastructure.common.storage.exceptions import (

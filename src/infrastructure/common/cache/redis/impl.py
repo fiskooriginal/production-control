@@ -1,6 +1,6 @@
 from redis.asyncio import Redis
 
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import CacheSettings
 

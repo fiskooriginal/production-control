@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.application.common.uow import UnitOfWorkProtocol
+from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.work_centers.events import WorkCenterDeletedEvent
 

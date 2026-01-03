@@ -5,8 +5,8 @@ from celery.signals import worker_process_init, worker_process_shutdown
 from redis.asyncio import ConnectionPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
-from src.application.common.storage.interface import StorageServiceProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.storage.interfaces import StorageServiceProtocol
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
 from src.core.settings import (

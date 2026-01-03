@@ -12,8 +12,8 @@ from src.application.common.exceptions import FileParseError
 from src.application.work_centers.commands.create import CreateWorkCenterCommand
 from src.core.logging import get_logger
 from src.core.settings import CacheSettings, CelerySettings
-from src.domain.batches.events.import_completed import BatchesImportCompletedEvent
-from src.domain.batches.services.validate_import_row import BatchImportRowValidator
+from src.domain.batches.events import BatchesImportCompletedEvent
+from src.domain.batches.services import BatchImportRowValidator
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.file_parsers import FileParserFactory

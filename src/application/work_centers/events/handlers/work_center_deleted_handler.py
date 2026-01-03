@@ -1,4 +1,4 @@
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
 from src.application.common.cache.keys.batches import get_batches_list_pattern
 from src.core.logging import get_logger
 from src.domain.work_centers.events import WorkCenterDeletedEvent

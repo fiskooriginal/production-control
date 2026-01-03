@@ -4,7 +4,7 @@ from typing import Any
 from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.batches.services.validate_batch_uniqueness import is_batch_exist
-from src.domain.batches.value_objects.import_row import BatchImportRow
+from src.domain.batches.value_objects import BatchImportRow
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 
 logger = get_logger("entities.import.validator")

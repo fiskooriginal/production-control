@@ -2,11 +2,13 @@ from uuid import uuid4
 
 from src.application.batches.dtos.export_batches import ExportBatchesInputDTO, ExportBatchesOutputDTO
 from src.application.batches.mappers import entity_to_raw_data_dto
-from src.application.batches.queries import BatchQueryServiceProtocol, ListBatchesQuery
+from src.application.batches.queries.queries import ListBatchesQuery
+from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.application.common.exceptions import ApplicationException
-from src.application.common.ports import FileGeneratorProtocol
-from src.application.common.storage import StorageServiceProtocol
-from src.application.work_centers.queries import ListWorkCentersQuery, WorkCenterQueryServiceProtocol
+from src.application.common.ports.file_generator import FileGeneratorProtocol
+from src.application.common.storage.interfaces import StorageServiceProtocol
+from src.application.work_centers.queries.queries import ListWorkCentersQuery
+from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 
 logger = get_logger("entities.export.service")

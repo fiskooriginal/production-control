@@ -19,7 +19,7 @@ def event_handler[T](event_type: type[T]) -> Callable[[Any], Any]:
 
     Example:
         @event_handler(BatchClosedEvent)
-        class GenerateReportOnBatchClosedHandler:
+        class BatchClosedHandler:
             async def handle(self, event: BatchClosedEvent) -> None:
                 ...
 

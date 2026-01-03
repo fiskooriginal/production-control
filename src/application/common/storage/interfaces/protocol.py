@@ -1,16 +1,7 @@
-from dataclasses import dataclass
 from io import BytesIO
 from typing import Protocol
 
-
-@dataclass
-class FileInfo:
-    """Информация о файле в хранилище."""
-
-    name: str
-    size: int
-    last_modified: str
-    etag: str | None = None
+from src.application.common.storage.dtos import FileInfo
 
 
 class StorageServiceProtocol(Protocol):

@@ -7,7 +7,7 @@ from uuid import UUID
 from dacite import Config, from_dict
 
 from src.core.time import datetime_aware_to_naive, datetime_naive_to_aware
-from src.domain.batches.entities import BatchEntity
+from src.domain.batches import BatchEntity
 from src.domain.batches.value_objects import (
     BatchNumber,
     EknCode,
@@ -17,7 +17,7 @@ from src.domain.batches.value_objects import (
     TaskDescription,
     Team,
 )
-from src.domain.products.entities import ProductEntity
+from src.domain.products import ProductEntity
 from src.infrastructure.common.exceptions import MappingException
 from src.infrastructure.persistence.mappers.products import to_domain_entity as product_to_domain
 from src.infrastructure.persistence.mappers.products import to_persistence_model as product_to_persistence_model

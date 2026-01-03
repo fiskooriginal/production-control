@@ -5,19 +5,15 @@ from fastapi import Depends, Request
 from src.application.batches.commands.generate_report import GenerateReportCommand
 from src.application.batches.reports.adapters import ReportStorageAdapter
 from src.application.batches.reports.ports import ReportGeneratorProtocol
-from src.application.batches.reports.services import (
-    ReportDataService,
-    ReportEmailService,
-    ReportGenerationService,
-)
-from src.application.common.email.interface.protocol import EmailServiceProtocol
-from src.application.common.storage.interface import StorageServiceProtocol
-from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
+from src.application.batches.reports.services import ReportDataService, ReportEmailService, ReportGenerationService
+from src.application.common.email.interfaces import EmailServiceProtocol
+from src.application.common.storage.interfaces import StorageServiceProtocol
+from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 from src.core.settings import EmailSettings
 from src.infrastructure.common.email.smtp import SMTPEmailService
 from src.infrastructure.common.file_generators.batches.reports import BatchExcelReportGenerator, BatchPDFReportGenerator
-from src.infrastructure.persistence.queries import WorkCenterQueryService
+from src.infrastructure.persistence.queries.work_centers import WorkCenterQueryService
 from src.presentation.di.batches import batch_query
 from src.presentation.di.common import async_session, uow
 

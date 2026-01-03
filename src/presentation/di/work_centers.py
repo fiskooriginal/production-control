@@ -2,13 +2,11 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src.application.work_centers.commands import (
-    CreateWorkCenterCommand,
-    DeleteWorkCenterCommand,
-    UpdateWorkCenterCommand,
-)
+from src.application.work_centers.commands.create import CreateWorkCenterCommand
+from src.application.work_centers.commands.delete import DeleteWorkCenterCommand
+from src.application.work_centers.commands.update import UpdateWorkCenterCommand
 from src.application.work_centers.queries.handlers import GetWorkCenterQueryHandler, ListWorkCentersQueryHandler
-from src.infrastructure.persistence.queries import WorkCenterQueryService
+from src.infrastructure.persistence.queries.work_centers import WorkCenterQueryService
 from src.presentation.di.common import async_session, uow
 
 

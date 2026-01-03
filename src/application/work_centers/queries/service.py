@@ -3,7 +3,7 @@ from uuid import UUID
 
 from src.application.work_centers.queries.queries import ListWorkCentersQuery
 from src.domain.common.queries import QueryResult
-from src.domain.work_centers.entities import WorkCenterEntity
+from src.domain.work_centers import WorkCenterEntity
 
 
 class WorkCenterQueryServiceProtocol(Protocol):

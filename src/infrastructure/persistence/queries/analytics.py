@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.analytics.queries.dtos import DashboardStatisticsDTO
 from src.application.analytics.queries.service import AnalyticsQueryServiceProtocol
-from src.application.common.cache.interface.protocol import CacheServiceProtocol
+from src.application.common.cache.interfaces import CacheServiceProtocol
 from src.application.common.cache.keys.analytics import get_dashboard_stats_key
 from src.core.logging import get_logger
 from src.core.settings import AnalyticsSettings

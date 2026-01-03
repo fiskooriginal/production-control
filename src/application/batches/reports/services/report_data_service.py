@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from src.application.batches.queries import BatchQueryServiceProtocol
+from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.application.batches.reports.statistics import calculate_statistics
 from src.application.common.exceptions import ApplicationException
-from src.application.work_centers.queries import WorkCenterQueryServiceProtocol
+from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
 from src.core.logging import get_logger
 
 logger = get_logger("service.reports.data_service")
