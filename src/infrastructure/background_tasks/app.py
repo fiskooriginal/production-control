@@ -6,6 +6,8 @@ from redis.asyncio import ConnectionPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from src.application.common.cache.interfaces import CacheServiceProtocol
+from src.application.common.messaging.interfaces.event_consumer import EventConsumerProtocol
+from src.application.common.messaging.interfaces.event_producer import EventProducerProtocol
 from src.application.common.storage.interfaces import StorageServiceProtocol
 from src.core.database import dispose_engine, init_engine, make_session_factory
 from src.core.logging import get_logger
@@ -14,12 +16,17 @@ from src.core.settings import (
     CelerySettings,
     DatabaseSettings,
     MinIOSettings,
+    RabbitMQMessagingSettings,
     RabbitMQSettings,
     RedisSettings,
 )
 from src.infrastructure.background_tasks.beat_schedule import beat_schedule
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
+from src.infrastructure.messaging.rabbitmq.connection import RabbitMQConnection
+from src.infrastructure.messaging.rabbitmq.consumer import RabbitMQEventConsumer
+from src.infrastructure.messaging.rabbitmq.mapper import EventRoutingMapper
+from src.infrastructure.messaging.rabbitmq.producer import RabbitMQEventProducer
 
 logger = get_logger("celery")
 
@@ -29,6 +36,9 @@ _worker_loop: asyncio.AbstractEventLoop | None = None
 _storage_service: StorageServiceProtocol | None = None
 _cache_service: CacheServiceProtocol | None = None
 _redis_pool: ConnectionPool | None = None
+_event_producer: EventProducerProtocol | None = None
+_event_consumer: EventConsumerProtocol | None = None
+_rabbitmq_connection: RabbitMQConnection | None = None
 
 rabbitmq_settings = RabbitMQSettings()
 redis_settings = RedisSettings()
@@ -51,6 +61,7 @@ celery_app = Celery(
         "src.infrastructure.background_tasks.tasks.export_batches",
         "src.infrastructure.background_tasks.tasks.import_batches",
         "src.infrastructure.background_tasks.tasks.process_outbox_events",
+        "src.infrastructure.background_tasks.tasks.rabbitmq_consumer",
         "src.infrastructure.background_tasks.tasks.update_dashboard_stats",
     ],
 )
@@ -74,6 +85,7 @@ logger.info(f"Celery app initialized successfully with {len(beat_schedule)} sche
 def init_worker_db(**kwargs) -> None:
     """Инициализирует ресурсы при старте worker процесса"""
     global _engine, _session_factory, _worker_loop, _storage_service, _cache_service, _redis_pool
+    global _event_producer, _event_consumer, _rabbitmq_connection
     try:
         _worker_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(_worker_loop)
@@ -97,6 +109,16 @@ def init_worker_db(**kwargs) -> None:
         logger.info(f"Initializing MinIO storage for worker: endpoint={minio_settings.endpoint}")
         _storage_service = _worker_loop.run_until_complete(init_minio_storage(minio_settings))
         logger.info("MinIO storage initialized for worker")
+
+        messaging_settings = RabbitMQMessagingSettings()
+        _rabbitmq_connection = RabbitMQConnection(rabbitmq_settings)
+        routing_mapper = EventRoutingMapper(messaging_settings.event_routing)
+
+        _event_producer = RabbitMQEventProducer(_rabbitmq_connection, messaging_settings, routing_mapper)
+        logger.info("Event producer initialized for worker")
+
+        _event_consumer = RabbitMQEventConsumer(_rabbitmq_connection, messaging_settings, routing_mapper)
+        logger.info("Event consumer initialized for worker")
     except Exception as e:
         logger.exception(f"Failed to initialize worker resources: {e}")
         raise
@@ -106,9 +128,16 @@ def init_worker_db(**kwargs) -> None:
 def shutdown_worker_db(**kwargs) -> None:
     """Корректно закрывает database engine и storage service при остановке worker процесса"""
     global _engine, _session_factory, _worker_loop, _storage_service, _cache_service, _redis_pool
+    global _event_producer, _event_consumer, _rabbitmq_connection
     if _engine and _worker_loop:
         try:
             logger.info("Disposing worker resources")
+            if _event_consumer:
+                _worker_loop.run_until_complete(_event_consumer.stop())
+            if _event_producer:
+                _worker_loop.run_until_complete(_event_producer.close())
+            if _rabbitmq_connection:
+                _worker_loop.run_until_complete(_rabbitmq_connection.close())
             _worker_loop.run_until_complete(dispose_engine(_engine))
             _worker_loop.run_until_complete(close_cache(_redis_pool))
             _engine = None
@@ -116,6 +145,9 @@ def shutdown_worker_db(**kwargs) -> None:
             _storage_service = None
             _cache_service = None
             _redis_pool = None
+            _event_producer = None
+            _event_consumer = None
+            _rabbitmq_connection = None
             _worker_loop.close()
             _worker_loop = None
             asyncio.set_event_loop(None)
@@ -148,6 +180,20 @@ def get_storage_service() -> StorageServiceProtocol:
 def get_cache_service() -> CacheServiceProtocol | None:
     """Возвращает глобальный cache service для использования в задачах"""
     return _cache_service
+
+
+def get_event_producer() -> EventProducerProtocol:
+    """Возвращает глобальный event producer для использования в задачах"""
+    if _event_producer is None:
+        raise RuntimeError("Event producer not initialized. Ensure worker_process_init signal was called.")
+    return _event_producer
+
+
+def get_event_consumer() -> EventConsumerProtocol:
+    """Возвращает глобальный event consumer для использования в задачах"""
+    if _event_consumer is None:
+        raise RuntimeError("Event consumer not initialized. Ensure worker_process_init signal was called.")
+    return _event_consumer
 
 
 def run_async_task(coro):

@@ -29,6 +29,10 @@ from src.core.config import (
     MINIO_REGION,
     MINIO_SECRET_KEY,
     MINIO_SECURE,
+    RABBITMQ_CONSUMER_PREFETCH,
+    RABBITMQ_CONSUMER_QUEUE,
+    RABBITMQ_EVENT_EXCHANGE,
+    RABBITMQ_EVENT_ROUTING,
     RABBITMQ_HOST,
     RABBITMQ_PASSWORD,
     RABBITMQ_PORT,
@@ -197,3 +201,11 @@ class BatchCacheSettings:
 @dataclass
 class AnalyticsSettings:
     ttl_dashboard: int = ANALYTICS_DASHBOARD_TTL
+
+
+@dataclass
+class RabbitMQMessagingSettings:
+    event_exchange: str = RABBITMQ_EVENT_EXCHANGE
+    event_routing: str | None = RABBITMQ_EVENT_ROUTING
+    consumer_queue: str = RABBITMQ_CONSUMER_QUEUE
+    consumer_prefetch: int = RABBITMQ_CONSUMER_PREFETCH

@@ -42,6 +42,12 @@ RABBITMQ_USER: str = getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASSWORD: str = getenv("RABBITMQ_PASSWORD", "guest")
 RABBITMQ_VHOST: str = getenv("RABBITMQ_VHOST", "/")
 
+# RabbitMQ messaging settings
+RABBITMQ_EVENT_EXCHANGE: str = getenv("RABBITMQ_EVENT_EXCHANGE", "events")
+RABBITMQ_EVENT_ROUTING: str | None = getenv("RABBITMQ_EVENT_ROUTING")
+RABBITMQ_CONSUMER_QUEUE: str = getenv("RABBITMQ_CONSUMER_QUEUE", "event_consumer")
+RABBITMQ_CONSUMER_PREFETCH: int = int(getenv("RABBITMQ_CONSUMER_PREFETCH", "10"))
+
 # Celery settings
 CELERY_BROKER_URL: str | None = getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND: str | None = getenv("CELERY_RESULT_BACKEND")

@@ -4,7 +4,7 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
-from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
+from src.infrastructure.background_tasks.app import celery_app, get_event_producer, get_session_factory, run_async_task
 from src.infrastructure.events.handlers.factory import create_handler_instance
 from src.infrastructure.events.handlers.registry import EventHandlerRegistry
 from src.infrastructure.events.serializer import EventSerializer
@@ -135,35 +135,41 @@ async def _process_single_event(
     handlers = EventHandlerRegistry.get_handlers(event_type)
 
     if not handlers:
-        error_message = f"No handlers registered for event type {event_type.__name__}"
         logger.warning(
-            f"{error_message} (event_id={outbox_event.uuid})",
+            f"No handlers registered for event type {event_type.__name__} (event_id={outbox_event.uuid})",
             extra={"event_id": str(outbox_event.uuid), "event_type": event_type.__name__},
         )
-        await outbox_repo.mark_event_failed(outbox_event.uuid, error_message)
-        await session.commit()
-        return
+    else:
+        for handler_class in handlers:
+            try:
+                handler_instance = create_handler_instance(handler_class, session)
 
-    for handler_class in handlers:
-        try:
-            handler_instance = create_handler_instance(handler_class, session)
+                if not hasattr(handler_instance, "handle"):
+                    raise ValueError(f"Handler {type(handler_instance).__name__} does not have handle method")
 
-            if not hasattr(handler_instance, "handle"):
-                raise ValueError(f"Handler {type(handler_instance).__name__} does not have handle method")
+                if not callable(handler_instance.handle):
+                    raise ValueError(f"Handler {type(handler_instance).__name__} does not have callable handle method")
 
-            if not callable(handler_instance.handle):
-                raise ValueError(f"Handler {type(handler_instance).__name__} does not have callable handle method")
+                if inspect.iscoroutinefunction(handler_instance.handle):
+                    await handler_instance.handle(deserialized_event)
+                else:
+                    handler_instance.handle(deserialized_event)
+            except Exception as e:
+                logger.exception(
+                    f"Handler {handler_class.__name__} failed for event {outbox_event.uuid}: {e}",
+                    extra={"event_id": str(outbox_event.uuid), "handler": handler_class.__name__},
+                )
+                raise
 
-            if inspect.iscoroutinefunction(handler_instance.handle):
-                await handler_instance.handle(deserialized_event)
-            else:
-                handler_instance.handle(deserialized_event)
-        except Exception as e:
-            logger.exception(
-                f"Handler {handler_class.__name__} failed for event {outbox_event.uuid}: {e}",
-                extra={"event_id": str(outbox_event.uuid), "handler": handler_class.__name__},
-            )
-            raise
+    try:
+        event_producer = get_event_producer()
+        await event_producer.publish(deserialized_event)
+    except Exception as e:
+        logger.exception(
+            f"Failed to publish event {outbox_event.uuid} to RabbitMQ: {e}",
+            extra={"event_id": str(outbox_event.uuid), "event_name": outbox_event.event_name},
+        )
+        raise
 
     await outbox_repo.mark_event_done(outbox_event.uuid)
     await session.commit()
