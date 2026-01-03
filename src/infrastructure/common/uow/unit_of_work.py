@@ -33,8 +33,9 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     При rollback события НЕ очищаются.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, manual_commit: bool = False) -> None:
         self._session = session
+        self._manual_commit = manual_commit
         self._identity_map = IdentityMap()
         self._event_collector = EventCollector(self._identity_map)
         self._outbox_repository = OutboxRepository(session)
@@ -83,7 +84,8 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
             logger.error(f"Transaction failed with {exc_type.__name__}: {exc_value}")
             await self.rollback()
         else:
-            await self.commit()
+            if not self._manual_commit:
+                await self.commit()
 
     async def commit(self) -> None:
         """
@@ -123,7 +125,12 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
 
 
 class _TrackedRepositoryWrapper:
-    """Wrapper для автоматического трекинга сущностей в IdentityMap"""
+    """
+    Wrapper для автоматического трекинга сущностей в IdentityMap.
+
+    Критично: для create/update добавляет исходную сущность ДО вызова репозитория,
+    чтобы сохранить доменные события, которые теряются при преобразовании через to_domain_entity().
+    """
 
     def __init__(self, repository, identity_map: IdentityMap):
         self._repository = repository
@@ -135,14 +142,23 @@ class _TrackedRepositoryWrapper:
             return attr
 
         async def wrapper(*args, **kwargs):
+            # Для create/update добавляем исходную сущность ДО вызова репозитория
+            # чтобы сохранить доменные события
+            if name in ("create", "update") and args:
+                entity = args[0]
+                if hasattr(entity, "uuid"):
+                    self._identity_map.add(entity)
+
             result = await attr(*args, **kwargs)
 
-            if hasattr(result, "uuid"):
-                self._identity_map.add(result)
-            elif isinstance(result, list):
-                for entity in result:
-                    if hasattr(entity, "uuid"):
-                        self._identity_map.add(entity)
+            # Для остальных методов добавляем результат ПОСЛЕ вызова
+            if name not in ("create", "update"):
+                if hasattr(result, "uuid"):
+                    self._identity_map.add(result)
+                elif isinstance(result, list):
+                    for entity in result:
+                        if hasattr(entity, "uuid"):
+                            self._identity_map.add(entity)
 
             return result
 

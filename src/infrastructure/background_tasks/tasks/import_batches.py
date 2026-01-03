@@ -82,7 +82,7 @@ async def _import_batches_async(
             cache_service, pool = await init_cache(cache_settings, raise_error=False)
 
         async with session_factory() as session:
-            uow = SqlAlchemyUnitOfWork(session)
+            uow = SqlAlchemyUnitOfWork(session, manual_commit=True)
 
             async with uow:
                 # Создание зависимостей
