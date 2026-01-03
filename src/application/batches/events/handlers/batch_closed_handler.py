@@ -2,12 +2,10 @@ from src.application.batches.reports.dtos import ReportFormatEnum
 from src.application.batches.reports.services.report_generation_service import ReportGenerationService
 from src.core.logging import get_logger
 from src.domain.batches.events import BatchClosedEvent
-from src.infrastructure.events.handlers.decorator import event_handler
 
 logger = get_logger("handler.batches.closed")
 
 
-@event_handler(BatchClosedEvent)
 class BatchClosedHandler:
     """Обработчик события закрытия партии для автоматической генерации PDF отчета"""
 

@@ -1,6 +1,10 @@
 from typing import ClassVar, TypeVar
 
+from src.application.batches.events.handlers import BatchClosedHandler
+from src.application.work_centers.events.handlers.work_center_deleted_handler import WorkCenterDeletedHandler
+from src.domain.batches.events import BatchClosedEvent
 from src.domain.common.events import DomainEvent
+from src.domain.work_centers.events import WorkCenterDeletedEvent
 
 T = TypeVar("T", bound=DomainEvent)
 
@@ -47,3 +51,12 @@ class EventHandlerRegistry:
         Используется в тестах.
         """
         cls._handlers.clear()
+
+
+def _initialize_registry() -> None:
+    """Инициализирует реестр всех обработчиков событий системы"""
+    EventHandlerRegistry.register(BatchClosedEvent, BatchClosedHandler)
+    EventHandlerRegistry.register(WorkCenterDeletedEvent, WorkCenterDeletedHandler)
+
+
+_initialize_registry()

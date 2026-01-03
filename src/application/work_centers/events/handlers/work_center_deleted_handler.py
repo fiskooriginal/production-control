@@ -2,12 +2,10 @@ from src.application.common.cache.interfaces import CacheServiceProtocol
 from src.application.common.cache.keys.batches import get_batches_list_pattern
 from src.core.logging import get_logger
 from src.domain.work_centers.events import WorkCenterDeletedEvent
-from src.infrastructure.events.handlers.decorator import event_handler
 
 logger = get_logger("handler.work_centers")
 
 
-@event_handler(WorkCenterDeletedEvent)
 class WorkCenterDeletedHandler:
     """Обработчик события удаления рабочего центра"""
 
