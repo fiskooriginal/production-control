@@ -6,7 +6,6 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.core.time import datetime_now
-from src.infrastructure.background_tasks import states
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.common.uow.unit_of_work import SqlAlchemyUnitOfWork
 
@@ -140,7 +139,7 @@ async def _aggregate_batch_async(
                         batch.products = temp_products
 
                 updated_products = []
-                for idx, product in enumerate(products_to_aggregate, start=1):
+                for product in products_to_aggregate:
                     was_aggregated_before = products_before_aggregation.get(product.uuid, False)
 
                     if product.is_aggregated and not was_aggregated_before:
@@ -152,33 +151,11 @@ async def _aggregate_batch_async(
                             failed_count += 1
                             processed_codes.add(product.unique_code.value)
 
-                    if idx % max(1, total // 10) == 0 or idx == total:
-                        progress = int((idx / total) * 100) if total > 0 else 0
-                        task_instance.update_state(
-                            state=states.PROGRESS,
-                            meta={
-                                "current": idx,
-                                "total": total,
-                                "progress": progress,
-                            },
-                        )
-
                 for product in updated_products:
                     await uow.products.update(product)
 
                 await uow.batches.update(batch)
                 await uow.commit()
-
-                if total > 0:
-                    progress = 100
-                    task_instance.update_state(
-                        state=states.PROGRESS,
-                        meta={
-                            "current": total,
-                            "total": total,
-                            "progress": progress,
-                        },
-                    )
 
         logger.info(
             f"Aggregation completed: batch_id={batch_id}, total={total}, "
