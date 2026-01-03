@@ -3,6 +3,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.common.events import DomainEvent
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 
@@ -21,6 +22,13 @@ class UnitOfWorkProtocol(Protocol):
 
     @abstractmethod
     async def rollback(self) -> None: ...
+
+    def register_event(self, event: DomainEvent) -> None:
+        """
+        Регистрирует standalone событие (не привязанное к доменной сущности).
+        Используется для регистрации событий в фоновых задачах или сервисном слое.
+        """
+        ...
 
     @property
     @abstractmethod

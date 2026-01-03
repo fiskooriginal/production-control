@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.common.uow import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
+from src.domain.common.events import DomainEvent
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 from src.infrastructure.common.uow.event_collector import EventCollector
@@ -56,6 +57,13 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     def work_centers(self) -> WorkCenterRepositoryProtocol:
         """Proxy репозиторий для рабочих центров с трекингом агрегатов"""
         return _TrackedRepositoryWrapper(self._work_center_repo, self._identity_map)
+
+    def register_event(self, event: DomainEvent) -> None:
+        """
+        Регистрирует standalone событие (не привязанное к доменной сущности).
+        Используется для регистрации событий в фоновых задачах или сервисном слое.
+        """
+        self._event_collector.register_event(event)
 
     async def __aenter__(self) -> Self:
         """Начинает транзакцию UOW"""

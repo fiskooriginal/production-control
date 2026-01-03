@@ -22,14 +22,24 @@ class EventCollector:
     """
     Собирает доменные события из отслеживаемых агрегатов и преобразует их в OutboxEvent.
     Работает совместно с IdentityMap для извлечения событий из всех агрегатов в рамках UOW.
+    Поддерживает регистрацию standalone событий (события вне доменных сущностей).
     """
 
     def __init__(self, identity_map: IdentityMap) -> None:
         self._identity_map = identity_map
+        self._standalone_events: list[DomainEvent] = []
+
+    def register_event(self, event: DomainEvent) -> None:
+        """
+        Регистрирует standalone событие (не привязанное к доменной сущности).
+        Используется для регистрации событий в фоновых задачах или сервисном слое.
+        """
+        self._standalone_events.append(event)
 
     def collect_events(self) -> list[OutboxEvent]:
         """
-        Собирает все доменные события из tracked агрегатов и преобразует в OutboxEvent.
+        Собирает все доменные события из tracked агрегатов и standalone событий,
+        преобразует в OutboxEvent.
         События НЕ очищаются здесь - это делается после успешного commit.
         """
         outbox_events: list[OutboxEvent] = []
@@ -40,15 +50,21 @@ class EventCollector:
                 outbox_event = self._convert_to_outbox(domain_event)
                 outbox_events.append(outbox_event)
 
+        for standalone_event in self._standalone_events:
+            outbox_event = self._convert_to_outbox(standalone_event)
+            outbox_events.append(outbox_event)
+
         return outbox_events
 
     def clear_events(self) -> None:
         """
-        Очищает доменные события у всех tracked агрегатов.
+        Очищает доменные события у всех tracked агрегатов и standalone события.
         Вызывается ТОЛЬКО после успешного commit транзакции.
         """
         for entity in self._identity_map.get_all():
             entity.clear_domain_events()
+
+        self._standalone_events.clear()
 
     def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
