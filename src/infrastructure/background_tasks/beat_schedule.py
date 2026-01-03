@@ -27,11 +27,10 @@ beat_schedule = {
         "task": "tasks.auto_close_expired_batches",
         "schedule": crontab(hour=1, minute=0),  # Каждый день в 01:00
     },
-    # Пример: Очистка старых файлов - каждый день в 02:00
-    # "cleanup-old-files": {
-    #     "task": "tasks.cleanup_old_files",
-    #     "schedule": crontab(hour=2, minute=0),
-    # },
+    "cleanup-old-files": {
+        "task": "tasks.cleanup_old_minio_files",
+        "schedule": crontab(hour=2, minute=0),  # Каждый день в 02:00
+    },
     #
     # Пример: Повторная отправка webhooks - каждые 15 минут
     # "retry-failed-webhooks": {

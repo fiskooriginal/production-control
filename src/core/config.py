@@ -65,6 +65,7 @@ MINIO_SECRET_KEY: str = getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKETS: str = getenv("MINIO_BUCKETS", "reports,exports,imports")
 MINIO_SECURE: bool = getenv("MINIO_SECURE", "false") == "true"
 MINIO_REGION: str | None = getenv("MINIO_REGION")
+MINIO_FILES_LIFETIME_DAYS: int = int(getenv("MINIO_FILES_LIFETIME_DAYS", "30"))
 
 # Email settings
 SMTP_HOST: str | None = getenv("SMTP_HOST")

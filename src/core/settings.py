@@ -25,6 +25,7 @@ from src.core.config import (
     MINIO_ACCESS_KEY,
     MINIO_BUCKETS,
     MINIO_ENDPOINT,
+    MINIO_FILES_LIFETIME_DAYS,
     MINIO_REGION,
     MINIO_SECRET_KEY,
     MINIO_SECURE,
@@ -148,6 +149,7 @@ class MinIOSettings:
     buckets: list[str] = None
     secure: bool = MINIO_SECURE
     region: str | None = MINIO_REGION
+    files_lifetime_days: int = MINIO_FILES_LIFETIME_DAYS
 
     def __post_init__(self) -> None:
         if self.buckets is None:
