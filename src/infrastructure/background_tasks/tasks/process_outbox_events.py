@@ -6,6 +6,7 @@ from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.events import EventSerializer
+from src.infrastructure.events.handlers.factory import create_handler_instance
 from src.infrastructure.events.handlers.registry import EventHandlerRegistry
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 
@@ -50,7 +51,6 @@ async def _process_outbox_events_async(task_instance) -> dict:
             outbox_repo = OutboxRepository(session)
 
             logger.info("Starting outbox events processing")
-
             events = await outbox_repo.claim_pending_events(limit=100, lock_duration_seconds=300)
 
             if not events:
@@ -144,22 +144,24 @@ async def _process_single_event(
         await session.commit()
         return
 
-    for handler in handlers:
+    for handler_class in handlers:
         try:
-            if not hasattr(handler, "handle"):
-                raise ValueError(f"Handler {type(handler).__name__} does not have handle method")
+            handler_instance = create_handler_instance(handler_class, session)
 
-            if not callable(handler.handle):
-                raise ValueError(f"Handler {type(handler).__name__} does not have callable handle method")
+            if not hasattr(handler_instance, "handle"):
+                raise ValueError(f"Handler {type(handler_instance).__name__} does not have handle method")
 
-            if inspect.iscoroutinefunction(handler.handle):
-                await handler.handle(deserialized_event)
+            if not callable(handler_instance.handle):
+                raise ValueError(f"Handler {type(handler_instance).__name__} does not have callable handle method")
+
+            if inspect.iscoroutinefunction(handler_instance.handle):
+                await handler_instance.handle(deserialized_event)
             else:
-                handler.handle(deserialized_event)
+                handler_instance.handle(deserialized_event)
         except Exception as e:
             logger.exception(
-                f"Handler {type(handler).__name__} failed for event {outbox_event.uuid}: {e}",
-                extra={"event_id": str(outbox_event.uuid), "handler": type(handler).__name__},
+                f"Handler {handler_class.__name__} failed for event {outbox_event.uuid}: {e}",
+                extra={"event_id": str(outbox_event.uuid), "handler": handler_class.__name__},
             )
             raise
 

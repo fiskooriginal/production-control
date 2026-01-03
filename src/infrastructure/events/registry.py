@@ -13,6 +13,7 @@ from src.domain.batches.events.import_completed import BatchesImportCompletedEve
 from src.domain.batches.events.report_generated import ReportGeneratedEvent
 from src.domain.common.events import DomainEvent
 from src.domain.products.events import ProductAggregatedEvent
+from src.domain.work_centers.events import WorkCenterDeletedEvent
 
 T = TypeVar("T", bound=DomainEvent)
 
@@ -67,6 +68,7 @@ def _initialize_registry() -> None:
     EventRegistry.register("batch.deleted", 1, BatchDeletedEvent)
     EventRegistry.register("batch.report_generated", 1, ReportGeneratedEvent)
     EventRegistry.register("product.aggregated", 1, ProductAggregatedEvent)
+    EventRegistry.register("work_center.deleted", 1, WorkCenterDeletedEvent)
     EventRegistry.register("batch.import_completed", 1, BatchesImportCompletedEvent)
 
 
