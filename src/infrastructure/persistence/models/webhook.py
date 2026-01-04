@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import JSON, Column
@@ -40,6 +41,7 @@ class WebhookDelivery(BaseModel, table=True):
     response_status: int | None = None
     response_body: str | None = None
     error_message: str | None = None
+    delivered_at: datetime | None = None
 
     subscription_id: UUID = Field(
         foreign_key="webhook_subscriptions.uuid",

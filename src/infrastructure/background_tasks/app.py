@@ -61,6 +61,7 @@ celery_app = Celery(
         "src.infrastructure.background_tasks.tasks.export_batches",
         "src.infrastructure.background_tasks.tasks.import_batches",
         "src.infrastructure.background_tasks.tasks.process_outbox_events",
+        "src.infrastructure.background_tasks.tasks.process_webhook_events",
         "src.infrastructure.background_tasks.tasks.update_dashboard_stats",
     ],
 )
@@ -193,6 +194,13 @@ def get_event_consumer() -> EventConsumerProtocol:
     if _event_consumer is None:
         raise RuntimeError("Event consumer not initialized. Ensure worker_process_init signal was called.")
     return _event_consumer
+
+
+def get_rabbitmq_connection() -> RabbitMQConnection:
+    """Возвращает глобальный RabbitMQ connection для использования в задачах"""
+    if _rabbitmq_connection is None:
+        raise RuntimeError("RabbitMQ connection not initialized. Ensure worker_process_init signal was called.")
+    return _rabbitmq_connection
 
 
 def run_async_task(coro):

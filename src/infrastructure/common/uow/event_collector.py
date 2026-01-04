@@ -11,7 +11,7 @@ def generate_dedup_key(event: DomainEvent) -> str:
     Генерирует ключ дедупликации для события.
     Формат: event_name:aggregate_id:occurred_at_iso
     """
-    from src.infrastructure.events import EventRegistry
+    from src.infrastructure.events.registry import EventRegistry
 
     event_name, _ = EventRegistry.get_event_metadata(type(event))
     occurred_at_str = event.occurred_at.isoformat()
@@ -68,7 +68,7 @@ class EventCollector:
 
     def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
-        from src.infrastructure.events import EventSerializer
+        from src.infrastructure.events.serializer import EventSerializer
 
         serialized = EventSerializer.serialize(event)
 

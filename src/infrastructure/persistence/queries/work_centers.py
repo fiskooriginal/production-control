@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.work_centers.queries.queries import ListWorkCentersQuery
 from src.application.work_centers.queries.service import WorkCenterQueryServiceProtocol
-from src.application.work_centers.queries.sort import WorkCenterSortField
+from src.application.work_centers.queries.sort import WorkCenterSortField, WorkCenterSortSpec
 from src.domain.common.queries import QueryResult
 from src.domain.work_centers import WorkCenterEntity
 from src.infrastructure.common.exceptions import DatabaseException
@@ -84,8 +84,6 @@ class WorkCenterQueryService(WorkCenterQueryServiceProtocol):
 
     def _apply_sort(self, stmt, sort):
         """Применяет сортировку к запросу"""
-        from src.application.work_centers.queries import WorkCenterSortSpec
-
         if not isinstance(sort, WorkCenterSortSpec):
             raise ValueError("sort должен быть типа WorkCenterSortSpec")
 

@@ -6,12 +6,15 @@ from src.application.batches.queries.queries import ListBatchesQuery
 from src.application.batches.queries.sort import BatchSortField, BatchSortSpec
 from src.application.products.queries.queries import ListProductsQuery
 from src.application.products.queries.sort import ProductSortField, ProductSortSpec
+from src.application.webhooks.queries.filters import WebhookReadFilters
+from src.application.webhooks.queries.queries import ListWebhookDeliveriesQuery, ListWebhookSubscriptionsQuery
 from src.application.work_centers.queries.filters import WorkCenterReadFilters
 from src.application.work_centers.queries.queries import ListWorkCentersQuery
 from src.application.work_centers.queries.sort import WorkCenterSortField, WorkCenterSortSpec
 from src.domain.common.queries import PaginationSpec
 from src.presentation.api.schemas.batches import BatchFiltersParams
 from src.presentation.api.schemas.query_params import PaginationParams, SortParams
+from src.presentation.api.schemas.webhooks import WebhookFiltersParams
 from src.presentation.api.schemas.work_centers import WorkCenterFiltersParams
 from src.presentation.exceptions import SerializationException
 
@@ -159,3 +162,34 @@ def build_list_products_query(
     sort = sort_params_to_product_sort_spec(sort_params)
 
     return ListProductsQuery(pagination=pagination, sort=sort)
+
+
+def webhook_filters_params_to_query(params: WebhookFiltersParams) -> WebhookReadFilters | None:
+    """Конвертирует WebhookFiltersParams в WebhookReadFilters"""
+    try:
+        if params.event_type is not None:
+            return WebhookReadFilters(event_type=params.event_type)
+        return None
+    except Exception as e:
+        raise SerializationException(f"Ошибка сериализации WebhookFiltersParams: {e}") from e
+
+
+def build_list_webhook_subscriptions_query(
+    filter_params: WebhookFiltersParams,
+    pagination_params: PaginationParams,
+) -> ListWebhookSubscriptionsQuery:
+    """Создает ListWebhookSubscriptionsQuery из параметров запроса"""
+    filters = webhook_filters_params_to_query(filter_params)
+    pagination = pagination_params_to_spec(pagination_params)
+
+    return ListWebhookSubscriptionsQuery(filters=filters, pagination=pagination)
+
+
+def build_list_webhook_deliveries_query(
+    subscription_id: UUID,
+    pagination_params: PaginationParams,
+) -> ListWebhookDeliveriesQuery:
+    """Создает ListWebhookDeliveriesQuery из параметров запроса"""
+    pagination = pagination_params_to_spec(pagination_params)
+
+    return ListWebhookDeliveriesQuery(subscription_id=subscription_id, pagination=pagination)

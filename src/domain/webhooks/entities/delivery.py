@@ -1,36 +1,27 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from src.core.time import datetime_now
 from src.domain.common.entities import BaseEntity
-from src.domain.common.exceptions import EmptyFieldError, InvalidStateError, InvalidValueError
+from src.domain.common.exceptions import InvalidStateError
 from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.domain.webhooks.value_objects import Attempts, HttpStatusCode, WebhookPayload
 
 
 @dataclass(slots=True, kw_only=True)
 class WebhookDeliveryEntity(BaseEntity):
     subscription_id: UUID
     event_type: WebhookEventType
-    payload: dict[str, Any]
+    payload: WebhookPayload
     status: WebhookStatus
-    attempts: int = 0
-    response_status: int | None = None
+    attempts: Attempts = field(default_factory=lambda: Attempts(value=0))
+    response_status: HttpStatusCode | None = None
     response_body: str | None = None
     error_message: str | None = None
     delivered_at: datetime | None = None
 
     def __post_init__(self) -> None:
-        if not self.payload:
-            raise EmptyFieldError("Полезная нагрузка не может быть пустой")
-
-        if self.attempts < 0:
-            raise InvalidValueError("Количество попыток должно быть >= 0")
-
-        if self.response_status is not None and not (100 <= self.response_status <= 599):
-            raise InvalidValueError("HTTP статус должен быть в диапазоне 100-599")
-
         if self.status == WebhookStatus.SUCCESS:
             if self.delivered_at is None:
                 raise InvalidStateError("Время доставки должно быть установлено для успешной доставки")
@@ -41,10 +32,9 @@ class WebhookDeliveryEntity(BaseEntity):
         """Отмечает доставку как успешную"""
         if delivered_at is None:
             delivered_at = datetime_now()
-        if not (100 <= response_status <= 599):
-            raise InvalidValueError("HTTP статус должен быть в диапазоне 100-599")
+
         self.status = WebhookStatus.SUCCESS
-        self.response_status = response_status
+        self.response_status = HttpStatusCode(value=response_status)
         self.response_body = response_body
         self.delivered_at = delivered_at
         self.error_message = None
@@ -58,5 +48,5 @@ class WebhookDeliveryEntity(BaseEntity):
 
     def increment_attempts(self) -> None:
         """Увеличивает количество попыток"""
-        self.attempts += 1
+        self.attempts = Attempts(value=self.attempts.value + 1)
         self.updated_at = datetime_now()

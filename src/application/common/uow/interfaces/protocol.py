@@ -5,6 +5,8 @@ from typing import Protocol, Self
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.events import DomainEvent
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
+from src.domain.webhooks.interfaces.delivery import WebhookDeliveryRepositoryProtocol
+from src.domain.webhooks.interfaces.subscription import WebhookSubscriptionRepositoryProtocol
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 
 
@@ -41,3 +43,11 @@ class UnitOfWorkProtocol(Protocol):
     @property
     @abstractmethod
     def work_centers(self) -> WorkCenterRepositoryProtocol: ...
+
+    @property
+    @abstractmethod
+    def webhook_subscriptions(self) -> WebhookSubscriptionRepositoryProtocol: ...
+
+    @property
+    @abstractmethod
+    def webhook_deliveries(self) -> WebhookDeliveryRepositoryProtocol: ...

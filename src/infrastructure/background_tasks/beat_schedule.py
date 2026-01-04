@@ -15,6 +15,10 @@
 from celery.schedules import crontab
 
 beat_schedule = {
+    "process-webhook-events": {
+        "task": "tasks.process_webhook_events",
+        "schedule": 5.0,  # Каждые 5 секунд
+    },
     "process-outbox-events": {
         "task": "tasks.process_outbox_events",
         "schedule": crontab(minute="*/1"),  # Каждую минуту

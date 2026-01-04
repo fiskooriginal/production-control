@@ -8,12 +8,16 @@ from src.core.logging import get_logger
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
 from src.domain.common.events import DomainEvent
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
+from src.domain.webhooks.interfaces.delivery import WebhookDeliveryRepositoryProtocol
+from src.domain.webhooks.interfaces.subscription import WebhookSubscriptionRepositoryProtocol
 from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryProtocol
 from src.infrastructure.common.uow.event_collector import EventCollector
 from src.infrastructure.common.uow.identity_map import IdentityMap
 from src.infrastructure.persistence.repositories.batches import BatchRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
+from src.infrastructure.persistence.repositories.webhooks.delivery import WebhookDeliveryRepository
+from src.infrastructure.persistence.repositories.webhooks.subscription import WebhookSubscriptionRepository
 from src.infrastructure.persistence.repositories.work_centers import WorkCenterRepository
 
 logger = get_logger("uow")
@@ -36,6 +40,7 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     def __init__(self, session: AsyncSession, manual_commit: bool = False) -> None:
         self._session = session
         self._manual_commit = manual_commit
+
         self._identity_map = IdentityMap()
         self._event_collector = EventCollector(self._identity_map)
         self._outbox_repository = OutboxRepository(session)
@@ -43,6 +48,8 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         self._batch_repo = BatchRepository(session)
         self._product_repo = ProductRepository(session)
         self._work_center_repo = WorkCenterRepository(session)
+        self._webhook_subscription_repo = WebhookSubscriptionRepository(session)
+        self._webhook_delivery_repo = WebhookDeliveryRepository(session)
 
     @property
     def batches(self) -> BatchRepositoryProtocol:
@@ -58,6 +65,16 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     def work_centers(self) -> WorkCenterRepositoryProtocol:
         """Proxy репозиторий для рабочих центров с трекингом агрегатов"""
         return _TrackedRepositoryWrapper(self._work_center_repo, self._identity_map)
+
+    @property
+    def webhook_subscriptions(self) -> WebhookSubscriptionRepositoryProtocol:
+        """Proxy репозиторий для подписок на webhook с трекингом агрегатов"""
+        return _TrackedRepositoryWrapper(self._webhook_subscription_repo, self._identity_map)
+
+    @property
+    def webhook_deliveries(self) -> WebhookDeliveryRepositoryProtocol:
+        """Proxy репозиторий для доставок webhook с трекингом агрегатов"""
+        return _TrackedRepositoryWrapper(self._webhook_delivery_repo, self._identity_map)
 
     def register_event(self, event: DomainEvent) -> None:
         """

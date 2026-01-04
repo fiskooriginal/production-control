@@ -10,7 +10,16 @@ from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
 from src.presentation.api.exceptions import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
-from src.presentation.api.routes import analytics, background_tasks, batches, healthcheck, products, work_centers
+from src.presentation.api.routes import (
+    analytics,
+    background_tasks,
+    batches,
+    healthcheck,
+    products,
+    webhooks,
+    webhooks_test,
+    work_centers,
+)
 
 setup_logging(LOG_LEVEL)
 logger = get_logger("app")
@@ -67,6 +76,8 @@ def add_routes(app: FastAPI) -> None:
     app.include_router(healthcheck.router)
     app.include_router(background_tasks.router)
     app.include_router(analytics.router)
+    app.include_router(webhooks.router)
+    app.include_router(webhooks_test.router)
 
 
 def add_middlewares(app: FastAPI) -> None:
