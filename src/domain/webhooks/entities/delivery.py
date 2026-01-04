@@ -4,15 +4,17 @@ from uuid import UUID
 
 from src.core.time import datetime_now
 from src.domain.common.entities import BaseEntity
+from src.domain.common.enums import EventTypesEnum
 from src.domain.common.exceptions import InvalidStateError
-from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.domain.webhooks.enums import WebhookStatus
 from src.domain.webhooks.value_objects import Attempts, HttpStatusCode, WebhookPayload
 
 
 @dataclass(slots=True, kw_only=True)
 class WebhookDeliveryEntity(BaseEntity):
     subscription_id: UUID
-    event_type: WebhookEventType
+    event_type_id: UUID
+    event_type: EventTypesEnum
     payload: WebhookPayload
     status: WebhookStatus
     attempts: Attempts = field(default_factory=lambda: Attempts(value=0))

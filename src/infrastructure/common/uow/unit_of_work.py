@@ -14,6 +14,7 @@ from src.domain.work_centers.interfaces.repository import WorkCenterRepositoryPr
 from src.infrastructure.common.uow.event_collector import EventCollector
 from src.infrastructure.common.uow.identity_map import IdentityMap
 from src.infrastructure.persistence.repositories.batches import BatchRepository
+from src.infrastructure.persistence.repositories.event_type import EventTypeRepository
 from src.infrastructure.persistence.repositories.outbox import OutboxRepository
 from src.infrastructure.persistence.repositories.products import ProductRepository
 from src.infrastructure.persistence.repositories.webhooks.delivery import WebhookDeliveryRepository
@@ -50,6 +51,8 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         self._work_center_repo = WorkCenterRepository(session)
         self._webhook_subscription_repo = WebhookSubscriptionRepository(session)
         self._webhook_delivery_repo = WebhookDeliveryRepository(session)
+
+        self._event_type_repository = EventTypeRepository(session)
 
     @property
     def batches(self) -> BatchRepositoryProtocol:
@@ -117,7 +120,9 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         """
         await self._session.flush()
 
-        outbox_events = self._event_collector.collect_events()
+        event_types = await self._event_type_repository.list()
+
+        outbox_events = self._event_collector.collect_events(event_types)
 
         if outbox_events:
             logger.info(f"Collected {len(outbox_events)} domain event(s)")

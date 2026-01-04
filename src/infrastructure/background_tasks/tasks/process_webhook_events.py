@@ -3,6 +3,7 @@ import json
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import aio_pika
 
@@ -11,10 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.logging import get_logger
 from src.core.settings import CelerySettings, RabbitMQMessagingSettings
+from src.domain.common.enums import EventTypesEnum
 from src.domain.common.events import DomainEvent
 from src.domain.webhooks.entities.delivery import WebhookDeliveryEntity
 from src.domain.webhooks.entities.subscription import WebhookSubscriptionEntity
-from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.domain.webhooks.enums import WebhookStatus
 from src.domain.webhooks.value_objects import WebhookPayload
 from src.infrastructure.background_tasks.app import (
     celery_app,
@@ -26,8 +28,8 @@ from src.infrastructure.background_tasks.app import (
 from src.infrastructure.events.registry import EventRegistry
 from src.infrastructure.events.serializer import EventSerializer
 from src.infrastructure.persistence.queries.webhooks.subscription import WebhookSubscriptionQueryService
+from src.infrastructure.persistence.repositories.event_type import EventTypeRepository
 from src.infrastructure.persistence.repositories.webhooks.delivery import WebhookDeliveryRepository
-from src.infrastructure.webhooks.event_mapper import get_webhook_event_type
 from src.infrastructure.webhooks.sender import WebhookSender
 
 if TYPE_CHECKING:
@@ -65,7 +67,7 @@ def _is_retryable_error(exception: Exception) -> bool:
 
 
 async def _get_active_subscriptions_for_event(
-    query_service: WebhookSubscriptionQueryService, event_type: WebhookEventType
+    query_service: WebhookSubscriptionQueryService, event_type: EventTypesEnum
 ) -> list[WebhookSubscriptionEntity]:
     """
     Получает активные подписки для указанного типа события.
@@ -88,7 +90,7 @@ async def _get_active_subscriptions_for_event(
     result = await query_service.list(query)
 
     active_subscriptions = [sub for sub in result.items if sub.is_active]
-    logger.debug(f"Found {len(active_subscriptions)} active subscriptions for event_type={event_type.value}")
+    logger.debug(f"Found {len(active_subscriptions)} active subscriptions for event_type={event_type!s}")
     return active_subscriptions
 
 
@@ -115,13 +117,14 @@ def _extract_event_payload(event: DomainEvent) -> dict:
 
 
 def _create_delivery_entity(
-    subscription: WebhookSubscriptionEntity, event_type: WebhookEventType, payload: dict
+    subscription: WebhookSubscriptionEntity, event_type_id: UUID, event_type: EventTypesEnum, payload: dict
 ) -> WebhookDeliveryEntity:
     """
     Создает сущность доставки webhook со статусом PENDING.
 
     Args:
         subscription: Подписка на webhook
+        event_type_id: UUID типа события
         event_type: Тип события
         payload: Данные события
 
@@ -130,13 +133,16 @@ def _create_delivery_entity(
     """
     return WebhookDeliveryEntity(
         subscription_id=subscription.uuid,
+        event_type_id=event_type_id,
         event_type=event_type,
-        payload=WebhookPayload(value=payload),
+        payload=WebhookPayload(payload),
         status=WebhookStatus.PENDING,
     )
 
 
-async def _read_rabbitmq_messages(limit: int, timeout: float = 1.0) -> list[aio_pika.IncomingMessage]:
+async def _read_rabbitmq_messages(
+    limit: int, timeout: float = 1.0
+) -> tuple[list[aio_pika.IncomingMessage], aio_pika.abc.AbstractChannel]:
     """
     Читает сообщения из очереди RabbitMQ с таймаутом.
 
@@ -145,7 +151,7 @@ async def _read_rabbitmq_messages(limit: int, timeout: float = 1.0) -> list[aio_
         timeout: Таймаут в секундах для чтения одного сообщения
 
     Returns:
-        Список прочитанных сообщений
+        Кортеж из списка прочитанных сообщений и канала (канал нужно закрыть после обработки сообщений)
     """
     messages = []
     rabbitmq_connection = get_rabbitmq_connection()
@@ -153,42 +159,37 @@ async def _read_rabbitmq_messages(limit: int, timeout: float = 1.0) -> list[aio_
     channel = await conn.channel()
     await channel.set_qos(prefetch_count=messaging_settings.consumer_prefetch)
 
-    try:
-        exchange = await channel.declare_exchange(
-            messaging_settings.event_exchange,
-            aio_pika.ExchangeType.TOPIC,
-            durable=True,
-        )
+    exchange = await channel.declare_exchange(
+        messaging_settings.event_exchange,
+        aio_pika.ExchangeType.TOPIC,
+        durable=True,
+    )
 
-        queue: AbstractQueue = await channel.declare_queue(
-            messaging_settings.consumer_queue,
-            durable=True,
-        )
+    queue: AbstractQueue = await channel.declare_queue(
+        messaging_settings.consumer_queue,
+        durable=True,
+    )
 
-        await queue.bind(exchange, routing_key="#")
+    await queue.bind(exchange, routing_key="#")
 
-        logger.debug(f"Reading messages from queue: {messaging_settings.consumer_queue}, limit={limit}")
+    logger.debug(f"Reading messages from queue: {messaging_settings.consumer_queue}, limit={limit}")
 
-        for _ in range(limit):
-            try:
-                message = await asyncio.wait_for(queue.get(timeout=timeout), timeout=timeout)
-                if message is None:
-                    break
-                messages.append(message)
-                logger.debug(f"Read message from queue: delivery_tag={message.delivery_tag}")
-            except TimeoutError:
-                logger.debug("Timeout while reading message from queue")
+    for _ in range(limit):
+        try:
+            message = await asyncio.wait_for(queue.get(timeout=timeout), timeout=timeout)
+            if message is None:
                 break
-            except Exception as e:
-                logger.warning(f"Error reading message from queue: {e}")
-                break
+            messages.append(message)
+            logger.debug(f"Read message from queue: delivery_tag={message.delivery_tag}")
+        except TimeoutError:
+            logger.debug("Timeout while reading message from queue")
+            break
+        except Exception as e:
+            logger.warning(f"Error reading message from queue: {e}")
+            break
 
-        logger.info(f"Read {len(messages)} messages from queue")
-        return messages
-
-    finally:
-        if not channel.is_closed:
-            await channel.close()
+    logger.info(f"Read {len(messages)} messages from queue")
+    return messages, channel
 
 
 async def _deserialize_rabbitmq_message(message: aio_pika.IncomingMessage) -> DomainEvent | None:
@@ -240,7 +241,8 @@ def process_webhook_events(self) -> dict:
 
 async def _process_single_subscription(
     subscription: WebhookSubscriptionEntity,
-    event_type: WebhookEventType,
+    event_type_id: UUID,
+    event_type: EventTypesEnum,
     event_payload: dict,
     delivery_repository: WebhookDeliveryRepository,
     webhook_sender: WebhookSender,
@@ -251,6 +253,7 @@ async def _process_single_subscription(
 
     Args:
         subscription: Подписка на webhook
+        event_type_id: UUID типа события
         event_type: Тип события
         event_payload: Данные события
         delivery_repository: Репозиторий для доставок
@@ -258,12 +261,12 @@ async def _process_single_subscription(
         stats: Статистика обработки
     """
     try:
-        delivery = _create_delivery_entity(subscription, event_type, event_payload)
+        delivery = _create_delivery_entity(subscription, event_type_id, event_type, event_payload)
         delivery = await delivery_repository.create(delivery)
 
         logger.debug(
             f"Created delivery subscription_id={subscription.uuid} "
-            f"event_type={event_type.value} delivery_id={delivery.uuid}"
+            f"event_type={event_type!s} delivery_id={delivery.uuid}"
         )
 
         delivery = await webhook_sender.send_webhook(
@@ -279,20 +282,20 @@ async def _process_single_subscription(
             stats.webhooks_sent += 1
             logger.info(
                 f"Webhook sent successfully subscription_id={subscription.uuid} "
-                f"event_type={event_type.value} delivery_id={delivery.uuid}"
+                f"event_type={event_type!s} delivery_id={delivery.uuid}"
             )
         else:
             stats.webhooks_failed += 1
             logger.warning(
                 f"Webhook failed subscription_id={subscription.uuid} "
-                f"event_type={event_type.value} delivery_id={delivery.uuid} "
+                f"event_type={event_type!s} delivery_id={delivery.uuid} "
                 f"error={delivery.error_message}"
             )
 
     except Exception as e:
         stats.webhooks_failed += 1
         logger.error(
-            f"Error processing webhook subscription_id={subscription.uuid} event_type={event_type.value}: {e}",
+            f"Error processing webhook subscription_id={subscription.uuid} event_type={event_type!s}: {e}",
             exc_info=True,
         )
         stats.errors.append(f"Subscription {subscription.uuid!s}: {e!s}")
@@ -324,9 +327,10 @@ async def _process_single_event(
         logger.debug(f"Processing event: {type(event).__name__}, aggregate_id={event.aggregate_id}")
 
         event_name, _ = EventRegistry.get_event_metadata(type(event))
-        webhook_event_type = get_webhook_event_type(event_name)
 
-        if webhook_event_type is None:
+        try:
+            webhook_event_type = EventTypesEnum(event_name)
+        except ValueError:
             logger.debug(f"Event {event_name} not supported by webhooks, skipping: aggregate_id={event.aggregate_id}")
             await message.ack()
             return
@@ -335,16 +339,27 @@ async def _process_single_event(
 
         if not active_subscriptions:
             logger.debug(
-                f"No active subscriptions for event_type={webhook_event_type.value}, aggregate_id={event.aggregate_id}"
+                f"No active subscriptions for event_type={webhook_event_type!s}, aggregate_id={event.aggregate_id}"
             )
             await message.ack()
             return
 
         event_payload = _extract_event_payload(event)
 
+        event_type_repository = EventTypeRepository(session)
+        event_type_model = await event_type_repository.get_by_event_type(webhook_event_type)
+        if event_type_model is None:
+            logger.error(
+                f"Event type {webhook_event_type} not found in database, skipping webhook delivery: "
+                f"aggregate_id={event.aggregate_id}"
+            )
+            await message.ack()
+            return
+
         for subscription in active_subscriptions:
             await _process_single_subscription(
                 subscription=subscription,
+                event_type_id=event_type_model.uuid,
                 event_type=webhook_event_type,
                 event_payload=event_payload,
                 delivery_repository=delivery_repository,
@@ -371,13 +386,14 @@ async def _process_webhook_events_async(task_instance) -> dict:
     """Асинхронная часть задачи обработки webhook событий"""
     session_factory = get_session_factory()
     stats = ProcessingStats()
+    channel = None
 
     try:
         async with session_factory() as session:
             logger.info("Starting webhook events processing")
 
             get_event_consumer()
-            messages = await _read_rabbitmq_messages(limit=100, timeout=1.0)
+            messages, channel = await _read_rabbitmq_messages(limit=100, timeout=1.0)
 
             query_service = WebhookSubscriptionQueryService(session)
             delivery_repository = WebhookDeliveryRepository(session)
@@ -403,6 +419,9 @@ async def _process_webhook_events_async(task_instance) -> dict:
 
             finally:
                 await webhook_sender.close()
+                if channel and not channel.is_closed:
+                    await channel.close()
+                    logger.debug("Closed RabbitMQ channel")
 
             logger.info(
                 f"Webhook events processing completed: processed={stats.processed}, "
@@ -413,6 +432,11 @@ async def _process_webhook_events_async(task_instance) -> dict:
 
     except Exception as e:
         logger.exception(f"Failed to process webhook events: {e}")
+        if channel and not channel.is_closed:
+            try:
+                await channel.close()
+            except Exception as close_error:
+                logger.warning(f"Error closing channel: {close_error}")
         if _is_retryable_error(e) and task_instance.request.retries < celery_settings.task_max_retries:
             raise task_instance.retry(
                 exc=e,

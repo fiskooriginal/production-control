@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from src.domain.webhooks.enums import WebhookEventType
+from src.domain.common.enums import EventTypesEnum
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WebhookReadFilters:
-    event_type: WebhookEventType | None = None
+    event_type: EventTypesEnum | None = None

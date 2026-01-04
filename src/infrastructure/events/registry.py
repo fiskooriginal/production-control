@@ -11,6 +11,7 @@ from src.domain.batches.events import (
 )
 from src.domain.batches.events.import_completed import BatchesImportCompletedEvent
 from src.domain.batches.events.report_generated import ReportGeneratedEvent
+from src.domain.common.enums import EventTypesEnum
 from src.domain.common.events import DomainEvent
 from src.domain.products.events import ProductAggregatedEvent
 from src.domain.work_centers.events import WorkCenterDeletedEvent
@@ -28,8 +29,9 @@ class EventRegistry:
     _reverse_registry: ClassVar[dict[type[DomainEvent], tuple[str, int]]] = {}
 
     @classmethod
-    def register(cls, event_name: str, event_version: int, event_class: type[DomainEvent]) -> None:
+    def register(cls, event_type: EventTypesEnum, event_version: int, event_class: type[DomainEvent]) -> None:
         """Регистрирует тип события в whitelist"""
+        event_name = str(event_type)
         key = (event_name, event_version)
         if key in cls._registry:
             raise ValueError(f"Event {event_name} v{event_version} already registered")
@@ -52,24 +54,34 @@ class EventRegistry:
         return cls._reverse_registry[event_class]
 
     @classmethod
+    def get_event_name(cls, event_type: EventTypesEnum) -> str:
+        """Получает строковое имя события из EventTypesEnum"""
+        return str(event_type)
+
+    @classmethod
     def is_registered(cls, event_class: type[DomainEvent]) -> bool:
         """Проверяет, зарегистрирован ли класс события"""
         return event_class in cls._reverse_registry
 
+    @classmethod
+    def get_all_registered(cls) -> list[tuple[str, int]]:
+        """Получает список всех зарегистрированных событий (имя, версия)"""
+        return list(cls._registry.keys())
+
 
 def _initialize_registry() -> None:
     """Инициализирует реестр всех доменных событий системы"""
-    EventRegistry.register("batch.created", 1, BatchCreatedEvent)
-    EventRegistry.register("batch.closed", 1, BatchClosedEvent)
-    EventRegistry.register("batch.opened", 1, BatchOpenedEvent)
-    EventRegistry.register("batch.product_added", 1, ProductAddedToBatchEvent)
-    EventRegistry.register("batch.product_removed", 1, ProductRemovedFromBatchEvent)
-    EventRegistry.register("batch.aggregated", 1, BatchAggregatedEvent)
-    EventRegistry.register("batch.deleted", 1, BatchDeletedEvent)
-    EventRegistry.register("batch.report_generated", 1, ReportGeneratedEvent)
-    EventRegistry.register("product.aggregated", 1, ProductAggregatedEvent)
-    EventRegistry.register("work_center.deleted", 1, WorkCenterDeletedEvent)
-    EventRegistry.register("batch.import_completed", 1, BatchesImportCompletedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_CREATED, 1, BatchCreatedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_CLOSED, 1, BatchClosedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_OPENED, 1, BatchOpenedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_PRODUCT_ADDED, 1, ProductAddedToBatchEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_PRODUCT_REMOVED, 1, ProductRemovedFromBatchEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_AGGREGATED, 1, BatchAggregatedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_DELETED, 1, BatchDeletedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_REPORT_GENERATED, 1, ReportGeneratedEvent)
+    EventRegistry.register(EventTypesEnum.PRODUCT_AGGREGATED, 1, ProductAggregatedEvent)
+    EventRegistry.register(EventTypesEnum.WORK_CENTER_DELETED, 1, WorkCenterDeletedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_IMPORT_COMPLETED, 1, BatchesImportCompletedEvent)
 
 
 _initialize_registry()

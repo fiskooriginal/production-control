@@ -66,7 +66,7 @@ class WebhookSubscriptionQueryService(WebhookSubscriptionQueryServiceProtocol):
             raise ValueError("filters должен быть типа WebhookReadFilters")
 
         if filters.event_type is not None:
-            event_type_value = filters.event_type.value
+            event_type_value = str(filters.event_type)
             events_jsonb = cast(WebhookSubscription.events, JSONB)
             filter_array = func.jsonb_build_array(event_type_value)
             stmt = stmt.where(events_jsonb.op("@>")(filter_array))

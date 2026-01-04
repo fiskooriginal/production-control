@@ -6,9 +6,9 @@ import httpx
 
 from src.core.logging import get_logger
 from src.core.time import datetime_now
+from src.domain.common.enums import EventTypesEnum
 from src.domain.webhooks.entities.delivery import WebhookDeliveryEntity
 from src.domain.webhooks.entities.subscription import WebhookSubscriptionEntity
-from src.domain.webhooks.enums import WebhookEventType
 from src.infrastructure.webhooks.hmac import HMACSigner
 
 logger = get_logger("webhooks.sender")
@@ -53,16 +53,16 @@ class WebhookSender:
             await self._client.aclose()
             self._client = None
 
-    def _build_webhook_payload(self, event_type: WebhookEventType, data: dict) -> dict:
+    def _build_webhook_payload(self, event_type: EventTypesEnum, data: dict) -> dict:
         """Создает payload для webhook в формате {"event": "...", "timestamp": "...", "data": {...}}"""
         return {
-            "event": event_type.value,
+            "event": str(event_type),
             "timestamp": datetime_now().isoformat(),
             "data": data,
         }
 
     def _build_request(
-        self, subscription: WebhookSubscriptionEntity, event_type: WebhookEventType, payload: dict
+        self, subscription: WebhookSubscriptionEntity, event_type: EventTypesEnum, payload: dict
     ) -> WebhookRequest:
         """Строит объект запроса с payload и заголовками"""
         webhook_payload = self._build_webhook_payload(event_type, payload)
@@ -71,7 +71,7 @@ class WebhookSender:
         headers = {
             "Content-Type": "application/json",
             "X-Webhook-Signature": signature,
-            "X-Webhook-Event": event_type.value,
+            "X-Webhook-Event": str(event_type),
         }
 
         return WebhookRequest(
@@ -136,7 +136,7 @@ class WebhookSender:
     async def send_webhook(
         self,
         subscription: WebhookSubscriptionEntity,
-        event_type: WebhookEventType,
+        event_type: EventTypesEnum,
         payload: dict,
         delivery: WebhookDeliveryEntity,
     ) -> WebhookDeliveryEntity:
@@ -160,7 +160,7 @@ class WebhookSender:
 
             logger.info(
                 f"Отправка webhook attempt={attempt}/{max_attempts} "
-                f"subscription_id={subscription.id} event={event_type.value} url={request.url}"
+                f"subscription_id={subscription.uuid} event={event_type!s} url={request.url}"
             )
 
             response = await self._execute_request(request)
@@ -173,8 +173,8 @@ class WebhookSender:
                 )
 
                 logger.info(
-                    f"Webhook успешно отправлен subscription_id={subscription.id} "
-                    f"event={event_type.value} status={response.status_code} attempts={attempt}"
+                    f"Webhook успешно отправлен subscription_id={subscription.uuid} "
+                    f"event={event_type!s} status={response.status_code} attempts={attempt}"
                 )
 
                 return delivery
@@ -189,7 +189,7 @@ class WebhookSender:
 
         logger.error(
             f"Webhook не удалось отправить после {max_attempts} попыток "
-            f"subscription_id={subscription.id} event={event_type.value}"
+            f"subscription_id={subscription.uuid} event={event_type!s}"
         )
 
         return delivery
@@ -197,32 +197,32 @@ class WebhookSender:
     def _log_failed_attempt(
         self,
         subscription: WebhookSubscriptionEntity,
-        event_type: WebhookEventType,
+        event_type: EventTypesEnum,
         attempt: int,
         response: WebhookResponse,
     ) -> None:
         """Логирует неудачную попытку отправки"""
         if response.status_code:
             logger.warning(
-                f"Webhook вернул не успешный статус subscription_id={subscription.id} "
-                f"event={event_type.value} status={response.status_code} attempt={attempt}"
+                f"Webhook вернул не успешный статус subscription_id={subscription.uuid} "
+                f"event={event_type!s} status={response.status_code} attempt={attempt}"
             )
         else:
             logger.warning(
-                f"Ошибка при отправке webhook subscription_id={subscription.id} "
-                f"event={event_type.value} attempt={attempt} error={response.error_message}"
+                f"Ошибка при отправке webhook subscription_id={subscription.uuid} "
+                f"event={event_type!s} attempt={attempt} error={response.error_message}"
             )
 
     async def _wait_before_retry(
         self,
         attempt: int,
         subscription: WebhookSubscriptionEntity,
-        event_type: WebhookEventType,
+        event_type: EventTypesEnum,
     ) -> None:
         """Ожидает перед повторной попыткой"""
         delay = self._calculate_retry_delay(attempt)
         logger.info(
-            f"Повторная попытка через {delay}s subscription_id={subscription.id} "
-            f"event={event_type.value} attempt={attempt + 1}"
+            f"Повторная попытка через {delay}s subscription_id={subscription.uuid} "
+            f"event={event_type!s} attempt={attempt + 1}"
         )
         await asyncio.sleep(delay)

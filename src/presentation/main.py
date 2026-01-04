@@ -8,12 +8,14 @@ from src.core.logging import get_logger, setup_logging
 from src.core.settings import CacheSettings, DatabaseSettings, MinIOSettings
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
+from src.infrastructure.events.sync_service import EventTypeSyncService
 from src.presentation.api.exceptions import register_exception_handlers
 from src.presentation.api.middleware import LoggingMiddleware
 from src.presentation.api.routes import (
     analytics,
     background_tasks,
     batches,
+    events,
     healthcheck,
     products,
     webhooks,
@@ -37,6 +39,11 @@ async def lifespan(app: FastAPI):
         session_factory = make_session_factory(engine)
         app.state.engine = engine
         app.state.session_factory = session_factory
+
+        # Event Types Sync
+        async with session_factory() as session:
+            sync_service = EventTypeSyncService(session)
+            await sync_service.sync()
 
         # Cache
         cache_settings = CacheSettings()
@@ -78,6 +85,7 @@ def add_routes(app: FastAPI) -> None:
     app.include_router(analytics.router)
     app.include_router(webhooks.router)
     app.include_router(webhooks_test.router)
+    app.include_router(events.router)
 
 
 def add_middlewares(app: FastAPI) -> None:

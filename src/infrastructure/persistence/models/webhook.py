@@ -1,12 +1,14 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, Index
 from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
-from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.domain.common.enums import EventTypesEnum
+from src.domain.webhooks.enums import WebhookStatus
 from src.infrastructure.persistence.models.base import BaseModel
+from src.infrastructure.persistence.models.event_type import EventType
 
 
 class WebhookSubscription(BaseModel, table=True):
@@ -15,7 +17,7 @@ class WebhookSubscription(BaseModel, table=True):
     __tablename__ = "webhook_subscriptions"
 
     url: str
-    events: list[WebhookEventType] = Field(sa_column=Column(JSON))
+    events: list[EventTypesEnum] = Field(sa_column=Column(JSON))
     secret_key: str
     is_active: bool = True
     retry_count: int = 3
@@ -32,8 +34,9 @@ class WebhookDelivery(BaseModel, table=True):
     """Доставка вебхука"""
 
     __tablename__ = "webhook_deliveries"
+    __table_args__ = (Index("idx_webhook_delivery_event_type_id", "event_type_id"),)
 
-    event_type: WebhookEventType = Field(sa_column=Column(SQLEnum(WebhookEventType)))
+    event_type: str | None = Field(default=None, nullable=True)
     status: WebhookStatus = Field(sa_column=Column(SQLEnum(WebhookStatus)))
     attempts: int = 0
 
@@ -48,8 +51,18 @@ class WebhookDelivery(BaseModel, table=True):
         sa_column_kwargs={"nullable": False},
     )
 
+    event_type_id: UUID = Field(
+        default=None,
+        foreign_key="event_types.uuid",
+        nullable=True,
+        index=True,
+    )
+
     # связи
     subscription: WebhookSubscription = Relationship(
         back_populates="deliveries",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
+    event_type_ref: EventType = Relationship(
         sa_relationship_kwargs={"lazy": "selectin"},
     )

@@ -1,8 +1,9 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from src.core.time import datetime_aware_to_naive, datetime_now
 from src.domain.common.events import DomainEvent
 from src.infrastructure.common.uow.identity_map import IdentityMap
+from src.infrastructure.persistence.models.event_type import EventType
 from src.infrastructure.persistence.models.outbox_event import OutboxEvent, OutboxEventStatusEnum
 
 
@@ -36,7 +37,7 @@ class EventCollector:
         """
         self._standalone_events.append(event)
 
-    def collect_events(self) -> list[OutboxEvent]:
+    def collect_events(self, event_types: list[EventType]) -> list[OutboxEvent]:
         """
         Собирает все доменные события из tracked агрегатов и standalone событий,
         преобразует в OutboxEvent.
@@ -47,11 +48,11 @@ class EventCollector:
         for entity in self._identity_map.get_all():
             domain_events = entity.get_domain_events()
             for domain_event in domain_events:
-                outbox_event = self._convert_to_outbox(domain_event)
+                outbox_event = self._convert_to_outbox(domain_event, event_types)
                 outbox_events.append(outbox_event)
 
         for standalone_event in self._standalone_events:
-            outbox_event = self._convert_to_outbox(standalone_event)
+            outbox_event = self._convert_to_outbox(standalone_event, event_types)
             outbox_events.append(outbox_event)
 
         return outbox_events
@@ -66,7 +67,7 @@ class EventCollector:
 
         self._standalone_events.clear()
 
-    def _convert_to_outbox(self, event: DomainEvent) -> OutboxEvent:
+    def _convert_to_outbox(self, event: DomainEvent, event_types: list[EventType]) -> OutboxEvent:
         """Преобразует доменное событие в OutboxEvent для сохранения в БД"""
         from src.infrastructure.events.serializer import EventSerializer
 
@@ -74,8 +75,12 @@ class EventCollector:
 
         dedup_key = generate_dedup_key(event)
 
+        event_type_map: dict[str, UUID] = {event_type.name: event_type.uuid for event_type in event_types}
+        event_type_id = event_type_map[serialized["event_name"]]
+
         return OutboxEvent(
             uuid=uuid4(),
+            event_type_id=event_type_id,
             event_name=serialized["event_name"],
             event_version=serialized["event_version"],
             aggregate_id=event.aggregate_id,

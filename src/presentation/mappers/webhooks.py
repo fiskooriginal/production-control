@@ -34,7 +34,7 @@ def subscription_entity_to_response(entity: WebhookSubscriptionEntity) -> Webhoo
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             url=entity.url.value,
-            events=[event.value for event in entity.events.value],
+            events=list(entity.events),
             is_active=entity.is_active,
             retry_count=entity.retry_count.value,
             timeout=entity.timeout.value,

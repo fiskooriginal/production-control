@@ -15,15 +15,6 @@ class OutboxRepository:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def insert_event(self, event: OutboxEvent) -> OutboxEvent:
-        """Вставляет событие в outbox в рамках текущей транзакции"""
-        try:
-            self._session.add(event)
-            await self._session.flush()
-            return event
-        except Exception as e:
-            raise OutboxRepositoryException(f"Ошибка при вставке события в outbox: {e}") from e
-
     async def insert_events(self, events: list[OutboxEvent]) -> list[OutboxEvent]:
         """Вставляет несколько событий в outbox в рамках текущей транзакции"""
         try:
@@ -50,7 +41,7 @@ class OutboxRepository:
                 select(OutboxEvent)
                 .where(
                     OutboxEvent.status == OutboxEventStatusEnum.PENDING,
-                    (OutboxEvent.locked_until == None) | (OutboxEvent.locked_until < now),  # noqa: E711
+                    (OutboxEvent.locked_until is None) | (OutboxEvent.locked_until < now),
                 )
                 .order_by(OutboxEvent.created_at)
                 .limit(limit)

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from src.core.time import datetime_now
 from src.domain.common.entities import BaseEntity
-from src.domain.webhooks.enums import WebhookEventType
+from src.domain.common.enums import EventTypesEnum
 from src.domain.webhooks.value_objects import RetryCount, SecretKey, Timeout, WebhookEvents, WebhookUrl
 
 
@@ -25,7 +25,7 @@ class WebhookSubscriptionEntity(BaseEntity):
         self.is_active = False
         self.updated_at = datetime_now()
 
-    def update_events(self, events: list[WebhookEventType]) -> None:
+    def update_events(self, events: list[EventTypesEnum]) -> None:
         """Обновляет список событий"""
         self.events = WebhookEvents(value=events)
         self.updated_at = datetime_now()

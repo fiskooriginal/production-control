@@ -5,7 +5,8 @@ from uuid import UUID
 from fastapi import Query
 from pydantic import BaseModel, Field
 
-from src.domain.webhooks.enums import WebhookEventType, WebhookStatus
+from src.domain.common.enums import EventTypesEnum
+from src.domain.webhooks.enums import WebhookStatus
 from src.presentation.api.schemas.base import TimestampSchema, UUIDSchema
 
 
@@ -24,7 +25,7 @@ class CreateWebhookSubscriptionRequest(BaseModel):
     """Request schema для создания подписки на webhook"""
 
     url: str = Field(..., min_length=1, description="URL для отправки webhook")
-    events: list[WebhookEventType] = Field(..., min_items=1, description="Список событий для подписки")
+    events: list[EventTypesEnum] = Field(..., min_items=1, description="Список событий для подписки")
     secret_key: str = Field(..., min_length=1, description="Секретный ключ для подписи webhook")
     is_active: bool = Field(True, description="Активна ли подписка")
     retry_count: int = Field(3, ge=0, description="Количество повторов при неудачной доставке")
@@ -35,7 +36,7 @@ class WebhookSubscriptionResponse(UUIDSchema, TimestampSchema, BaseModel):
     """Response schema для подписки на webhook"""
 
     url: str = Field(..., description="URL для отправки webhook")
-    events: list[WebhookEventType] = Field(..., description="Список событий для подписки")
+    events: list[EventTypesEnum] = Field(..., description="Список событий для подписки")
     is_active: bool = Field(..., description="Активна ли подписка")
     retry_count: int = Field(..., description="Количество повторов при неудачной доставке")
     timeout: int = Field(..., description="Таймаут доставки в секундах")
@@ -47,7 +48,7 @@ class WebhookSubscriptionResponse(UUIDSchema, TimestampSchema, BaseModel):
 class WebhookFiltersParams(BaseModel):
     """Query параметры для фильтрации подписок на webhook"""
 
-    event_type: Annotated[WebhookEventType | None, Query(description="Фильтр по типу события")] = None
+    event_type: Annotated[EventTypesEnum | None, Query(description="Фильтр по типу события")] = None
 
 
 class ListWebhookSubscriptionsResponse(BaseModel):
@@ -66,7 +67,7 @@ class WebhookDeliveryResponse(UUIDSchema, TimestampSchema, BaseModel):
     """Response schema для доставки webhook"""
 
     subscription_id: UUID = Field(..., description="ID подписки")
-    event_type: WebhookEventType = Field(..., description="Тип события")
+    event_type: EventTypesEnum = Field(..., description="Тип события")
     payload: dict[str, Any] = Field(..., description="Полезная нагрузка")
     status: WebhookStatus = Field(..., description="Статус доставки")
     attempts: int = Field(..., description="Количество попыток")
