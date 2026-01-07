@@ -13,6 +13,8 @@ async def is_batch_exist(
 ) -> bool:
     """Проверяет уникальность комбинации номера партии и даты"""
     existing_batch = await repository.get_by_batch_number_and_date(batch_number.value, batch_date)
-    if exclude_batch_id is None:
+    if existing_batch is None:
         return False
+    if exclude_batch_id is None:
+        return True
     return existing_batch.uuid != exclude_batch_id
