@@ -9,19 +9,6 @@ from src.core.settings import CacheSettings, DatabaseSettings, MinIOSettings
 from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.storage.minio import init_minio_storage
 from src.infrastructure.events.sync_service import EventTypeSyncService
-from src.presentation.api.exceptions import register_exception_handlers
-from src.presentation.api.middleware import LoggingMiddleware
-from src.presentation.api.routes import (
-    analytics,
-    background_tasks,
-    batches,
-    events,
-    healthcheck,
-    products,
-    webhooks,
-    webhooks_test,
-    work_centers,
-)
 
 setup_logging(LOG_LEVEL)
 logger = get_logger("app")
@@ -77,23 +64,25 @@ async def lifespan(app: FastAPI):
 
 
 def add_routes(app: FastAPI) -> None:
-    app.include_router(batches.router)
-    app.include_router(products.router)
-    app.include_router(work_centers.router)
-    app.include_router(healthcheck.router)
-    app.include_router(background_tasks.router)
-    app.include_router(analytics.router)
-    app.include_router(webhooks.router)
-    app.include_router(webhooks_test.router)
-    app.include_router(events.router)
+    from src.presentation.v1 import router as v1_router
+
+    app.include_router(v1_router)
 
 
 def add_middlewares(app: FastAPI) -> None:
+    from src.presentation.middlewares.logging import LoggingMiddleware
+
     app.add_middleware(LoggingMiddleware)
+
+
+def add_exception_handlers(app: FastAPI) -> None:
+    from src.presentation.exceptions.registry import register_exception_handlers
+
+    register_exception_handlers(app)
 
 
 app = FastAPI(title="Production Control API", lifespan=lifespan)
 
 add_middlewares(app)
-register_exception_handlers(app)
+add_exception_handlers(app)
 add_routes(app)

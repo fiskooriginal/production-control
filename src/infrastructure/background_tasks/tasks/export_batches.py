@@ -1,6 +1,7 @@
 from sqlalchemy.exc import DBAPIError, OperationalError
 
 from src.application.batches.dtos.export_batches import ExportBatchesInputDTO
+from src.application.batches.queries.filters import BatchReadFilters
 from src.application.batches.services.export_service import BatchesExportService
 from src.application.common.dtos import ExportImportFileFormatEnum
 from src.core.logging import get_logger
@@ -9,7 +10,6 @@ from src.infrastructure.background_tasks.app import celery_app, get_session_fact
 from src.infrastructure.common.file_generators.batches.exports.factory import BatchesExportGeneratorFactory
 from src.infrastructure.persistence.queries.batches import BatchQueryService
 from src.infrastructure.persistence.queries.work_centers import WorkCenterQueryService
-from src.presentation.api.schemas.batches import BatchFiltersParams
 
 logger = get_logger("celery.tasks.export_batches")
 
@@ -25,7 +25,7 @@ def _is_retryable_error(exception: Exception) -> bool:
 def export_batches(
     self,
     format: ExportImportFileFormatEnum,
-    filters: BatchFiltersParams,
+    filters: BatchReadFilters,
 ) -> dict:
     """
     Асинхронный экспорт партий в файл (XLSX или CSV).
@@ -48,7 +48,7 @@ def export_batches(
 async def _export_batches_async(
     task_instance,
     format: ExportImportFileFormatEnum,
-    filters: BatchFiltersParams,
+    filters: BatchReadFilters,
 ) -> dict:
     """Асинхронная часть задачи экспорта"""
     session_factory = get_session_factory()
