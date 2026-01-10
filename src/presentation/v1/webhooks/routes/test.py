@@ -7,8 +7,9 @@ from src.core.logging import get_logger
 from src.infrastructure.webhooks.hmac import HMACSigner
 from src.presentation.v1.webhooks.schemas import WebhookTestResponse
 
-router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 logger = get_logger("webhooks.test")
+
+router = APIRouter()
 
 
 @router.post("/test", response_model=WebhookTestResponse, status_code=status.HTTP_200_OK)

@@ -10,7 +10,7 @@ from src.presentation.v1.webhooks.mappers import (
 )
 from src.presentation.v1.webhooks.schemas import ListWebhookDeliveriesResponse
 
-router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
+router = APIRouter()
 
 
 @router.get("/{subscription_id}/deliveries", response_model=ListWebhookDeliveriesResponse)

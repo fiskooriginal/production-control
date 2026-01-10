@@ -17,7 +17,7 @@ from src.presentation.v1.webhooks.schemas import (
     WebhookSubscriptionResponse,
 )
 
-router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
+router = APIRouter()
 
 
 @router.post("", response_model=WebhookSubscriptionResponse, status_code=status.HTTP_201_CREATED)
