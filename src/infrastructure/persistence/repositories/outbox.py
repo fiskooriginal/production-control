@@ -1,7 +1,7 @@
 from datetime import timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.time import datetime_now
@@ -41,7 +41,10 @@ class OutboxRepository:
                 select(OutboxEvent)
                 .where(
                     OutboxEvent.status == OutboxEventStatusEnum.PENDING,
-                    (OutboxEvent.locked_until is None) | (OutboxEvent.locked_until < now),
+                    or_(
+                        OutboxEvent.locked_until.is_(None),
+                        OutboxEvent.locked_until < now,
+                    ),
                 )
                 .order_by(OutboxEvent.created_at)
                 .limit(limit)
