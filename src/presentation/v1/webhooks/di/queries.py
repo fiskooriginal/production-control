@@ -7,7 +7,8 @@ from src.application.webhooks.queries.handlers import (
     ListWebhookDeliveriesQueryHandler,
     ListWebhookSubscriptionsQueryHandler,
 )
-from src.infrastructure.persistence.queries.webhooks import WebhookDeliveryQueryService, WebhookSubscriptionQueryService
+from src.infrastructure.persistence.queries.webhooks.delivery import WebhookDeliveryQueryService
+from src.infrastructure.persistence.queries.webhooks.subscription import WebhookSubscriptionQueryService
 from src.presentation.v1.common.di import async_session
 
 
