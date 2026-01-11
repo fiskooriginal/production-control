@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Relationship
@@ -21,7 +20,6 @@ class WorkCenter(BaseModel, table=True):
 
     identifier: str
     name: str
-    author: UUID
 
     batches: list["Batch"] = Relationship(
         back_populates="work_center",

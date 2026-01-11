@@ -22,14 +22,12 @@ def to_domain_entity(work_center_model: WorkCenter) -> WorkCenterEntity:
 def to_persistence_model(work_center_entity: WorkCenterEntity, existing_model: WorkCenter | None = None) -> WorkCenter:
     """Конвертирует domain domain_entity WorkCenterEntity в persistence модель WorkCenter"""
     try:
-        author = existing_model.author if existing_model else work_center_entity.uuid
         return WorkCenter(
             uuid=work_center_entity.uuid,
             created_at=datetime_aware_to_naive(work_center_entity.created_at),
             updated_at=datetime_aware_to_naive(work_center_entity.updated_at),
             identifier=work_center_entity.identifier.value,
             name=work_center_entity.name.value,
-            author=author,
         )
     except Exception as e:
         raise MappingException(f"Ошибка маппинга domain -> persistence для WorkCenter: {e}") from e
