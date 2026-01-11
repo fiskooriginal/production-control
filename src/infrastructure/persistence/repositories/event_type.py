@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.time import datetime_now
 from src.domain.common.enums import EventTypesEnum
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.models.event_type import EventType
@@ -33,6 +34,7 @@ class EventTypeRepository:
             event_type = await self.get_by_name(name, version)
             if event_type is None:
                 event_type = EventType(
+                    created_at=datetime_now(naive=True),
                     name=name,
                     version=version,
                     webhook_enabled=webhook_enabled,
@@ -63,6 +65,7 @@ class EventTypeRepository:
                 raise ValueError(f"Тип события с UUID {event_type_id} не найден")
 
             event_type.webhook_enabled = enabled
+            event_type.updated_at = datetime_now(naive=True)
             await self._session.flush()
             return event_type
         except ValueError:

@@ -29,3 +29,5 @@ class EventTypeSyncService:
             except Exception as e:
                 logger.exception(f"Ошибка при синхронизации события {event_name} v{event_version}: {e}")
                 raise
+
+        await self._session.commit()
