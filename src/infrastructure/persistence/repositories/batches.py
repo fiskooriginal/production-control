@@ -7,101 +7,53 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.time import datetime_aware_to_naive
 from src.domain.batches import BatchEntity
 from src.domain.batches.interfaces.repository import BatchRepositoryProtocol
-from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
+from src.domain.common.exceptions import DoesNotExistError
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.batches import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.batch import Batch
+from src.infrastructure.persistence.repositories.base import BaseRepository
 
 
-class BatchRepository(BatchRepositoryProtocol):
+class BatchRepository(BaseRepository[BatchEntity, Batch], BatchRepositoryProtocol):
     def __init__(self, session: AsyncSession):
-        self._session = session
+        super().__init__(session, Batch, to_domain_entity, to_persistence_model)
 
-    async def _get_or_raise(self, uuid: UUID) -> Batch:
+    async def _get_model_or_raise(self, uuid: UUID) -> Batch:
+        """Переопределяет метод для использования select() вместо session.get()"""
         try:
-            stmt = select(Batch).where(Batch.uuid == uuid)
+            stmt = select(self._model_class).where(self._model_class.uuid == uuid)
             result = await self._session.execute(stmt)
             batch_model = result.scalar_one_or_none()
             if batch_model is None:
-                raise DoesNotExistError(f"Партия с UUID {uuid} не найдена")
+                raise DoesNotExistError(f"{self._model_name} с UUID {uuid} не найдена")
             return batch_model
         except DoesNotExistError:
             raise
         except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при получении партии: {e}") from e
-
-    async def get_or_raise(self, uuid: UUID) -> BatchEntity:
-        """Получает партию по UUID для write-операций"""
-        batch_model = await self._get_or_raise(uuid)
-        return to_domain_entity(batch_model)
-
-    async def create(self, domain_entity: BatchEntity) -> BatchEntity:
-        """Создает новую партию в репозитории"""
-        try:
-            stmt = select(Batch.uuid).where(Batch.uuid == domain_entity.uuid)
-            result = await self._session.execute(stmt)
-            if result.scalar_one_or_none() is not None:
-                raise AlreadyExistsError(f"Партия с UUID {domain_entity.uuid} уже существует")
-        except AlreadyExistsError:
-            raise
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при проверке существования партии: {e}") from e
-
-        batch_model = to_persistence_model(domain_entity)
-        try:
-            self._session.add(batch_model)
-            await self._session.flush()
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при создании партии: {e}") from e
-
-        return to_domain_entity(batch_model)
-
-    async def update(self, domain_entity: BatchEntity) -> BatchEntity:
-        """Обновляет существующую партию"""
-        batch_model = await self._get_or_raise(domain_entity.uuid)
-        updated_model = to_persistence_model(domain_entity)
-        for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
-            setattr(batch_model, key, value)
-
-        try:
-            await self._session.flush()
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при обновлении партии: {e}") from e
-
-        return to_domain_entity(batch_model)
-
-    async def delete(self, uuid: UUID) -> None:
-        """Удаляет партию по UUID"""
-        try:
-            batch_model = await self._get_or_raise(uuid)
-            await self._session.delete(batch_model)
-        except DoesNotExistError:
-            raise
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при удалении партии: {e}") from e
+            raise DatabaseException(f"Ошибка базы данных при получении {self._model_name}: {e}") from e
 
     async def get_by_batch_number_and_date(self, batch_number: int, batch_date: date) -> BatchEntity | None:
         """Находит партию по номеру партии и дате"""
         try:
-            stmt = select(Batch).where(
-                Batch.batch_number == batch_number,
-                Batch.batch_date == batch_date,
+            stmt = select(self._model_class).where(
+                self._model_class.batch_number == batch_number,
+                self._model_class.batch_date == batch_date,
             )
             result = await self._session.execute(stmt)
             batch_model = result.scalar_one_or_none()
             if batch_model is None:
                 return None
-            return to_domain_entity(batch_model)
+            return self._to_domain_entity(batch_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске партии по номеру и дате: {e}") from e
 
     async def get_by_work_center(self, work_center_id: UUID) -> list[BatchEntity]:
         """Находит все партии рабочего центра"""
         try:
-            stmt = select(Batch).where(Batch.work_center_id == work_center_id)
+            stmt = select(self._model_class).where(self._model_class.work_center_id == work_center_id)
             result = await self._session.execute(stmt)
             batch_models = result.scalars().all()
-            return [to_domain_entity(batch) for batch in batch_models]
+            return [self._to_domain_entity(batch) for batch in batch_models]
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске партий по рабочему центру: {e}") from e
 
@@ -109,9 +61,11 @@ class BatchRepository(BatchRepositoryProtocol):
         """Находит открытые партии с shift_end_time < before_time"""
         try:
             before_time_naive = datetime_aware_to_naive(before_time)
-            stmt = select(Batch).where(not Batch.is_closed, Batch.shift_end_time < before_time_naive)
+            stmt = select(self._model_class).where(
+                not self._model_class.is_closed, self._model_class.shift_end_time < before_time_naive
+            )
             result = await self._session.execute(stmt)
             batch_models = result.scalars().all()
-            return [to_domain_entity(batch) for batch in batch_models]
+            return [self._to_domain_entity(batch) for batch in batch_models]
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске просроченных партий: {e}") from e

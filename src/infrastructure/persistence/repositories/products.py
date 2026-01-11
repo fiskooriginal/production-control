@@ -1,79 +1,26 @@
-import builtins
-
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.common.exceptions import DoesNotExistError
 from src.domain.products import ProductEntity
 from src.domain.products.interfaces.repository import ProductRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.products import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.product import Product
+from src.infrastructure.persistence.repositories.base import BaseRepository
 
 
-class ProductRepository(ProductRepositoryProtocol):
+class ProductRepository(BaseRepository[ProductEntity, Product], ProductRepositoryProtocol):
     def __init__(self, session: AsyncSession):
-        self._session = session
-
-    async def get_or_raise(self, uuid: UUID) -> ProductEntity:
-        """Получает продукт по UUID для write-операций"""
-        try:
-            product_model = await self._session.get(Product, uuid)
-            if product_model is None:
-                raise DoesNotExistError(f"Продукт с UUID {uuid} не найден")
-            return to_domain_entity(product_model)
-        except DoesNotExistError:
-            raise
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при получении продукта: {e}") from e
-
-    async def create(self, domain_entity: ProductEntity) -> ProductEntity:
-        """Создает новый продукт в репозитории"""
-        product_model = to_persistence_model(domain_entity)
-
-        try:
-            self._session.add(product_model)
-            await self._session.flush()
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при создании продукта: {e}") from e
-
-        return to_domain_entity(product_model)
-
-    async def update(self, domain_entity: ProductEntity) -> ProductEntity:
-        """Обновляет существующий продукт"""
-        product_model = await self._session.get(Product, domain_entity.uuid)
-        if product_model is None:
-            raise DoesNotExistError(f"Продукт с UUID {domain_entity.uuid} не найден")
-
-        updated_model = to_persistence_model(domain_entity)
-        for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
-            setattr(product_model, key, value)
-
-        try:
-            await self._session.flush()
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при обновлении продукта: {e}") from e
-
-        return to_domain_entity(product_model)
-
-    async def delete(self, uuid: UUID) -> None:
-        """Удаляет продукт по UUID"""
-        try:
-            product_model = await self._session.get(Product, uuid)
-            if product_model is None:
-                raise DoesNotExistError(f"Продукт с UUID {uuid} не найден")
-            await self._session.delete(product_model)
-        except DoesNotExistError:
-            raise
-        except Exception as e:
-            raise DatabaseException(f"Ошибка при удалении продукта: {e}") from e
+        super().__init__(session, Product, to_domain_entity, to_persistence_model)
 
     async def get_by_unique_code(self, unique_code: str, batch_id: UUID) -> ProductEntity | None:
         """Находит продукт по уникальному коду и идентификатору партии"""
         try:
-            stmt = select(Product).where(Product.unique_code == unique_code, Product.batch_id == batch_id)
+            stmt = select(self._model_class).where(
+                self._model_class.unique_code == unique_code, self._model_class.batch_id == batch_id
+            )
             result = await self._session.execute(stmt)
             product_model = result.scalar_one_or_none()
             if product_model is None:
@@ -81,41 +28,41 @@ class ProductRepository(ProductRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при поиске продукта по коду: {e}") from e
 
-        return to_domain_entity(product_model)
+        return self._to_domain_entity(product_model)
 
-    async def get_aggregated(self) -> builtins.list[ProductEntity]:
+    async def get_aggregated(self) -> list[ProductEntity]:
         """Находит все агрегированные продукты"""
         try:
-            stmt = select(Product).where(Product.is_aggregated.is_(True))
+            stmt = select(self._model_class).where(self._model_class.is_aggregated.is_(True))
             result = await self._session.execute(stmt)
             products = result.scalars().all()
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении агрегированных продуктов: {e}") from e
 
-        return [to_domain_entity(p) for p in products]
+        return [self._to_domain_entity(p) for p in products]
 
-    async def get_by_ids(self, ids: builtins.list[UUID]) -> builtins.list[ProductEntity]:
+    async def get_by_ids(self, ids: list[UUID]) -> list[ProductEntity]:
         """Возвращает все продукты из переданного списка ID"""
         try:
             if not ids:
                 return []
-            stmt = select(Product).where(Product.uuid.in_(ids))
+            stmt = select(self._model_class).where(self._model_class.uuid.in_(ids))
             result = await self._session.execute(stmt)
             products = result.scalars().all()
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении продуктов по ID: {e}") from e
 
-        return [to_domain_entity(p) for p in products]
+        return [self._to_domain_entity(p) for p in products]
 
-    async def get_by_unique_codes(self, unique_codes: builtins.list[str]) -> builtins.list[ProductEntity]:
+    async def get_by_unique_codes(self, unique_codes: list[str]) -> list[ProductEntity]:
         """Возвращает все продукты из переданного списка уникальных кодов"""
         try:
             if not unique_codes:
                 return []
-            stmt = select(Product).where(Product.unique_code.in_(unique_codes))
+            stmt = select(self._model_class).where(self._model_class.unique_code.in_(unique_codes))
             result = await self._session.execute(stmt)
             products = result.scalars().all()
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении продуктов по уникальным кодам: {e}") from e
 
-        return [to_domain_entity(p) for p in products]
+        return [self._to_domain_entity(p) for p in products]
