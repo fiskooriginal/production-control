@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from src.application.common.cache.interfaces import CacheServiceProtocol
-from src.application.common.cache.keys.batches import get_batch_key, get_batches_list_pattern
 from src.application.common.uow.interfaces import UnitOfWorkProtocol
 from src.core.logging import get_logger
 from src.domain.batches import BatchEntity
@@ -14,9 +12,8 @@ logger = get_logger("command.batches")
 
 
 class AddProductToBatchCommand:
-    def __init__(self, uow: UnitOfWorkProtocol, cache_service: CacheServiceProtocol | None = None):
+    def __init__(self, uow: UnitOfWorkProtocol):
         self._uow = uow
-        self._cache_service = cache_service
 
     async def execute(self, batch_id: UUID, unique_code: str) -> BatchEntity:
         """Добавляет продукт в партию с автоматическим сохранением доменных событий в outbox"""
@@ -41,19 +38,7 @@ class AddProductToBatchCommand:
                 batch.add_product(product)
                 await self._uow.batches.update(batch)
                 logger.info(f"Product added to batch successfully: product_id={product.uuid}")
-
-            await self._invalidate_batch_cache(batch_id)
-            return batch
+                return batch
         except Exception as e:
             logger.exception(f"Failed to add product to batch: {e}")
             raise
-
-    async def _invalidate_batch_cache(self, batch_id: UUID) -> None:
-        """Инвалидирует кэш для партии (best effort)."""
-        if not self._cache_service or not self._cache_service.enabled:
-            return
-        try:
-            await self._cache_service.delete(get_batch_key(batch_id, self._cache_service.key_prefix))
-            await self._cache_service.delete_pattern(get_batches_list_pattern(self._cache_service.key_prefix))
-        except Exception as e:
-            logger.warning(f"Failed to invalidate cache for batch {batch_id}: {e}")

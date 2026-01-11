@@ -7,6 +7,7 @@ class EventTypesEnum(enum.Enum):
     BATCH_CREATED = "batch.created"
     BATCH_CLOSED = "batch.closed"
     BATCH_OPENED = "batch.opened"
+    BATCH_UPDATED = "batch.updated"
     BATCH_PRODUCT_ADDED = "batch.product_added"
     BATCH_PRODUCT_REMOVED = "batch.product_removed"
     BATCH_AGGREGATED = "batch.aggregated"

@@ -21,7 +21,7 @@ beat_schedule = {
     },
     "process-outbox-events": {
         "task": "tasks.process_outbox_events",
-        "schedule": crontab(minute="*/1"),  # Каждую минуту
+        "schedule": 5.0,  # Каждые 5 секунд
     },
     "update-dashboard-statistics": {
         "task": "tasks.update_dashboard_stats",

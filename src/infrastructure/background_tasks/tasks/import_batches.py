@@ -11,11 +11,10 @@ from src.application.batches.services.import_service import BatchesImportService
 from src.application.common.exceptions import FileParseError
 from src.application.work_centers.commands.create import CreateWorkCenterCommand
 from src.core.logging import get_logger
-from src.core.settings import CacheSettings, CelerySettings
+from src.core.settings import CelerySettings
 from src.domain.batches.events import BatchesImportCompletedEvent
 from src.domain.batches.services import BatchImportRowValidator
 from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
-from src.infrastructure.common.cache.redis import close_cache, init_cache
 from src.infrastructure.common.file_parsers import FileParserFactory
 from src.infrastructure.common.uow.unit_of_work import SqlAlchemyUnitOfWork
 
@@ -74,14 +73,8 @@ async def _import_batches_async(
 ) -> dict:
     """Асинхронная часть задачи импорта"""
     session_factory = get_session_factory()
-    cache_settings = CacheSettings()
-    cache_service = None
-    pool = None
 
     try:
-        if cache_settings.enabled:
-            cache_service, pool = await init_cache(cache_settings, raise_error=False)
-
         async with session_factory() as session:
             uow = SqlAlchemyUnitOfWork(session, manual_commit=True)
 
@@ -89,9 +82,9 @@ async def _import_batches_async(
                 # Создание зависимостей
                 parser = FileParserFactory.create(file_extension)
                 validator = BatchImportRowValidator(uow.batches, uow.work_centers)
-                create_command = CreateBatchCommand(uow, cache_service)
-                update_command = UpdateBatchCommand(uow, cache_service)
-                add_product_command = AddProductToBatchCommand(uow, cache_service)
+                create_command = CreateBatchCommand(uow)
+                update_command = UpdateBatchCommand(uow)
+                add_product_command = AddProductToBatchCommand(uow)
                 create_work_center_command = CreateWorkCenterCommand(uow)
 
                 # Создание сервиса импорта
@@ -157,6 +150,3 @@ async def _import_batches_async(
                 countdown=celery_settings.task_default_retry_delay,
             ) from e
         raise
-    finally:
-        if pool:
-            await close_cache(pool)

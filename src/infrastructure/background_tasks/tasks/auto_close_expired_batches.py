@@ -8,12 +8,7 @@ from src.core.logging import get_logger
 from src.core.settings import CelerySettings
 from src.core.time import datetime_now
 from src.domain.common.exceptions import InvalidStateError
-from src.infrastructure.background_tasks.app import (
-    celery_app,
-    get_cache_service,
-    get_session_factory,
-    run_async_task,
-)
+from src.infrastructure.background_tasks.app import celery_app, get_session_factory, run_async_task
 from src.infrastructure.common.uow.unit_of_work import SqlAlchemyUnitOfWork
 
 logger = get_logger("celery.tasks.auto_close_expired_batches")
@@ -39,7 +34,6 @@ def _is_retryable_error(exception: Exception) -> bool:
 async def _auto_close_expired_batches_async(task_instance) -> dict:
     """Асинхронная часть задачи автоматического закрытия просроченных партий"""
     session_factory = get_session_factory()
-    cache_service = get_cache_service()
 
     closed_count = 0
     skipped_count = 0
@@ -63,10 +57,10 @@ async def _auto_close_expired_batches_async(task_instance) -> dict:
 
                 for batch in expired_batches:
                     try:
-                        aggregate_command = AggregateBatchCommand(uow, cache_service)
+                        aggregate_command = AggregateBatchCommand(uow)
                         await aggregate_command.execute(AggregateBatchInputDTO(batch_id=batch.uuid))
 
-                        close_command = CloseBatchCommand(uow, cache_service)
+                        close_command = CloseBatchCommand(uow)
                         await close_command.execute(CloseBatchInputDTO(batch_id=batch.uuid, closed_at=now))
 
                         closed_count += 1

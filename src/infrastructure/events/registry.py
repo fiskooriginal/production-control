@@ -6,6 +6,7 @@ from src.domain.batches.events import (
     BatchCreatedEvent,
     BatchDeletedEvent,
     BatchOpenedEvent,
+    BatchUpdatedEvent,
     ProductAddedToBatchEvent,
     ProductRemovedFromBatchEvent,
 )
@@ -74,6 +75,7 @@ def _initialize_registry() -> None:
     EventRegistry.register(EventTypesEnum.BATCH_CREATED, 1, BatchCreatedEvent)
     EventRegistry.register(EventTypesEnum.BATCH_CLOSED, 1, BatchClosedEvent)
     EventRegistry.register(EventTypesEnum.BATCH_OPENED, 1, BatchOpenedEvent)
+    EventRegistry.register(EventTypesEnum.BATCH_UPDATED, 1, BatchUpdatedEvent)
     EventRegistry.register(EventTypesEnum.BATCH_PRODUCT_ADDED, 1, ProductAddedToBatchEvent)
     EventRegistry.register(EventTypesEnum.BATCH_PRODUCT_REMOVED, 1, ProductRemovedFromBatchEvent)
     EventRegistry.register(EventTypesEnum.BATCH_AGGREGATED, 1, BatchAggregatedEvent)

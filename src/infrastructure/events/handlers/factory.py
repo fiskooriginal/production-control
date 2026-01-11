@@ -1,19 +1,12 @@
-"""
-Фабрика для создания экземпляров обработчиков событий с внедрением зависимостей.
-
-Создает экземпляры хендлеров на основе их типов и доступных ресурсов в Celery worker.
-"""
-
 import inspect
 
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.batches.events.handlers import BatchClosedHandler
+from src.application.batches.events.handlers import BatchCacheInvalidationHandler, BatchReportGenerationHandler
 from src.application.batches.reports.adapters import ReportStorageAdapter
 from src.application.batches.reports.services import ReportDataService, ReportGenerationService
-from src.application.work_centers.events.handlers.work_center_deleted_handler import WorkCenterDeletedHandler
 from src.core.logging import get_logger
 from src.infrastructure.background_tasks.app import get_cache_service, get_storage_service
 from src.infrastructure.common.file_generators.batches.reports import BatchExcelReportGenerator, BatchPDFReportGenerator
@@ -35,10 +28,10 @@ def create_handler_instance(handler_class: type, session: AsyncSession) -> Any:
     Returns:
         Экземпляр хендлера с инициализированными зависимостями
     """
-    if handler_class == BatchClosedHandler:
-        return _create_batch_closed_handler(session)
-    elif handler_class == WorkCenterDeletedHandler:
-        return _create_work_center_deleted_handler()
+    if handler_class == BatchReportGenerationHandler:
+        return _create_batch_report_generation_handler(session)
+    elif handler_class == BatchCacheInvalidationHandler:
+        return _create_batch_cache_invalidation_handler()
     else:
         sig = inspect.signature(handler_class.__init__)
         params = list(sig.parameters.keys())[1:]
@@ -47,7 +40,7 @@ def create_handler_instance(handler_class: type, session: AsyncSession) -> Any:
         raise ValueError(f"Cannot create instance of {handler_class.__name__}: unknown dependencies: {params}")
 
 
-def _create_batch_closed_handler(session: AsyncSession) -> BatchClosedHandler:
+def _create_batch_report_generation_handler(session: AsyncSession) -> BatchReportGenerationHandler:
     """Создает экземпляр BatchClosedHandler со всеми зависимостями"""
     uow = SqlAlchemyUnitOfWork(session)
     batch_query_service = BatchQueryService(session)
@@ -64,12 +57,10 @@ def _create_batch_closed_handler(session: AsyncSession) -> BatchClosedHandler:
         excel_generator=excel_generator,
         report_storage=report_storage,
     )
-    return BatchClosedHandler(report_generation_service)
+    return BatchReportGenerationHandler(report_generation_service)
 
 
-def _create_work_center_deleted_handler() -> WorkCenterDeletedHandler:
-    """Создает экземпляр WorkCenterDeletedHandler с cache service"""
+def _create_batch_cache_invalidation_handler() -> BatchCacheInvalidationHandler:
+    """Создает экземпляр BatchCacheInvalidationHandler с cache service"""
     cache_service = get_cache_service()
-    if cache_service is None:
-        logger.warning("Cache service is not available, WorkCenterDeletedHandler will not work properly")
-    return WorkCenterDeletedHandler(cache_service)
+    return BatchCacheInvalidationHandler(cache_service)

@@ -1,5 +1,7 @@
-from src.application.batches.events.handlers.batch_closed_handler import BatchClosedHandler
+from src.application.batches.events.handlers.batch_cache_invalidation_handler import BatchCacheInvalidationHandler
+from src.application.batches.events.handlers.batch_report_generation_handler import BatchReportGenerationHandler
 
 __all__ = [
-    "BatchClosedHandler",
+    "BatchCacheInvalidationHandler",
+    "BatchReportGenerationHandler",
 ]

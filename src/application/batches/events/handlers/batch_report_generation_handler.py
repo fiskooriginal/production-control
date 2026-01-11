@@ -3,18 +3,18 @@ from src.application.batches.reports.services.report_generation_service import R
 from src.core.logging import get_logger
 from src.domain.batches.events import BatchClosedEvent
 
-logger = get_logger("handler.batches.closed")
+logger = get_logger("batches.events.handlers.batch_report_generation_handler")
 
 
-class BatchClosedHandler:
-    """Обработчик события закрытия партии для автоматической генерации PDF отчета"""
+class BatchReportGenerationHandler:
+    """Обработчик события для автоматической генерации PDF отчета"""
 
     def __init__(self, report_generation_service: ReportGenerationService) -> None:
         self._report_generation_service = report_generation_service
 
     async def handle(self, event: BatchClosedEvent) -> None:
         """Обрабатывает событие закрытия партии, генерируя PDF отчет"""
-        logger.info(f"Handling BatchClosedEvent: batch_id={event.aggregate_id}")
+        logger.info(f"Handling BatchReportGenerationHandler: batch_id={event.aggregate_id}")
 
         try:
             await self._report_generation_service.generate_report(event.aggregate_id, ReportFormatEnum.PDF)

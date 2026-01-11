@@ -1,8 +1,16 @@
 from typing import ClassVar, TypeVar
 
-from src.application.batches.events.handlers import BatchClosedHandler
-from src.application.work_centers.events.handlers.work_center_deleted_handler import WorkCenterDeletedHandler
-from src.domain.batches.events import BatchClosedEvent
+from src.application.batches.events.handlers import BatchCacheInvalidationHandler, BatchReportGenerationHandler
+from src.domain.batches.events import (
+    BatchAggregatedEvent,
+    BatchClosedEvent,
+    BatchCreatedEvent,
+    BatchDeletedEvent,
+    BatchOpenedEvent,
+    BatchUpdatedEvent,
+    ProductAddedToBatchEvent,
+    ProductRemovedFromBatchEvent,
+)
 from src.domain.common.events import DomainEvent
 from src.domain.work_centers.events import WorkCenterDeletedEvent
 
@@ -55,8 +63,17 @@ class EventHandlerRegistry:
 
 def _initialize_registry() -> None:
     """Инициализирует реестр всех обработчиков событий системы"""
-    EventHandlerRegistry.register(BatchClosedEvent, BatchClosedHandler)
-    EventHandlerRegistry.register(WorkCenterDeletedEvent, WorkCenterDeletedHandler)
+    EventHandlerRegistry.register(BatchClosedEvent, BatchReportGenerationHandler)
+
+    EventHandlerRegistry.register(WorkCenterDeletedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchCreatedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchUpdatedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchDeletedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchClosedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchOpenedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(BatchAggregatedEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(ProductAddedToBatchEvent, BatchCacheInvalidationHandler)
+    EventHandlerRegistry.register(ProductRemovedFromBatchEvent, BatchCacheInvalidationHandler)
 
 
 _initialize_registry()
