@@ -4,9 +4,10 @@ from dataclasses import asdict
 from typing import ClassVar
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.batches.queries.filters import BatchReadFilters
 from src.application.batches.queries.queries import ListBatchesQuery
 from src.application.batches.queries.service import BatchQueryServiceProtocol
 from src.application.batches.queries.sort import BatchSortField
@@ -16,7 +17,6 @@ from src.core.logging import get_logger
 from src.core.settings import BatchCacheSettings
 from src.domain.batches import BatchEntity
 from src.domain.common.queries import QueryResult
-from src.infrastructure.common.exceptions import DatabaseException
 from src.infrastructure.persistence.mappers.batches import (
     dict_to_domain,
     domain_to_json_bytes,
@@ -24,11 +24,15 @@ from src.infrastructure.persistence.mappers.batches import (
     to_domain_entity,
 )
 from src.infrastructure.persistence.models.batch import Batch
+from src.infrastructure.persistence.queries.base import BaseQueryService
 
 logger = get_logger("query.batches")
 
 
-class BatchQueryService(BatchQueryServiceProtocol):
+class BatchQueryService(
+    BaseQueryService[BatchEntity, Batch, ListBatchesQuery, BatchReadFilters, BatchSortField],
+    BatchQueryServiceProtocol,
+):
     SORT_FIELD_MAPPING: ClassVar = {
         BatchSortField.CREATED_AT: Batch.created_at,
         BatchSortField.UPDATED_AT: Batch.updated_at,
@@ -40,58 +44,17 @@ class BatchQueryService(BatchQueryServiceProtocol):
     }
 
     def __init__(self, session: AsyncSession):
-        self._session = session
+        super().__init__(session, Batch, to_domain_entity)
 
-    async def get(self, batch_id: UUID) -> BatchEntity | None:
-        """Получает партию по UUID"""
-        try:
-            stmt = select(Batch).where(Batch.uuid == batch_id)
-            result = await self._session.execute(stmt)
-            batch_model = result.scalar_one_or_none()
-            if batch_model is None:
-                return None
-            return to_domain_entity(batch_model)
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при получении партии: {e}") from e
-
-    async def list(self, query: ListBatchesQuery) -> QueryResult[BatchEntity]:
-        """Получает список партий с фильтрацией, пагинацией и сортировкой"""
-        try:
-            stmt = select(Batch)
-            count_stmt = select(Batch)
-
-            if query.filters:
-                stmt, count_stmt = self._apply_filters(stmt, count_stmt, query.filters)
-
-            if query.sort:
-                stmt = self._apply_sort(stmt, query.sort)
-
-            total_result = await self._session.execute(select(func.count()).select_from(count_stmt.subquery()))
-            total = total_result.scalar_one() or 0
-
-            if query.pagination:
-                stmt = stmt.offset(query.pagination.offset).limit(query.pagination.limit)
-
-            result = await self._session.execute(stmt)
-            batches = result.scalars().all()
-
-            entities = [to_domain_entity(batch) for batch in batches]
-
-            return QueryResult[BatchEntity](
-                items=entities,
-                total=total,
-                limit=query.pagination.limit if query.pagination else None,
-                offset=query.pagination.offset if query.pagination else None,
-            )
-        except Exception as e:
-            raise DatabaseException(f"Ошибка базы данных при получении списка партий: {e}") from e
-
-    def _apply_filters(self, stmt, count_stmt, filters):
+    def _apply_filters(
+        self,
+        stmt: Select,
+        count_stmt: Select,
+        filters: BatchReadFilters | None,
+    ) -> tuple[Select, Select]:
         """Применяет фильтры к запросу"""
-        from src.application.batches.queries import BatchReadFilters
-
-        if not isinstance(filters, BatchReadFilters):
-            raise ValueError("filters должен быть типа BatchReadFilters")
+        if filters is None:
+            return stmt, count_stmt
 
         if filters.is_closed is not None:
             stmt = stmt.where(Batch.is_closed == filters.is_closed)
@@ -122,22 +85,6 @@ class BatchQueryService(BatchQueryServiceProtocol):
             count_stmt = count_stmt.where(Batch.shift == filters.shift)
 
         return stmt, count_stmt
-
-    def _apply_sort(self, stmt, sort):
-        """Применяет сортировку к запросу"""
-        from src.application.batches.queries.sort import BatchSortSpec
-
-        if not isinstance(sort, BatchSortSpec):
-            raise ValueError("sort должен быть типа BatchSortSpec")
-
-        column = self.SORT_FIELD_MAPPING.get(sort.field)
-        if column is None:
-            raise ValueError(f"Неизвестное поле сортировки: {sort.field}")
-
-        if sort.direction.value == "desc":
-            column = column.desc()
-
-        return stmt.order_by(column)
 
 
 class CachedBatchQueryServiceProxy(BatchQueryService):
