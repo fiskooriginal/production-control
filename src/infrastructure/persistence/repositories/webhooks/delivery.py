@@ -4,10 +4,7 @@ from src.domain.common.exceptions import DoesNotExistError
 from src.domain.webhooks.entities.delivery import WebhookDeliveryEntity
 from src.domain.webhooks.interfaces.delivery import WebhookDeliveryRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.webhooks.delivery import (
-    to_domain_entity_delivery,
-    to_persistence_model_delivery,
-)
+from src.infrastructure.persistence.mappers.webhooks.delivery import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.webhook import WebhookDelivery
 
 
@@ -17,7 +14,7 @@ class WebhookDeliveryRepository(WebhookDeliveryRepositoryProtocol):
 
     async def create(self, domain_entity: WebhookDeliveryEntity) -> WebhookDeliveryEntity:
         """Создает новую доставку webhook в репозитории"""
-        delivery_model = to_persistence_model_delivery(domain_entity)
+        delivery_model = to_persistence_model(domain_entity)
 
         try:
             self._session.add(delivery_model)
@@ -25,7 +22,7 @@ class WebhookDeliveryRepository(WebhookDeliveryRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при создании доставки webhook: {e}") from e
 
-        return to_domain_entity_delivery(delivery_model)
+        return to_domain_entity(delivery_model)
 
     async def update(self, domain_entity: WebhookDeliveryEntity) -> WebhookDeliveryEntity:
         """Обновляет существующую доставку webhook"""
@@ -33,7 +30,7 @@ class WebhookDeliveryRepository(WebhookDeliveryRepositoryProtocol):
         if delivery_model is None:
             raise DoesNotExistError(f"Доставка webhook с UUID {domain_entity.uuid} не найдена")
 
-        updated_model = to_persistence_model_delivery(domain_entity)
+        updated_model = to_persistence_model(domain_entity)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(delivery_model, key, value)
 
@@ -42,4 +39,4 @@ class WebhookDeliveryRepository(WebhookDeliveryRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при обновлении доставки webhook: {e}") from e
 
-        return to_domain_entity_delivery(delivery_model)
+        return to_domain_entity(delivery_model)

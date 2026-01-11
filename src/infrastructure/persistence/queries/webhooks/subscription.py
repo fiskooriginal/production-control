@@ -9,7 +9,7 @@ from src.application.webhooks.queries.subscription import WebhookSubscriptionQue
 from src.domain.common.queries import QueryResult
 from src.domain.webhooks.entities.subscription import WebhookSubscriptionEntity
 from src.infrastructure.common.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.webhooks.subscription import to_domain_entity_subscription
+from src.infrastructure.persistence.mappers.webhooks.subscription import to_domain_entity
 from src.infrastructure.persistence.models.webhook import WebhookSubscription
 
 
@@ -25,7 +25,7 @@ class WebhookSubscriptionQueryService(WebhookSubscriptionQueryServiceProtocol):
             subscription_model = result.scalar_one_or_none()
             if subscription_model is None:
                 return None
-            return to_domain_entity_subscription(subscription_model)
+            return to_domain_entity(subscription_model)
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при получении подписки на webhook: {e}") from e
 
@@ -47,7 +47,7 @@ class WebhookSubscriptionQueryService(WebhookSubscriptionQueryServiceProtocol):
             result = await self._session.execute(stmt)
             subscription_models = result.scalars().all()
 
-            entities = [to_domain_entity_subscription(subscription) for subscription in subscription_models]
+            entities = [to_domain_entity(subscription) for subscription in subscription_models]
 
             return QueryResult[WebhookSubscriptionEntity](
                 items=entities,

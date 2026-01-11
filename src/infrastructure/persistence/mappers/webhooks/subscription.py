@@ -6,7 +6,7 @@ from src.infrastructure.common.exceptions import MappingException
 from src.infrastructure.persistence.models.webhook import WebhookSubscription
 
 
-def to_domain_entity_subscription(subscription_model: WebhookSubscription) -> WebhookSubscriptionEntity:
+def to_domain_entity(subscription_model: WebhookSubscription) -> WebhookSubscriptionEntity:
     """Конвертирует persistence модель WebhookSubscription в domain entity WebhookSubscriptionEntity"""
     try:
         return WebhookSubscriptionEntity(
@@ -26,7 +26,7 @@ def to_domain_entity_subscription(subscription_model: WebhookSubscription) -> We
         raise MappingException(f"Ошибка маппинга persistence -> domain для WebhookSubscription: {e}") from e
 
 
-def to_persistence_model_subscription(subscription_entity: WebhookSubscriptionEntity) -> WebhookSubscription:
+def to_persistence_model(subscription_entity: WebhookSubscriptionEntity) -> WebhookSubscription:
     """Конвертирует domain entity WebhookSubscriptionEntity в persistence модель WebhookSubscription"""
     try:
         return WebhookSubscription(

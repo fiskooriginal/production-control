@@ -7,7 +7,7 @@ from src.infrastructure.common.exceptions import MappingException
 from src.infrastructure.persistence.models.webhook import WebhookDelivery
 
 
-def to_domain_entity_delivery(delivery_model: WebhookDelivery) -> WebhookDeliveryEntity:
+def to_domain_entity(delivery_model: WebhookDelivery) -> WebhookDeliveryEntity:
     """Конвертирует persistence модель WebhookDelivery в domain entity WebhookDeliveryEntity"""
     try:
         return WebhookDeliveryEntity(
@@ -31,7 +31,7 @@ def to_domain_entity_delivery(delivery_model: WebhookDelivery) -> WebhookDeliver
         raise MappingException(f"Ошибка маппинга persistence -> domain для WebhookDelivery: {e}") from e
 
 
-def to_persistence_model_delivery(delivery_entity: WebhookDeliveryEntity) -> WebhookDelivery:
+def to_persistence_model(delivery_entity: WebhookDeliveryEntity) -> WebhookDelivery:
     """Конвертирует domain entity WebhookDeliveryEntity в persistence модель WebhookDelivery"""
     try:
         delivery_model = WebhookDelivery(

@@ -6,7 +6,7 @@ from src.application.webhooks.queries.queries import ListWebhookDeliveriesQuery
 from src.domain.common.queries import QueryResult
 from src.domain.webhooks.entities.delivery import WebhookDeliveryEntity
 from src.infrastructure.common.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.webhooks.delivery import to_domain_entity_delivery
+from src.infrastructure.persistence.mappers.webhooks.delivery import to_domain_entity
 from src.infrastructure.persistence.models.webhook import WebhookDelivery
 
 
@@ -29,7 +29,7 @@ class WebhookDeliveryQueryService(WebhookDeliveryQueryServiceProtocol):
             result = await self._session.execute(stmt)
             delivery_models = result.scalars().all()
 
-            entities = [to_domain_entity_delivery(delivery) for delivery in delivery_models]
+            entities = [to_domain_entity(delivery) for delivery in delivery_models]
 
             return QueryResult[WebhookDeliveryEntity](
                 items=entities,

@@ -7,10 +7,7 @@ from src.domain.common.exceptions import AlreadyExistsError, DoesNotExistError
 from src.domain.webhooks.entities.subscription import WebhookSubscriptionEntity
 from src.domain.webhooks.interfaces.subscription import WebhookSubscriptionRepositoryProtocol
 from src.infrastructure.common.exceptions import DatabaseException
-from src.infrastructure.persistence.mappers.webhooks.subscription import (
-    to_domain_entity_subscription,
-    to_persistence_model_subscription,
-)
+from src.infrastructure.persistence.mappers.webhooks.subscription import to_domain_entity, to_persistence_model
 from src.infrastructure.persistence.models.webhook import WebhookSubscription
 
 
@@ -24,7 +21,7 @@ class WebhookSubscriptionRepository(WebhookSubscriptionRepositoryProtocol):
             subscription_model = await self._session.get(WebhookSubscription, uuid)
             if subscription_model is None:
                 raise DoesNotExistError(f"Подписка на webhook с UUID {uuid} не найдена")
-            return to_domain_entity_subscription(subscription_model)
+            return to_domain_entity(subscription_model)
         except DoesNotExistError:
             raise
         except Exception as e:
@@ -42,7 +39,7 @@ class WebhookSubscriptionRepository(WebhookSubscriptionRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при проверке существования подписки: {e}") from e
 
-        subscription_model = to_persistence_model_subscription(domain_entity)
+        subscription_model = to_persistence_model(domain_entity)
 
         try:
             self._session.add(subscription_model)
@@ -50,7 +47,7 @@ class WebhookSubscriptionRepository(WebhookSubscriptionRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при создании подписки на webhook: {e}") from e
 
-        return to_domain_entity_subscription(subscription_model)
+        return to_domain_entity(subscription_model)
 
     async def update(self, domain_entity: WebhookSubscriptionEntity) -> WebhookSubscriptionEntity:
         """Обновляет существующую подписку на webhook"""
@@ -58,7 +55,7 @@ class WebhookSubscriptionRepository(WebhookSubscriptionRepositoryProtocol):
         if subscription_model is None:
             raise DoesNotExistError(f"Подписка на webhook с UUID {domain_entity.uuid} не найдена")
 
-        updated_model = to_persistence_model_subscription(domain_entity)
+        updated_model = to_persistence_model(domain_entity)
         for key, value in updated_model.model_dump(exclude={"uuid", "created_at"}).items():
             setattr(subscription_model, key, value)
 
@@ -67,7 +64,7 @@ class WebhookSubscriptionRepository(WebhookSubscriptionRepositoryProtocol):
         except Exception as e:
             raise DatabaseException(f"Ошибка базы данных при обновлении подписки на webhook: {e}") from e
 
-        return to_domain_entity_subscription(subscription_model)
+        return to_domain_entity(subscription_model)
 
     async def delete(self, uuid: UUID) -> None:
         """Удаляет подписку на webhook по UUID"""
