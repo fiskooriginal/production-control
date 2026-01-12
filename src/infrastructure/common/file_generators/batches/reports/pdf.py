@@ -12,8 +12,9 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 from src.application.batches.reports.dtos import BatchReportDataDTO
 from src.core.logging import get_logger
 from src.infrastructure.common.exceptions.batches import BatchPDFGenerationError
-from src.infrastructure.common.file_generators.batches.reports.fonts.cyrillic.register_fonts import (
+from src.infrastructure.common.file_generators.batches.reports.register_fonts import (
     FONT_NAME_BOLD,
+    FONT_NAME_ITALIC,
     FONT_NAME_REGULAR,
     register_fonts,
 )
@@ -65,7 +66,7 @@ class BatchPDFReportGenerator:
             )
             story = []
 
-            styles = getSampleStyleSheet()
+            styles = self._create_default_styles()
 
             self._create_header(story, batch_data, styles)
             story.append(Spacer(1, 0.5 * cm))
@@ -87,6 +88,29 @@ class BatchPDFReportGenerator:
         except Exception as e:
             logger.error(f"Ошибка генерации PDF отчета: {e}")
             raise BatchPDFGenerationError(f"Ошибка генерации PDF отчета: {e}") from e
+
+    @staticmethod
+    def _create_default_styles() -> dict:
+        """
+        Создает стили по умолчанию с использованием зарегистрированных шрифтов.
+
+        Returns:
+            Словарь стилей с настроенными шрифтами
+        """
+        styles = getSampleStyleSheet()
+
+        styles["Normal"].fontName = FONT_NAME_REGULAR
+        styles["BodyText"].fontName = FONT_NAME_REGULAR
+        styles["Italic"].fontName = FONT_NAME_ITALIC
+        styles["Heading1"].fontName = FONT_NAME_BOLD
+        styles["Heading2"].fontName = FONT_NAME_BOLD
+        styles["Heading3"].fontName = FONT_NAME_BOLD
+        styles["Heading4"].fontName = FONT_NAME_BOLD
+        styles["Heading5"].fontName = FONT_NAME_BOLD
+        styles["Heading6"].fontName = FONT_NAME_BOLD
+        styles["Title"].fontName = FONT_NAME_BOLD
+
+        return styles
 
     @staticmethod
     def _create_header(story: list, batch_data: BatchReportDataDTO, styles: dict) -> None:
@@ -139,7 +163,9 @@ class BatchPDFReportGenerator:
                     ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
                     ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#E7E6E6")),
                     ("FONTNAME", (0, 1), (0, -1), FONT_NAME_BOLD),
+                    ("FONTNAME", (1, 1), (1, -1), FONT_NAME_REGULAR),
                     ("FONTSIZE", (0, 1), (0, -1), 10),
+                    ("FONTSIZE", (1, 1), (1, -1), 10),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("LEFTPADDING", (0, 0), (-1, -1), 6),
@@ -234,7 +260,9 @@ class BatchPDFReportGenerator:
                     ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
                     ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#E7E6E6")),
                     ("FONTNAME", (0, 1), (0, -1), FONT_NAME_BOLD),
+                    ("FONTNAME", (1, 1), (1, -1), FONT_NAME_REGULAR),
                     ("FONTSIZE", (0, 1), (0, -1), 10),
+                    ("FONTSIZE", (1, 1), (1, -1), 10),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("LEFTPADDING", (0, 0), (-1, -1), 6),
