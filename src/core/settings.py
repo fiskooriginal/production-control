@@ -1,0 +1,211 @@
+from dataclasses import dataclass
+
+from src.core.config import (
+    ANALYTICS_DASHBOARD_TTL,
+    BATCH_CACHE_GET_TTL,
+    BATCH_CACHE_LIST_TTL,
+    CACHE_ENABLED,
+    CACHE_KEY_PREFIX,
+    CELERY_BROKER_URL,
+    CELERY_REDIS_KEY_PREFIX,
+    CELERY_RESULT_BACKEND,
+    CELERY_TASK_ACKS_LATE,
+    CELERY_TASK_DEFAULT_QUEUE,
+    CELERY_TASK_DEFAULT_RETRY_DELAY,
+    CELERY_TASK_MAX_RETRIES,
+    CELERY_TASK_REJECT_ON_WORKER_LOST,
+    CELERY_TIMEZONE,
+    CELERY_WORKER_CONCURRENCY,
+    DB_HOST,
+    DB_NAME,
+    DB_PASSWORD,
+    DB_PORT,
+    DB_SCHEMA,
+    DB_USER,
+    MINIO_ACCESS_KEY,
+    MINIO_BUCKETS,
+    MINIO_ENDPOINT,
+    MINIO_FILES_LIFETIME_DAYS,
+    MINIO_REGION,
+    MINIO_SECRET_KEY,
+    MINIO_SECURE,
+    RABBITMQ_CONSUMER_PREFETCH,
+    RABBITMQ_CONSUMER_QUEUE,
+    RABBITMQ_EVENT_EXCHANGE,
+    RABBITMQ_EVENT_ROUTING,
+    RABBITMQ_HOST,
+    RABBITMQ_PASSWORD,
+    RABBITMQ_PORT,
+    RABBITMQ_USER,
+    RABBITMQ_VHOST,
+    REDIS_DB,
+    REDIS_HOST,
+    REDIS_PASSWORD,
+    REDIS_PORT,
+    SMTP_FROM_EMAIL,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_USE_TLS,
+    SMTP_USER,
+)
+
+
+@dataclass
+class DatabaseSettings:
+    host: str = DB_HOST
+    port: int = DB_PORT
+    schema: str = DB_SCHEMA
+    name: str = DB_NAME
+    user: str = DB_USER
+    password: str = DB_PASSWORD
+
+    def __post_init__(self) -> None:
+        if not self.host:
+            raise ValueError("DB_HOST is not set")
+        if not self.port:
+            raise ValueError("DB_PORT is not set")
+        if not self.name:
+            raise ValueError("DB_NAME is not set")
+        if not self.user:
+            raise ValueError("DB_USER is not set")
+        if not self.password:
+            raise ValueError("DB_PASSWORD is not set")
+
+    @property
+    def url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+
+    def get_safe_url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:***@{self.host}:{self.port}/{self.name}"
+
+    def __repr__(self) -> str:
+        return (
+            f"DatabaseSettings(host={self.host!r}, port={self.port}, "
+            f"schema={self.schema!r}, name={self.name!r}, user={self.user!r}, password='***')"
+        )
+
+
+@dataclass
+class RedisSettings:
+    host: str = REDIS_HOST
+    port: int = REDIS_PORT
+    prefix: str = REDIS_DB
+    password: str | None = REDIS_PASSWORD
+
+    def get_url(self) -> str:
+        """Get Redis connection URL."""
+        if self.password:
+            return f"redis://:{self.password}@{self.host}:{self.port}/{self.prefix}"
+        return f"redis://{self.host}:{self.port}/{self.prefix}"
+
+
+@dataclass
+class RabbitMQSettings:
+    host: str = RABBITMQ_HOST
+    port: int = RABBITMQ_PORT
+    user: str = RABBITMQ_USER
+    password: str = RABBITMQ_PASSWORD
+    vhost: str = RABBITMQ_VHOST
+
+    def get_broker_url(self) -> str:
+        """Get RabbitMQ broker URL for Celery."""
+        return f"amqp://{self.user}:{self.password}@{self.host}:{self.port}/{self.vhost}"
+
+
+@dataclass
+class CelerySettings:
+    broker_url: str | None = CELERY_BROKER_URL
+    result_backend: str | None = CELERY_RESULT_BACKEND
+    timezone: str = CELERY_TIMEZONE
+    task_default_queue: str = CELERY_TASK_DEFAULT_QUEUE
+    task_acks_late: bool = CELERY_TASK_ACKS_LATE
+    task_reject_on_worker_lost: bool = CELERY_TASK_REJECT_ON_WORKER_LOST
+    worker_concurrency: int = CELERY_WORKER_CONCURRENCY
+    redis_key_prefix: str = CELERY_REDIS_KEY_PREFIX
+    task_max_retries: int = CELERY_TASK_MAX_RETRIES
+    task_default_retry_delay: int = CELERY_TASK_DEFAULT_RETRY_DELAY
+
+    def get_broker_url(self, rabbitmq_settings: RabbitMQSettings) -> str:
+        """Get broker URL, use configured or build from RabbitMQ settings."""
+        if self.broker_url and self.broker_url.strip():
+            return self.broker_url.strip()
+        return rabbitmq_settings.get_broker_url()
+
+    def get_result_backend_url(self, redis_settings: RedisSettings) -> str:
+        """Get result backend URL, use configured or build from Redis settings."""
+        if self.result_backend and self.result_backend.strip():
+            return self.result_backend.strip()
+        return redis_settings.get_url()
+
+
+@dataclass
+class CacheSettings:
+    enabled: bool = CACHE_ENABLED
+    key_prefix: str = CACHE_KEY_PREFIX
+
+
+@dataclass
+class MinIOSettings:
+    endpoint: str = MINIO_ENDPOINT
+    access_key: str = MINIO_ACCESS_KEY
+    secret_key: str = MINIO_SECRET_KEY
+    buckets: list[str] = None
+    secure: bool = MINIO_SECURE
+    region: str | None = MINIO_REGION
+    files_lifetime_days: int = MINIO_FILES_LIFETIME_DAYS
+
+    def __post_init__(self) -> None:
+        if self.buckets is None:
+            buckets_str = MINIO_BUCKETS
+            if buckets_str and buckets_str.strip():
+                self.buckets = [bucket.strip() for bucket in buckets_str.split(",") if bucket.strip()]
+            else:
+                self.buckets = []
+
+    def __repr__(self) -> str:
+        return (
+            f"MinIOSettings(endpoint={self.endpoint!r}, "
+            f"access_key={self.access_key!r}, secret_key='***', "
+            f"buckets={self.buckets!r}, secure={self.secure}, region={self.region!r})"
+        )
+
+
+@dataclass
+class EmailSettings:
+    host: str | None = SMTP_HOST
+    port: int = int(SMTP_PORT) if SMTP_PORT and SMTP_PORT.strip() else 587
+    user: str | None = SMTP_USER
+    password: str | None = SMTP_PASSWORD
+    from_email: str | None = SMTP_FROM_EMAIL
+    use_tls: bool = SMTP_USE_TLS
+
+    def is_configured(self) -> bool:
+        """Проверяет, настроен ли email сервис."""
+        return self.host is not None and self.user is not None and self.password is not None
+
+    def __repr__(self) -> str:
+        return (
+            f"EmailSettings(host={self.host!r}, port={self.port}, "
+            f"user={self.user!r}, password='***', "
+            f"from_email={self.from_email!r}, use_tls={self.use_tls})"
+        )
+
+
+@dataclass
+class BatchCacheSettings:
+    ttl_get: int = BATCH_CACHE_GET_TTL
+    ttl_list: int = BATCH_CACHE_LIST_TTL
+
+
+@dataclass
+class AnalyticsSettings:
+    ttl_dashboard: int = ANALYTICS_DASHBOARD_TTL
+
+
+@dataclass
+class RabbitMQMessagingSettings:
+    event_exchange: str = RABBITMQ_EVENT_EXCHANGE
+    event_routing: str | None = RABBITMQ_EVENT_ROUTING
+    consumer_queue: str = RABBITMQ_CONSUMER_QUEUE
+    consumer_prefetch: int = RABBITMQ_CONSUMER_PREFETCH

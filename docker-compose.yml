@@ -1,0 +1,360 @@
+services:
+  app:
+    profiles: ["app"]
+    container_name: production-control.app
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+      - ./alembic.ini:/app/alembic.ini:ro
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_DB=${REDIS_DB}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKETS=${MINIO_BUCKETS:-reports,exports,imports}
+      - MINIO_SECURE=${MINIO_SECURE:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "src.presentation.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsSL http://localhost:8000/api/healthcheck/service || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    profiles: ["app", "celery"]
+    container_name: production-control.postgres
+    image: "postgres:17-alpine"
+    hostname: production-control.postgres
+    restart: unless-stopped
+    expose:
+      - "5432"
+    ports:
+      - "127.0.0.1:15432:5432"
+    networks:
+      - production-control.network
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - production-control.postgres.data:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    profiles: ["app", "celery"]
+    container_name: production-control.redis
+    image: "redis:7-alpine"
+    hostname: production-control.redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    ports:
+      - "127.0.0.1:16379:6379"
+    networks:
+      - production-control.network
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --appendfsync everysec
+        else
+          redis-server --appendonly yes --appendfsync everysec
+        fi
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    volumes:
+      - production-control.redis.data:/data:rw
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          if [ -n "$$REDIS_PASSWORD" ]; then
+            redis-cli -a $$REDIS_PASSWORD ping | grep PONG
+          else
+            redis-cli ping | grep PONG
+          fi
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rabbitmq:
+    profiles: ["app", "celery"]
+    container_name: production-control.rabbitmq
+    image: "rabbitmq:3.13-management-alpine"
+    hostname: production-control.rabbitmq
+    restart: unless-stopped
+    expose:
+      - "5672"
+      - "15672"
+    ports:
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
+    networks:
+      - production-control.network
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - production-control.rabbitmq.data:/var/lib/rabbitmq:rw
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio:
+    profiles: ["app", "celery"]
+    container_name: production-control.minio
+    image: minio/minio:latest
+    hostname: production-control.minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - production-control.minio.data:/data:rw
+    networks:
+      - production-control.network
+    expose:
+      - "9000"
+      - "9001"
+    ports:
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:9000/minio/health/live || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  celery_worker:
+    profiles: ["celery"]
+    container_name: production-control.celery_worker
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_DB=${REDIS_DB}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKETS=${MINIO_BUCKETS:-reports,exports,imports}
+      - MINIO_SECURE=${MINIO_SECURE:-false}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.background_tasks.app:celery_app",
+        "worker",
+        "-l",
+        "INFO",
+        "--concurrency=2",
+      ]
+
+  celery_beat:
+    profiles: ["celery"]
+    container_name: production-control.celery_beat
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+      - production-control.celery_beat.schedule:/app/celerybeat-schedule:rw
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_DB=${REDIS_DB}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKETS=${MINIO_BUCKETS:-reports,exports,imports}
+      - MINIO_SECURE=${MINIO_SECURE:-false}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.background_tasks.app:celery_app",
+        "beat",
+        "-l",
+        "INFO",
+        "-s",
+        "/app/celerybeat-schedule/schedule",
+      ]
+
+  flower:
+    profiles: ["celery"]
+    container_name: production-control.flower
+    image: production-control
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - production-control.network
+    expose:
+      - "5555"
+    ports:
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+    environment:
+      - PYTHONPATH=/app
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_DB=${REDIS_DB}
+    command:
+      [
+        "celery",
+        "-A",
+        "src.infrastructure.background_tasks.app:celery_app",
+        "flower",
+        "--port=5555",
+      ]
+
+volumes:
+  production-control.postgres.data:
+    name: production-control.postgres.data
+  production-control.redis.data:
+    name: production-control.redis.data
+  production-control.rabbitmq.data:
+    name: production-control.rabbitmq.data
+  production-control.minio.data:
+    name: production-control.minio.data
+  production-control.celery_beat.schedule:
+    name: production-control.celery_beat.schedule
+
+networks:
+  production-control.network:
+    name: production-control.network

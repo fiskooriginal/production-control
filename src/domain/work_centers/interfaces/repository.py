@@ -1,0 +1,10 @@
+from typing import Protocol
+
+from src.domain.common.repository_protocol import BaseRepositoryProtocol
+from src.domain.work_centers import WorkCenterEntity
+
+
+class WorkCenterRepositoryProtocol(BaseRepositoryProtocol[WorkCenterEntity], Protocol):
+    async def get_by_identifier(self, identifier: str) -> WorkCenterEntity | None:
+        """Находит рабочий центр по идентификатору."""
+        ...
